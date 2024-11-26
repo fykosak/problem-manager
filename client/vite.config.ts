@@ -6,8 +6,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@": "./src/",
-			"@server": "./server/src/",
-			"@public": "../server/src/"
+			"@server": "../server/src/"
 		}
 	},
 	plugins: [react()],
