@@ -1,0 +1,119 @@
+# Basic text
+
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr
+
+==>
+
+Document(Text)
+
+# Math
+
+one $math$ two
+
+==>
+
+Document(Text,InlineMath(InlineMathContent),Text)
+
+# Command
+
+test \command text
+
+==>
+
+Document(Text,Command(CommandIdentifier),Text)
+
+# Command with empty argument
+
+\command{}
+
+==>
+
+Document(Command(CommandIdentifier,CommandArgument))
+
+# Command with non empty argument
+
+\command{asdf}
+
+==>
+
+Document(Command(CommandIdentifier,CommandArgument(Text)))
+
+# Command inside a command
+
+\command{asdf \asdf{qwer} asdf}
+
+==>
+
+Document(Command(CommandIdentifier,CommandArgument(Text,Command(CommandIdentifier,CommandArgument(Text)),Text)))
+
+# Command with optional argument
+
+\command[optional]{argument}[]
+
+==>
+
+Document(Command(CommandIdentifier,CommandArgumentOptional(Text),CommandArgument(Text),CommandArgumentOptional))
+
+# Command inside math
+
+$frac \frac{a}{b}$
+
+==>
+
+Document(InlineMath(InlineMathContent, Command(CommandIdentifier, CommandArgument(Text), CommandArgument(Text))))
+
+# Comment
+
+text % comment
+
+==>
+
+Document(Text, Comment)
+
+# Escaped %
+
+text \% not comment
+
+==>
+
+Document(Text, Command(CommandIdentifier), Text)
+
+# Escaped % in math
+
+$1.23 \%$ text
+
+==>
+
+Document(InlineMath(InlineMathContent, Command(CommandIdentifier)), Text)
+
+# Braces outside of command (normal mode)
+
+text {text} text
+
+==>
+
+Document(Text, "{", Text, "}", Text)
+
+# Braces outside of command (math mode)
+
+$text {text} text$
+
+==>
+
+Document(InlineMath(InlineMathContent, "{", InlineMathContent, "}", InlineMathContent))
+
+# Square brackets outside of command (normal mode)
+
+text [text] text
+
+==>
+
+Document(Text, "[", Text, "]", Text)
+
+# Square brackets outside of command (math mode)
+
+$text [text] text$
+
+==>
+
+Document(InlineMath(InlineMathContent, "[", InlineMathContent, "]", InlineMathContent))

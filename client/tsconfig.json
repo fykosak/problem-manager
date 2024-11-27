@@ -16,7 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./app/*"],
-      "~/server/*": ["../server/src/*"]
+      "~/server/*": ["../server/src/*"],
+      "~/libs/*": ["./libs/*"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

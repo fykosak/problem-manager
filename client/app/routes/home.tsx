@@ -1,5 +1,4 @@
 import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
 import { trpc } from "~/trpc";
 
 export function meta({}: Route.MetaArgs) {
@@ -15,5 +14,5 @@ export async function clientLoader({}: Route.ClientActionArgs) {
 }
 
 export default function Home() {
-	return <Welcome />;
+	return <p>home page</p>;
 }

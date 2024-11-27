@@ -1,0 +1,38 @@
+//Environment {
+//	Backslash "begin" Argument
+//	Content
+//	Backslash "end" Argument
+//}
+
+@precedence { commandargument @left, character @left }
+
+@top Document { (Text | InlineMath | Command | "[" | "]" | "{" | "}")* }
+
+InlineMath {
+	"$" !character (InlineMathContent | Command | "[" | "]" | "{" | "}")* "$"
+}
+
+Command {
+	CommandIdentifier (CommandArgument | CommandArgumentOptional)*
+}
+
+CommandArgument {
+	!commandargument "{" (Text | InlineMath | Command)* "}"
+}
+
+CommandArgumentOptional {
+	!commandargument "[" (Text | InlineMath | Command)* "]"
+}
+
+@skip { Comment }
+
+@tokens {
+	//Text { (![\\${}\[\]])+ }
+	Text { (![\\${}\[\]%])+ }
+	CommandIdentifier { "\\" (@asciiLetter|"%")+ }
+	InlineMathContent { (![\\${}\[\]%])+ }
+	Comment { "%" ![\n]* }
+
+	// listing those characters to enable syntax highlighting
+	"[" "]" "{" "}" "$"
+}
