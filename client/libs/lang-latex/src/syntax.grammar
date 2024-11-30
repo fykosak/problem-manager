@@ -29,7 +29,7 @@ CommandArgumentOptional {
 @tokens {
 	//Text { (![\\${}\[\]])+ }
 	Text { (![\\${}\[\]%])+ }
-	CommandIdentifier { "\\" (@asciiLetter|"%")+ }
+	CommandIdentifier { "\\" ((@asciiLetter)+ |"%"|"{"|"}") }
 	InlineMathContent { (![\\${}\[\]%])+ }
 	Comment { "%" ![\n]* }
 

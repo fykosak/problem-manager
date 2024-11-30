@@ -1,7 +1,8 @@
 import React from 'react';
 import CodeMirror from '@uiw/react-codemirror/src/index.js';
 import { material } from '@uiw/codemirror-theme-material';
-import { latex } from '~/libs/lang-latex/dist';
+import { latex, latexLinter } from '~/libs/lang-latex/dist';
+import { linter } from '@codemirror/lint';
 
 export default function TaskEdit() {
 	const [value, setValue] = React.useState(`
@@ -12,7 +13,15 @@ env content
 \\end{env}
 test $math$ test $123 \\%$ not a comment
 `);
-	return <CodeMirror value={value} height="1200px" width="1000px" theme={material} extensions={[latex()]} basicSetup={
-		{ foldGutter: true }
-	} />;
+	return <CodeMirror value={value}
+		height="1200px"
+		width="1000px"
+		theme={material}
+		extensions={[
+			latex(),
+			linter(latexLinter)
+		]}
+		basicSetup={
+			{ foldGutter: true }
+		} />;
 }

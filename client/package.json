@@ -9,6 +9,9 @@
     "typecheck": "react-router typegen && tsc --build --noEmit"
   },
   "dependencies": {
+    "@codemirror/lint": "^6.8.4",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/view": "^6.35.0",
     "@react-router/node": "^7.0.1",
     "@react-router/serve": "^7.0.1",
     "@trpc/client": "^10.45.2",
