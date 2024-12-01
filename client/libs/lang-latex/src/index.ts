@@ -95,11 +95,10 @@ function checkEnvironment(beginNode: SyntaxNodeRef, view: EditorView): Diagnosti
 				continue;
 			}
 
-			// TODO weird from and to values
 			if (!cursor.nextSibling()) {
 				return {
 					from: cursor.from,
-					to: cursor.from,
+					to: cursor.to,
 					severity: "error",
 					message: "\\end missing an environment name"
 				}
@@ -137,25 +136,50 @@ function checkEnvironment(beginNode: SyntaxNodeRef, view: EditorView): Diagnosti
 }
 
 function checkForMatchingLeftBrace(beginNode: SyntaxNodeRef, view: EditorView, diagnostics: Diagnostic[]): void {
+	const doc = view.state.doc;
 	const cursor = syntaxTree(view.state).cursor();
 
 	// get { node
 	cursor.moveTo(beginNode.to, -1);
 
-	let nestingDepth = 0;
+	let braceNestingDepth = 0;
+	let environmentNestingDepth = 0;
 
 	while (cursor.next()) {
 		if (cursor.name == "{") {
-			nestingDepth++;
+			braceNestingDepth++;
 			continue;
 		}
 
-		if (cursor.name == "}" && nestingDepth > 0) {
-			nestingDepth--;
+		if (cursor.name == "}" && braceNestingDepth > 0) {
+			braceNestingDepth--;
 			continue;
 		}
 
-		if (cursor.name == "}" && nestingDepth == 0) {
+		if (cursor.name == "CommandIdentifier" && doc.slice(cursor.from, cursor.to).toString() == "\\begin") {
+			environmentNestingDepth++;
+		}
+
+		if (cursor.name == "CommandIdentifier" && doc.slice(cursor.from, cursor.to).toString() == "\\end") {
+			environmentNestingDepth--;
+		}
+
+		if (cursor.name == "}" && braceNestingDepth == 0) {
+			if (environmentNestingDepth > 0) {
+				diagnostics.push({
+					from: cursor.from,
+					to: cursor.to,
+					severity: "error",
+					message: "Command ended before environment was enclosed"
+				})
+			} else if (environmentNestingDepth < 0) {
+				diagnostics.push({
+					from: cursor.from,
+					to: cursor.to,
+					severity: "error",
+					message: "Command ended after environment was enclosed"
+				})
+			}
 			return;
 		}
 	}
