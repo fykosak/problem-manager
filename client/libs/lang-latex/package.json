@@ -20,6 +20,7 @@
     "@codemirror/lint": "^6.8.4",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.35.0",
+    "@lezer/common": "^1.2.3",
     "@lezer/highlight": "^1.0.0",
     "@lezer/lr": "^1.0.0"
   },

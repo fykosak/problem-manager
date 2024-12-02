@@ -6,10 +6,10 @@
 
 @precedence { commandargument @left, character @left }
 
-@top Document { (Text | InlineMath | Command | "[" | "]" | "{" | "}")* }
+@top Document { (Text | InlineMath | Command | "[" | "]" | "{" | "}" | Newline)* }
 
 InlineMath {
-	"$" !character (InlineMathContent | Command | "[" | "]" | "{" | "}")* "$"
+	"$" !character (InlineMathContent | Command | "[" | "]" | "{" | "}" | Newline)* "$"
 }
 
 Command {
@@ -17,21 +17,21 @@ Command {
 }
 
 CommandArgument {
-	!commandargument "{" (Text | InlineMath | Command)* "}"
+	!commandargument "{" (Text | InlineMath | Command | Newline)* "}"
 }
 
 CommandArgumentOptional {
-	!commandargument "[" (Text | InlineMath | Command)* "]"
+	!commandargument "[" (Text | InlineMath | Command | Newline)* "]"
 }
 
 @skip { Comment }
 
 @tokens {
-	//Text { (![\\${}\[\]])+ }
-	Text { (![\\${}\[\]%])+ }
+	Text { (![\\${}\[\]%\n])+ }
 	CommandIdentifier { "\\" ((@asciiLetter)+ |"%"|"{"|"}") }
-	InlineMathContent { (![\\${}\[\]%])+ }
+	InlineMathContent { (![\\${}\[\]%\n])+ }
 	Comment { "%" ![\n]* }
+	Newline { "\n" }
 
 	// listing those characters to enable syntax highlighting
 	"[" "]" "{" "}" "$"

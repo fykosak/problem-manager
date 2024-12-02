@@ -117,3 +117,12 @@ $text [text] text$
 ==>
 
 Document(InlineMath(InlineMathContent, "[", InlineMathContent, "]", InlineMathContent))
+
+# Newline
+
+lorem ipsum
+dolor sit amet
+
+==>
+
+Document(Text, Newline, Text)
