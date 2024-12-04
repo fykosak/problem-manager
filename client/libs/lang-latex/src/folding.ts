@@ -55,4 +55,4 @@ export function foldEnvironment(state: EditorState, start: number): {
 	}
 }
 
-export const manualFolding = foldService.of(foldEnvironment)
+export const environmentFolding = foldService.of(foldEnvironment)

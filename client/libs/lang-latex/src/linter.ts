@@ -9,21 +9,10 @@ function checkEnvironment(beginNode: SyntaxNodeRef, view: EditorView): Diagnosti
 	const cursor = syntaxTree(view.state).cursor();
 
 	// get \begin node
-	cursor.moveTo(beginNode.to);
-	cursor.next();
+	cursor.moveTo(beginNode.to, -1);
 
 	// check for environment name argument
-	// TODO instantly goes to the command argument check
-	if (!cursor.nextSibling()) {
-		return {
-			from: beginNode.from,
-			to: beginNode.to,
-			severity: "error",
-			message: "\\begin is missing an environment name"
-		}
-	}
-
-	if (cursor.name != "CommandArgument") {
+	if (!cursor.nextSibling() || cursor.name != "CommandArgument") {
 		return {
 			from: beginNode.from,
 			to: beginNode.to,
@@ -99,9 +88,12 @@ function checkEnvironment(beginNode: SyntaxNodeRef, view: EditorView): Diagnosti
 	};
 }
 
-function checkForMatchingLeftBrace(beginNode: SyntaxNodeRef, view: EditorView, diagnostics: Diagnostic[]): void {
+function checkForMatchingBrace(beginNode: SyntaxNodeRef, view: EditorView, diagnostics: Diagnostic[], forwards: boolean = true): void {
 	const doc = view.state.doc;
 	const cursor = syntaxTree(view.state).cursor();
+
+	const nestingStartCharacter = forwards ? '{' : '}';
+	const nestingEndCharacter = forwards ? '}' : '{';
 
 	// get { node
 	cursor.moveTo(beginNode.to, -1);
@@ -109,39 +101,56 @@ function checkForMatchingLeftBrace(beginNode: SyntaxNodeRef, view: EditorView, d
 	let braceNestingDepth = 0;
 	let environmentNestingDepth = 0;
 
-	while (cursor.next()) {
-		if (cursor.name == "{") {
+	while (true) {
+		if (forwards) {
+			if (!cursor.next()) break;
+		} else {
+			if (!cursor.prev()) break;
+		}
+
+		if (cursor.name == nestingStartCharacter) {
 			braceNestingDepth++;
 			continue;
 		}
 
-		if (cursor.name == "}" && braceNestingDepth > 0) {
+		if (cursor.name == nestingEndCharacter && braceNestingDepth > 0) {
 			braceNestingDepth--;
 			continue;
 		}
 
 		if (cursor.name == "CommandIdentifier" && doc.slice(cursor.from, cursor.to).toString() == "\\begin") {
-			environmentNestingDepth++;
+			if (forwards) {
+				environmentNestingDepth++;
+			} else {
+				environmentNestingDepth--;
+			}
 		}
 
 		if (cursor.name == "CommandIdentifier" && doc.slice(cursor.from, cursor.to).toString() == "\\end") {
-			environmentNestingDepth--;
+			if (forwards) {
+				environmentNestingDepth--;
+			} else {
+				environmentNestingDepth++;
+			}
 		}
 
-		if (cursor.name == "}" && braceNestingDepth == 0) {
+		const closedBeforeEndMessage = "Command closed before environment end";
+		const closedAfterEndMessage = "Command closed after environment end";
+
+		if (cursor.name == nestingEndCharacter && braceNestingDepth == 0) {
 			if (environmentNestingDepth > 0) {
 				diagnostics.push({
 					from: cursor.from,
 					to: cursor.to,
 					severity: "error",
-					message: "Command ended before environment was enclosed"
+					message: forwards ? closedBeforeEndMessage : closedAfterEndMessage
 				})
 			} else if (environmentNestingDepth < 0) {
 				diagnostics.push({
 					from: cursor.from,
 					to: cursor.to,
 					severity: "error",
-					message: "Command ended after environment was enclosed"
+					message: forwards ? closedAfterEndMessage : closedBeforeEndMessage
 				})
 			}
 			return;
@@ -152,39 +161,7 @@ function checkForMatchingLeftBrace(beginNode: SyntaxNodeRef, view: EditorView, d
 		from: beginNode.from,
 		to: beginNode.to,
 		severity: "error",
-		message: "Unmatched {, missing }"
-	});
-}
-
-function checkForMatchingRightBrace(beginNode: SyntaxNodeRef, view: EditorView, diagnostics: Diagnostic[]): void {
-	const cursor = syntaxTree(view.state).cursor();
-
-	// get { node
-	cursor.moveTo(beginNode.to, -1);
-
-	let nestingDepth = 0;
-
-	while (cursor.prev()) {
-		if (cursor.name == "}") {
-			nestingDepth++;
-			continue;
-		}
-
-		if (cursor.name == "{" && nestingDepth > 0) {
-			nestingDepth--;
-			continue;
-		}
-
-		if (cursor.name == "{" && nestingDepth == 0) {
-			return;
-		}
-	}
-
-	diagnostics.push({
-		from: beginNode.from,
-		to: beginNode.to,
-		severity: "error",
-		message: "Unmatched }, missing {"
+		message: `Unmatched ${nestingStartCharacter}, missing ${nestingEndCharacter}`
 	});
 }
 
@@ -204,11 +181,11 @@ export function latexLinter(view: EditorView): Diagnostic[] {
 		}
 
 		if (node.name == "{") {
-			checkForMatchingLeftBrace(node, view, diagnostics);
+			checkForMatchingBrace(node, view, diagnostics);
 		}
 
 		if (node.name == "}") {
-			checkForMatchingRightBrace(node, view, diagnostics);
+			checkForMatchingBrace(node, view, diagnostics, false);
 		}
 
 		if (node.name == "Text") {

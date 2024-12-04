@@ -28,7 +28,7 @@ CommandArgumentOptional {
 
 @tokens {
 	Text { (![\\${}\[\]%\n])+ }
-	CommandIdentifier { "\\" ((@asciiLetter)+ |"%"|"{"|"}") }
+	CommandIdentifier { "\\" ((@asciiLetter)+ |"%"|"{"|"}"|"\\") }
 	InlineMathContent { (![\\${}\[\]%\n])+ }
 	Comment { "%" ![\n]* }
 	Newline { "\n" }
