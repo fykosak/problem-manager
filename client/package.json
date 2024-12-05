@@ -12,15 +12,21 @@
     "@codemirror/lint": "^6.8.4",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.35.0",
+    "@radix-ui/react-slot": "^1.1.0",
     "@react-router/node": "^7.0.1",
     "@react-router/serve": "^7.0.1",
     "@trpc/client": "^10.45.2",
     "@uiw/codemirror-theme-material": "^4.23.6",
     "@uiw/react-codemirror": "^4.23.6",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "isbot": "^5.1.17",
+    "lucide-react": "^0.465.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router": "^7.0.1"
+    "react-router": "^7.0.1",
+    "tailwind-merge": "^2.5.5",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@react-router/dev": "^7.0.1",
@@ -29,7 +35,7 @@
     "@types/react-dom": "^18.3.1",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.15",
+    "tailwindcss": "^3.4.16",
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
     "vite-tsconfig-paths": "^5.1.2"

@@ -1,3 +1,4 @@
+import { Button } from "~/components/ui/button";
 import type { Route } from "./+types/home";
 import { trpc } from "~/trpc";
 
@@ -14,5 +15,8 @@ export async function clientLoader({}: Route.ClientActionArgs) {
 }
 
 export default function Home() {
-	return <p>home page</p>;
+	return <p>
+		home page
+		<Button>Click</Button>
+	</p>;
 }
