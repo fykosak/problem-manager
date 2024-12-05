@@ -15,6 +15,7 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@react-router/node": "^7.0.1",
     "@react-router/serve": "^7.0.1",
+    "@tanstack/react-table": "^8.20.5",
     "@trpc/client": "^10.45.2",
     "@uiw/codemirror-theme-material": "^4.23.6",
     "@uiw/react-codemirror": "^4.23.6",
