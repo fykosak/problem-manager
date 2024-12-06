@@ -1,7 +1,7 @@
 import React from 'react';
 import CodeMirror from '@uiw/react-codemirror/src/index.js';
 import { material } from '@uiw/codemirror-theme-material';
-import { latex, latexLinter } from '~/libs/lang-latex/dist';
+import { latex, latexLinter } from '~/libs/lang-latex/dist/index.js';
 import { linter, lintGutter } from '@codemirror/lint';
 
 export default function TaskEdit() {

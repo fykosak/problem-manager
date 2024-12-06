@@ -1,4 +1,7 @@
-import { NavLink, NavLinkRenderProps } from "react-router";
+import { useState } from "react";
+import { NavLink, NavLinkRenderProps, useLocation } from "react-router";
+import { Menu } from "lucide-react";
+import { Button } from "./ui/button";
 
 const links = [
 	{ name: "Home", link: "/" },
@@ -7,22 +10,37 @@ const links = [
 	{ name: "Návrhy na úlohy", link: "/task-suggestions" },
 ]
 
-function getNavLinkClass(props: NavLinkRenderProps): string {
-	let className = "border border-2 h-9 px-4 py-2 rounded-md inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
-	if (props.isActive) {
-		className += " bg-primary text-primary-foreground hover:bg-primary/90"
-	} else {
-		className += " bg-background hover:bg-accent hover:text-accent-foreground"
-	}
-	return className;
+function NavLinkItem(props: { to: string, name: string }) {
+	const location = useLocation();
+	const isActive = location.pathname === props.to;
+	return <Button variant={isActive ? "default" : "outline"} asChild>
+		<NavLink key={props.to} to={props.to} end>{props.name}</NavLink>
+	</Button>
 }
 
 export default function NavigationBar() {
-	return <nav className="flex items-center justify-between">
-		<div className="space-x-4 my-2">
-			{links.map((link) => (
-				<NavLink className={getNavLinkClass} to={link.link} end>{link.name}</NavLink>
-			))}
+	const [navHidden, setNavHidden] = useState(true);
+
+	function switchVisible() {
+		setNavHidden(!navHidden);
+	}
+
+	return <nav className="flex items-center justify-between flex-wrap lg:space-x-2">
+		<div>
+			Logo
+		</div>
+		<Button className="lg:hidden" onClick={switchVisible} variant="outline"><Menu /></Button>
+		<div className={(navHidden ? "hidden" : "flex") + " flex-col lg:flex lg:flex-row basis-full lg:basis-auto grow justify-between"}>
+			<div className={(navHidden ? "hidden" : "flex") + " lg:flex flex-col lg:flex-row w-full lg:w-auto lg:items-center lg:space-x-4 my-2"}>
+				{links.map((link) => (
+					<NavLinkItem to={link.link} name={link.name} />
+				))}
+			</div>
+			<div className={(navHidden ? "hidden" : "flex") + " lg:flex flex-col lg:flex-row w-full lg:w-auto lg:items-center lg:space-x-4 my-2"}>
+				<a>38. ročník</a>
+				<a>FYKOS</a>
+				<a>Adam Krška</a>
+			</div>
 		</div>
 	</nav >;
 }
