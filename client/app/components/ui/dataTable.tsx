@@ -1,8 +1,12 @@
 import {
+	Column,
 	ColumnDef,
+	ColumnFiltersState,
 	SortingState,
 	flexRender,
 	getCoreRowModel,
+	getFacetedUniqueValues,
+	getFilteredRowModel,
 	getPaginationRowModel,
 	getSortedRowModel,
 	useReactTable,
@@ -18,6 +22,38 @@ import {
 } from "~/components/ui/table"
 import { DataTablePagination } from "./dataTablePagination"
 import * as React from "react"
+import { Select, SelectContent, SelectItem, SelectTrigger } from "~/components/ui/select";
+import { Filter } from "lucide-react";
+
+export function DataTableUniqueFilter<TData, TValue>({ column }: { column: Column<TData, TValue> }) {
+	const possibleValues = column.getFacetedUniqueValues();
+	const ALL_VALUES = '__all__';
+
+	let options = [
+		<SelectItem key={ALL_VALUES} value={ALL_VALUES}>Vše</SelectItem>
+	];
+	for (let [key, _] of possibleValues) {
+		options.push(
+			<SelectItem key={key} value={`${key}`}>{key}</SelectItem >
+		);
+	}
+
+	return <Select
+		onValueChange={(value) => {
+			if (value == ALL_VALUES) {
+				column.setFilterValue(undefined);
+			} else {
+				column.setFilterValue(value);
+			}
+		}}>
+		<SelectTrigger className="h-8 w-[70px]">
+			<Filter />
+		</SelectTrigger>
+		<SelectContent side="bottom">
+			{options}
+		</SelectContent>
+	</Select>;
+}
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
@@ -29,6 +65,7 @@ export function DataTable<TData, TValue>({
 	data,
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
+	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
 
 	const table = useReactTable({
 		data,
@@ -37,8 +74,37 @@ export function DataTable<TData, TValue>({
 		getPaginationRowModel: getPaginationRowModel(),
 		onSortingChange: setSorting,
 		getSortedRowModel: getSortedRowModel(),
+		onColumnFiltersChange: setColumnFilters,
+		getFilteredRowModel: getFilteredRowModel(),
+		getFacetedUniqueValues: (table, columnId) => () => {
+			// Custom implementation of unique values to account for array values
+			const uniqueValueMap = new Map<any, number>();
+
+			const facetedRowModel = table.getColumn(columnId)?.getFacetedRowModel();
+
+			if (!facetedRowModel) {
+				return new Map();
+			}
+
+			for (let row of facetedRowModel.flatRows) {
+				for (let columnValue of row.getUniqueValues(columnId)) {
+					if (Array.isArray(columnValue)) {
+						for (let value of columnValue) {
+							const prevCount = uniqueValueMap.get(value) || 0;
+							uniqueValueMap.set(value, prevCount + 1);
+						}
+					} else {
+						const prevCount = uniqueValueMap.get(columnValue) || 0;
+						uniqueValueMap.set(columnValue, prevCount + 1);
+					}
+				}
+			}
+
+			return uniqueValueMap;
+		},
 		state: {
-			sorting
+			sorting,
+			columnFilters,
 		}
 	});
 

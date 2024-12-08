@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowDownUp } from "lucide-react"
+import { ArrowDownUp, Filter } from "lucide-react"
 import { Button } from "~/components/ui/button"
+import { DataTableUniqueFilter } from "~/components/ui/dataTable"
 
 export type Task = {
 	name: string
@@ -22,15 +23,33 @@ export const columns: ColumnDef<Task>[] = [
 	},
 	{
 		accessorKey: "topic",
-		header: "Téma"
+		header: ({ column }) => {
+			return <div className="flex flex-nowrap gap-1 items-center">
+				Téma
+				<DataTableUniqueFilter column={column} />
+			</div>;
+		},
+		filterFn: "arrIncludes"
 	},
 	{
 		accessorKey: "type",
-		header: "Typ"
+		header: ({ column }) => {
+			return <div className="flex flex-nowrap gap-1 items-center">
+				Typ
+				<DataTableUniqueFilter column={column} />
+			</div>;
+		},
+		filterFn: "equalsString"
 	},
 	{
 		accessorKey: "state",
-		header: "Stav"
+		header: ({ column }) => {
+			return <div className="flex flex-nowrap gap-1 items-center">
+				Stav
+				<DataTableUniqueFilter column={column} />
+			</div>;
+		},
+		filterFn: "equalsString"
 	},
 	{
 		accessorKey: "created",

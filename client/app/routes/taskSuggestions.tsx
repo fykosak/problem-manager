@@ -4,7 +4,7 @@ import { Task, columns } from "~/models/task/columns";
 
 let data: Task[] = [];
 
-for (let i = 0; i < 333; i++) {
+for (let i = 0; i < 5; i++) {
 	data.push({
 		"name": "Skáčeme z vlaku",
 		"author": "Adam Krška",
@@ -13,7 +13,7 @@ for (let i = 0; i < 333; i++) {
 			"dynamika"
 		],
 		"type": "Složité",
-		"state": "Nevybrané",
+		"state": "Koš",
 		"created": new Date("2024-11-01 12:01:01")
 	})
 
@@ -28,6 +28,7 @@ for (let i = 0; i < 333; i++) {
 		"state": "Nevybrané",
 		"created": new Date("2024-11-01 13:01:01")
 	})
+
 	data.push({
 		"name": "Topíme vlak",
 		"author": "Adam Krška",
@@ -35,28 +36,27 @@ for (let i = 0; i < 333; i++) {
 			"hydromechanika"
 		],
 		"type": "Experiment",
+		"state": "Vybrané",
+		"created": new Date("2024-12-02 13:01:01")
+	})
+
+	data.push({
+		"name": "Vlak a letadlo",
+		"author": "Adam Krška",
+		"topic": [
+			"aerodynamika"
+		],
+		"type": "Složité",
 		"state": "Nevybrané",
 		"created": new Date("2024-12-02 13:01:01")
 	})
 }
 
 export default function TaskSuggestions() {
+
 	return <>
-		<div>
+		<div className="py-5">
 			<Button>+ Navrhnout úlohu</Button>
-		</div>
-		<div>
-			<h2>Typ úlohy</h2>
-			<Button className="mr-2">Jednoduché</Button>
-			<Button className="mr-2">Složité</Button>
-			<Button className="mr-2">Experiment</Button>
-			<Button className="mr-2">Problémovka</Button>
-		</div>
-		<div>
-			<h2>Stav úlohy</h2>
-			<Button className="mr-2">Nevybrané</Button>
-			<Button className="mr-2">Vybrané</Button>
-			<Button className="mr-2">Koš</Button>
 		</div>
 		<DataTable columns={columns} data={data} />
 	</>;
