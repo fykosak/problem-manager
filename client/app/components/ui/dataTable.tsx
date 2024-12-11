@@ -5,7 +5,6 @@ import {
 	SortingState,
 	flexRender,
 	getCoreRowModel,
-	getFacetedUniqueValues,
 	getFilteredRowModel,
 	getPaginationRowModel,
 	getSortedRowModel,
@@ -23,9 +22,11 @@ import {
 import { DataTablePagination } from "./dataTablePagination"
 import * as React from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "~/components/ui/select";
-import { Filter } from "lucide-react";
+import { ArrowDownUp, Filter } from "lucide-react";
+import { Button } from "./button";
 
-export function DataTableUniqueFilter<TData, TValue>({ column }: { column: Column<TData, TValue> }) {
+// Button to select a filter option to uniquely filter in a given column
+export function DataTableColumnUniqueFilter<TData, TValue>({ column }: { column: Column<TData, TValue> }) {
 	const possibleValues = column.getFacetedUniqueValues();
 	const ALL_VALUES = '__all__';
 
@@ -46,13 +47,24 @@ export function DataTableUniqueFilter<TData, TValue>({ column }: { column: Colum
 				column.setFilterValue(value);
 			}
 		}}>
-		<SelectTrigger className="h-8 w-[70px]">
+		<SelectTrigger variant="ghost" size="icon" arrow={false}>
 			<Filter />
 		</SelectTrigger>
 		<SelectContent side="bottom">
 			{options}
 		</SelectContent>
 	</Select>;
+}
+
+// Button that triggers column sorting
+export function DataTableColumnSorter<TData, TValue>({ column }: { column: Column<TData, TValue> }) {
+	return <Button
+		variant="ghost"
+		size="icon"
+		onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+	>
+		<ArrowDownUp />
+	</Button>
 }
 
 interface DataTableProps<TData, TValue> {
@@ -105,12 +117,12 @@ export function DataTable<TData, TValue>({
 		state: {
 			sorting,
 			columnFilters,
-		}
+		},
 	});
 
 	return (
 		<div>
-			<div className="rounded-md border">
+			<div className="rounded-md border my-2">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (

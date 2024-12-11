@@ -1,7 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowDownUp, Filter } from "lucide-react"
+import { ArrowDownUp } from "lucide-react"
 import { Button } from "~/components/ui/button"
-import { DataTableUniqueFilter } from "~/components/ui/dataTable"
+import { DataTableColumnSorter, DataTableColumnUniqueFilter } from "~/components/ui/dataTable"
 
 export type Task = {
 	name: string
@@ -24,9 +24,10 @@ export const columns: ColumnDef<Task>[] = [
 	{
 		accessorKey: "topic",
 		header: ({ column }) => {
-			return <div className="flex flex-nowrap gap-1 items-center">
+			return <div className="flex flex-nowrap items-center">
 				Téma
-				<DataTableUniqueFilter column={column} />
+				<DataTableColumnUniqueFilter column={column} />
+				<DataTableColumnSorter column={column} />
 			</div>;
 		},
 		filterFn: "arrIncludes"
@@ -34,9 +35,9 @@ export const columns: ColumnDef<Task>[] = [
 	{
 		accessorKey: "type",
 		header: ({ column }) => {
-			return <div className="flex flex-nowrap gap-1 items-center">
+			return <div className="flex flex-nowrap items-center">
 				Typ
-				<DataTableUniqueFilter column={column} />
+				<DataTableColumnUniqueFilter column={column} />
 			</div>;
 		},
 		filterFn: "equalsString"
@@ -44,9 +45,9 @@ export const columns: ColumnDef<Task>[] = [
 	{
 		accessorKey: "state",
 		header: ({ column }) => {
-			return <div className="flex flex-nowrap gap-1 items-center">
+			return <div className="flex flex-nowrap items-center">
 				Stav
-				<DataTableUniqueFilter column={column} />
+				<DataTableColumnUniqueFilter column={column} />
 			</div>;
 		},
 		filterFn: "equalsString"
@@ -55,18 +56,13 @@ export const columns: ColumnDef<Task>[] = [
 		accessorKey: "created",
 		cell: ({ row }) => {
 			const created: Date = row.getValue("created")
-			return created.toLocaleString("cs-CZ")
+			return created.toLocaleString("cs-CZ", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
 		},
 		header: ({ column }) => {
-			return (
-				<Button
-					variant="ghost"
-					onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-				>
-					Vytvořeno
-					<ArrowDownUp className="ml-2 h-4 w-4" />
-				</Button>
-			)
+			return <div className="flex flex-nowrap items-center">
+				Vytvořeno
+				<DataTableColumnSorter column={column} />
+			</div>;
 		},
 	},
 ]
