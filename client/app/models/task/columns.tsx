@@ -1,6 +1,4 @@
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowDownUp } from "lucide-react"
-import { Button } from "~/components/ui/button"
 import { DataTableColumnSorter, DataTableColumnUniqueFilter } from "~/components/ui/dataTable"
 
 export type Task = {
