@@ -1,3 +1,5 @@
+import { TaskDashboard } from "~/components/tasks/taskDashboard";
+
 export default function Tasks() {
-	return <p>tasks</p>;
+	return <TaskDashboard />
 }
