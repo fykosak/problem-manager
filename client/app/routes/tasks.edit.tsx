@@ -1,19 +1,27 @@
 import React from 'react';
+import * as Y from 'yjs';
+// @ts-ignore
+import { yCollab } from 'y-codemirror.next';
+import { WebsocketProvider } from 'y-websocket';
+
 import CodeMirror from '@uiw/react-codemirror/src/index.js';
 import { material } from '@uiw/codemirror-theme-material';
 import { latex, latexLinter } from '~/libs/lang-latex/dist/index.js';
 import { linter, lintGutter } from '@codemirror/lint';
 
 export default function TaskEdit() {
-	const [value, setValue] = React.useState(`
-\\command{} \\command{arg} \\command[asdf]{asdw} % comment
-$\\frac{a}{b}$
-\\begin{env}
-env content
-\\end{env}
-test $math$ test $123 \\%$ not a comment
-`);
-	return <CodeMirror value={value}
+	const ydoc = new Y.Doc();
+	const provider = new WebsocketProvider('ws://localhost:4000', 'my-roomname', ydoc);
+	const yText = ydoc.getText('codemirror');
+	const undoManager = new Y.UndoManager(yText);
+
+	provider.awareness.setLocalStateField('user', {
+		name: 'Anonymous ' + Math.floor(Math.random() * 100),
+		color: '#553322',
+		colorLight: '#998866'
+	});
+
+	return <CodeMirror value={yText.toString()}
 		height="1200px"
 		width="1000px"
 		theme={material}
@@ -23,9 +31,11 @@ test $math$ test $123 \\%$ not a comment
 		extensions={[
 			latex(),
 			linter(latexLinter),
-			lintGutter()
+			lintGutter(),
+			yCollab(yText, provider.awareness, { undoManager })
 		]}
 		basicSetup={
 			{ foldGutter: true }
-		} />;
+		}
+	/>;
 }
