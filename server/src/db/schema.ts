@@ -1,0 +1,103 @@
+import { sql } from "drizzle-orm";
+import { check, integer, json, pgEnum, pgTable, serial, text, timestamp, unique, varchar } from "drizzle-orm/pg-core";
+
+export const contestTable = pgTable("contest", {
+	contestId: serial().primaryKey(),
+	name: varchar({ length: 255 }).notNull().unique(),
+});
+
+export const contestYearTable = pgTable("contest_year", {
+	contestYearId: serial().primaryKey(),
+	contestId: integer().notNull().references(() => contestTable.contestId),
+	year: integer().notNull(),
+}, (table) => [
+	check("year_check", sql`${table.year} > 0`)
+]);
+
+export const seriesTable = pgTable("series", {
+	seriesId: serial().primaryKey(),
+	contestYearId: integer().notNull().references(() => contestYearTable.contestYearId),
+	label: varchar({ length: 255 }).notNull(),
+}, (table) => [
+	unique().on(table.contestYearId, table.label)
+]);
+
+export const topicTable = pgTable("topic", {
+	topicId: serial().primaryKey(),
+	contestId: integer().notNull().references(() => contestTable.contestId),
+	label: varchar({ length: 255 }).notNull(),
+}, (table) => [
+	unique().on(table.contestId, table.label)
+]);
+
+export const problemTopicTable = pgTable("problem_topic", {
+	problemTopicId: serial().primaryKey(),
+	problemId: integer().notNull().references(() => problemTable.problemId, { onDelete: 'cascade' }),
+	topicId: integer().notNull().references(() => topicTable.topicId),
+}, (table) => [
+	unique().on(table.problemId, table.topicId)
+]);
+
+export const problemStateEnum = pgEnum('problem_state', ['active', 'deleted']);
+
+export const problemTable = pgTable("problem", {
+	problemId: serial().primaryKey(),
+	state: problemStateEnum().notNull().default('active'),
+	seriesId: integer().references(() => seriesTable.seriesId),
+	metadata: json(),
+	created: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export const langEnum = pgEnum('lang', ['cs', 'en']);
+export const textTypeEnum = pgEnum('text_type', ['task', 'solution']);
+
+export const textTable = pgTable("text", {
+	textId: serial().primaryKey(),
+	problemId: integer().notNull().references(() => problemTable.problemId),
+	lang: langEnum().notNull(),
+	type: textTypeEnum().notNull(),
+}, (table) => [
+	unique().on(table.problemId, table.lang, table.type)
+]);
+
+export const textContestTable = pgTable("text_content", {
+	textContentId: serial().primaryKey(),
+	textId: integer().notNull().references(() => textTable.textId),
+	contents: text().notNull(),
+	personId: integer().notNull().references(() => personTable.personId),
+	created: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export const personTable = pgTable("person", {
+	personId: serial().primaryKey(),
+	firstName: varchar({ length: 255 }).notNull(),
+	lastName: varchar({ length: 255 }).notNull(),
+	texSignature: varchar({ length: 255 }).notNull(),
+});
+
+export const authorTable = pgTable("author", {
+	authorId: serial().primaryKey(),
+	personId: integer().notNull().references(() => personTable.personId),
+	problemId: integer().notNull().references(() => problemTable.problemId),
+	type: textTypeEnum().notNull(),
+}, (table) => [
+	unique().on(table.authorId, table.problemId, table.type)
+]);
+
+export const workStateEnum = pgEnum("work_state", ['waiting', 'pending', 'done']);
+
+export const workTable = pgTable("work", {
+	workId: serial().primaryKey(),
+	problemId: integer().notNull().references(() => problemTable.problemId),
+	label: varchar({ length: 255 }).notNull(),
+	group: varchar({ length: 255 }),
+	state: workStateEnum().notNull().default('waiting'),
+});
+
+export const personWorkTable = pgTable("person_work", {
+	personWorkId: serial().primaryKey(),
+	workId: integer().notNull().references(() => workTable.workId),
+	personId: integer().notNull().references(() => personTable.personId),
+}, (table) => [
+	unique().on(table.personId, table.workId)
+]);

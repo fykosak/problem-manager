@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import * as Y from 'yjs';
 // @ts-ignore
 import { yCollab } from 'y-codemirror.next';
@@ -14,6 +14,16 @@ export default function TaskEdit() {
 	const provider = new WebsocketProvider('ws://localhost:4000', 'my-roomname', ydoc);
 	const yText = ydoc.getText('codemirror');
 	const undoManager = new Y.UndoManager(yText);
+
+	useEffect(() => {
+		return (() => {
+			if (!provider.wsconnected) {
+				return;
+			}
+			provider.destroy();
+			ydoc.destroy();
+		});
+	}, []);
 
 	provider.awareness.setLocalStateField('user', {
 		name: 'Anonymous ' + Math.floor(Math.random() * 100),
