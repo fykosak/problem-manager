@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { check, integer, json, pgEnum, pgTable, serial, text, timestamp, unique, varchar } from "drizzle-orm/pg-core";
 
 export const contestTable = pgTable("contest", {
@@ -30,6 +30,10 @@ export const topicTable = pgTable("topic", {
 	unique().on(table.contestId, table.label)
 ]);
 
+export const topicRelations = relations(topicTable, ({ many }) => ({
+	problemTopics: many(problemTopicTable)
+}))
+
 export const problemTopicTable = pgTable("problem_topic", {
 	problemTopicId: serial().primaryKey(),
 	problemId: integer().notNull().references(() => problemTable.problemId, { onDelete: 'cascade' }),
@@ -38,15 +42,53 @@ export const problemTopicTable = pgTable("problem_topic", {
 	unique().on(table.problemId, table.topicId)
 ]);
 
+export const problemTopicRelations = relations(problemTopicTable, ({ one }) => ({
+	problem: one(problemTable, {
+		fields: [problemTopicTable.problemId],
+		references: [problemTable.problemId]
+	}),
+	topic: one(topicTable, {
+		fields: [problemTopicTable.topicId],
+		references: [topicTable.topicId]
+	})
+}))
+
+export const typeTable = pgTable("type", {
+	typeId: serial().primaryKey(),
+	contestId: integer().notNull().references(() => contestTable.contestId),
+	label: varchar({ length: 255 }).notNull()
+}, (table) => [
+	unique().on(table.contestId, table.label)
+])
+
+export const typeRelations = relations(typeTable, ({ many }) => ({
+	problems: many(problemTable)
+}))
+
 export const problemStateEnum = pgEnum('problem_state', ['active', 'deleted']);
 
 export const problemTable = pgTable("problem", {
 	problemId: serial().primaryKey(),
 	state: problemStateEnum().notNull().default('active'),
 	seriesId: integer().references(() => seriesTable.seriesId),
-	metadata: json(),
+	typeId: integer().notNull().references(() => typeTable.typeId),
+	metadata: json().notNull().$type<{ [key: string]: any }>(),
 	created: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
+
+export const problemRelations = relations(problemTable, ({ one, many }) => ({
+	problemTopics: many(problemTopicTable),
+	authors: many(authorTable),
+	work: many(workTable),
+	series: one(seriesTable, {
+		fields: [problemTable.seriesId],
+		references: [seriesTable.seriesId]
+	}),
+	type: one(typeTable, {
+		fields: [problemTable.typeId],
+		references: [typeTable.typeId]
+	})
+}))
 
 export const langEnum = pgEnum('lang', ['cs', 'en']);
 export const textTypeEnum = pgEnum('text_type', ['task', 'solution']);
@@ -75,6 +117,10 @@ export const personTable = pgTable("person", {
 	texSignature: varchar({ length: 255 }).notNull(),
 });
 
+export const personRelations = relations(personTable, ({ many }) => ({
+	authors: many(authorTable)
+}));
+
 export const authorTable = pgTable("author", {
 	authorId: serial().primaryKey(),
 	personId: integer().notNull().references(() => personTable.personId),
@@ -83,6 +129,17 @@ export const authorTable = pgTable("author", {
 }, (table) => [
 	unique().on(table.authorId, table.problemId, table.type)
 ]);
+
+export const authorRelations = relations(authorTable, ({ one }) => ({
+	person: one(personTable, {
+		fields: [authorTable.personId],
+		references: [personTable.personId]
+	}),
+	problem: one(problemTable, {
+		fields: [authorTable.problemId],
+		references: [problemTable.problemId]
+	})
+}));
 
 export const workStateEnum = pgEnum("work_state", ['waiting', 'pending', 'done']);
 

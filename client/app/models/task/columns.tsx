@@ -2,9 +2,9 @@ import { ColumnDef } from "@tanstack/react-table"
 import { DataTableColumnSorter, DataTableColumnUniqueFilter } from "~/components/ui/dataTable"
 
 export type Task = {
-	name: string
-	author: string
-	topic: string[]
+	name: string | null
+	authors: string[]
+	problemTopics: string[]
 	type: string
 	state: string
 	created: Date
@@ -16,11 +16,18 @@ export const columns: ColumnDef<Task>[] = [
 		header: "Název"
 	},
 	{
-		accessorKey: "author",
-		header: "Autor"
+		accessorKey: "authors",
+		header: ({ column }) => {
+			return <div className="flex flex-nowrap items-center">
+				Autor
+				<DataTableColumnUniqueFilter column={column} />
+				<DataTableColumnSorter column={column} />
+			</div>;
+		},
+		filterFn: "arrIncludes"
 	},
 	{
-		accessorKey: "topic",
+		accessorKey: "problemTopics",
 		header: ({ column }) => {
 			return <div className="flex flex-nowrap items-center">
 				Téma

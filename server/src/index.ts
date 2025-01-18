@@ -9,20 +9,33 @@ import * as http from 'http';
 import WebSocket from 'ws';
 // @ts-ignore
 import { setPersistence, setupWSConnection, WSSharedDoc } from './yjs';
+import { db } from './db';
+import { eq } from 'drizzle-orm';
 
 // created for each request
 const createContext = ({
 }: trpcExpress.CreateExpressContextOptions) => ({}); // no context
 type Context = Awaited<ReturnType<typeof createContext>>;
 
-const t = initTRPC.context<Context>().create();
-const appRouter = t.router({
-	getUser: t.procedure.input(z.string()).query((opts) => {
-		opts.input; // string
-		return {
-			id: opts.input,
-			name: 'Bilbo'
-		};
+const trpc = initTRPC.context<Context>().create();
+const appRouter = trpc.router({
+	getProblems: trpc.procedure.input(z.number()).query(async (opts) => {
+		return await db.query.problemTable.findMany({
+			with: {
+				problemTopics: {
+					with: {
+						topic: true
+					}
+				},
+				type: true,
+				authors: {
+					with: {
+						person: true
+					}
+				}
+			},
+			//where: eq(problemTable, opts.input)
+		});
 	})
 });
 

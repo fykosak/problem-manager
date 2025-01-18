@@ -1,85 +1,32 @@
 import { Button } from "~/components/ui/button";
 import { DataTable } from "~/components/ui/dataTable";
 import { Task, columns } from "~/models/task/columns";
+import { trpc } from "~/trpc";
+import { Route } from "./+types/taskSuggestions";
 
-let data: Task[] = [];
+export async function clientLoader({}: Route.ClientActionArgs) {
+	const problems = await trpc.getProblems.query(1);
+	console.log(problems);
 
-for (let i = 0; i < 5; i++) {
-	data.push({
-		"name": "Skáčeme z vlaku",
-		"author": "Adam Krška",
-		"topic": [
-			"kinematika",
-			"dynamika"
-		],
-		"type": "Složité",
-		"state": "Koš",
-		"created": new Date("2024-11-01 12:01:01")
-	})
+	// map to shape
+	const transformedProblems: Array<Task> = problems.map((problem) => ({
+		name: problem.metadata.name.cs,
+		authors: problem.authors.map((author) => author.person.firstName + " " + author.person.lastName), // TODO
+		problemTopics: problem.problemTopics.map((problemTopic) => problemTopic.topic.label),
+		type: problem.type.label,
+		state: problem.state,
+		created: new Date(problem.created)
+	}))
 
-	data.push({
-		"name": "Skáčeme na vlak",
-		"author": "Adam Krška",
-		"topic": [
-			"kinematika",
-			"dynamika"
-		],
-		"type": "Jednoduché",
-		"state": "Nevybrané",
-		"created": new Date("2024-11-01 13:01:01")
-	})
-
-	data.push({
-		"name": "Skáčeme na vlak",
-		"author": "Adam Krška",
-		"topic": [
-			"dynamika"
-		],
-		"type": "Jednoduché",
-		"state": "Nevybrané",
-		"created": new Date("2024-11-02 06:01:01")
-	})
-
-	data.push({
-		"name": "Topíme vlak",
-		"author": "Adam Krška",
-		"topic": [
-			"hydromechanika"
-		],
-		"type": "Experiment",
-		"state": "Vybrané",
-		"created": new Date("2024-12-01 13:01:01")
-	})
-
-	data.push({
-		"name": "Topíme vlak",
-		"author": "Adam Krška",
-		"topic": [
-			"hydromechanika"
-		],
-		"type": "Experiment",
-		"state": "Vybrané",
-		"created": new Date("2024-11-12 11:01:01")
-	})
-
-	data.push({
-		"name": "Vlak a letadlo",
-		"author": "Adam Krška",
-		"topic": [
-			"aerodynamika"
-		],
-		"type": "Složité",
-		"state": "Nevybrané",
-		"created": new Date("2024-11-29 13:01:01")
-	})
+	return transformedProblems;
 }
 
-export default function TaskSuggestions() {
+export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
 
 	return <>
 		<div className="py-5">
 			<Button>+ Navrhnout úlohu</Button>
 		</div>
-		<DataTable columns={columns} data={data} />
+		<DataTable columns={columns} data={loaderData} />
 	</>;
 }

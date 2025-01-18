@@ -77,6 +77,21 @@ async function seed() {
 		]);
 	}
 
+	console.log("Init types");
+	await db.insert(schema.typeTable).values([
+		{ contestId: 1, label: "Jednoduché" },
+		{ contestId: 1, label: "Složité" },
+		{ contestId: 1, label: "Experimentálka" },
+		{ contestId: 1, label: "Problémovka" },
+		{ contestId: 2, label: "FOF" },
+		{ contestId: 3, label: "Hlavní série" },
+		{ contestId: 3, label: "Hurry up" },
+		{ contestId: 4, label: "Matematická" },
+		{ contestId: 4, label: "Jednoduché" },
+		{ contestId: 4, label: "Složité" },
+		{ contestId: 4, label: "Experimentálka" },
+	]);
+
 	console.log("Init person");
 	for (let i = 1; i <= 20; i++) {
 		let firstName = ["James", "Michael", "Robert", "John", "Mary", "Betty"][Math.floor(Math.random() * 6)];
@@ -94,10 +109,14 @@ async function seed() {
 		const availableTopics = Array.from(await db.query.topicTable.findMany({
 			where: eq(schema.topicTable.contestId, i)
 		}), (topic) => topic.topicId);
+		const types = Array.from(await db.query.typeTable.findMany({
+			where: eq(schema.topicTable.contestId, i)
+		}), (type) => type.typeId)
 		for (let i = 0; i < 50; i++) {
 			const name = ["Lorem ipsum", "Dolor sit amet", "consectetur adipiscing", "Cras eu", "nisl justo"][Math.floor(Math.random() * 5)]
 			const [problem] = await db.insert(schema.problemTable).values({
 				state: Math.random() < 0.8 ? 'active' : 'deleted',
+				typeId: types[Math.floor(Math.random() * types.length)],
 				metadata: {
 					name: {
 						cs: name,
