@@ -4,7 +4,12 @@ import { check, integer, json, pgEnum, pgTable, serial, text, timestamp, unique,
 export const contestTable = pgTable("contest", {
 	contestId: serial().primaryKey(),
 	name: varchar({ length: 255 }).notNull().unique(),
+	symbol: varchar({ length: 255 }).notNull().unique(),
 });
+
+export const contestRelations = relations(contestTable, ({ many }) => ({
+	years: many(contestYearTable)
+}));
 
 export const contestYearTable = pgTable("contest_year", {
 	contestYearId: serial().primaryKey(),
@@ -13,6 +18,13 @@ export const contestYearTable = pgTable("contest_year", {
 }, (table) => [
 	check("year_check", sql`${table.year} > 0`)
 ]);
+
+export const contestYearRelations = relations(contestYearTable, ({ one }) => ({
+	contest: one(contestTable, {
+		fields: [contestYearTable.contestId],
+		references: [contestTable.contestId]
+	})
+}));
 
 export const seriesTable = pgTable("series", {
 	seriesId: serial().primaryKey(),

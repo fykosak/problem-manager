@@ -10,7 +10,8 @@ import WebSocket from 'ws';
 // @ts-ignore
 import { setPersistence, setupWSConnection, WSSharedDoc } from './yjs';
 import { db } from './db';
-import { eq } from 'drizzle-orm';
+import { and, eq, getTableColumns } from 'drizzle-orm';
+import { contestTable, contestYearTable } from './db/schema';
 
 // created for each request
 const createContext = ({
@@ -36,7 +37,14 @@ const appRouter = trpc.router({
 			},
 			//where: eq(problemTable, opts.input)
 		});
-	})
+	}),
+	getContests: trpc.procedure.query(async () => {
+		return await db.query.contestTable.findMany({
+			with: {
+				years: true
+			}
+		})
+	}),
 });
 
 const app = express();

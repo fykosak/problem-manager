@@ -6,7 +6,6 @@ import { Route } from "./+types/taskSuggestions";
 
 export async function clientLoader({}: Route.ClientActionArgs) {
 	const problems = await trpc.getProblems.query(1);
-	console.log(problems);
 
 	// map to shape
 	const transformedProblems: Array<Task> = problems.map((problem) => ({

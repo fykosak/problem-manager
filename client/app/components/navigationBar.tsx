@@ -1,18 +1,45 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router";
 import { ArrowDown, Menu, Moon, Sun } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button, buttonVariants } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "~/components/ui/dropdown-menu";
 import { useTheme } from "./themeProvider";
+import { cn } from "~/lib/utils";
 
 const links = [
-	{ name: "Home", link: "/" },
-	{ name: "Úlohy", link: "/tasks" },
-	{ name: "Úprava úlohy", link: "/tasks/edit" },
-	{ name: "Návrhy na úlohy", link: "/task-suggestions" },
+	{ name: "Home", link: "" },
+	{ name: "Úlohy", link: "tasks" },
+	{ name: "Úprava úlohy", link: "tasks/edit" },
+	{ name: "Návrhy na úlohy", link: "task-suggestions" },
 ]
 
-export default function NavigationBar() {
+export default function NavigationBar({ contests, selectedContest, selectedYear }: {
+	contests: {
+		contestId: number,
+		name: string,
+		symbol: string,
+		years: {
+			contestYearId: number,
+			contestId: number,
+			year: number
+		}[]
+	}[],
+	selectedContest: {
+		contestId: number,
+		name: string,
+		symbol: string,
+		years: {
+			contestYearId: number,
+			contestId: number,
+			year: number
+		}[]
+	},
+	selectedYear: {
+		contestYearId: number,
+		contestId: number,
+		year: number
+	}
+}) {
 	const [navHidden, setNavHidden] = useState(true);
 	const { setTheme } = useTheme()
 
@@ -28,7 +55,15 @@ export default function NavigationBar() {
 		</Button>
 	}
 
-	// TODO fetch data
+	function DropdownLinkItem(props: { to: string, name: string }) {
+		return <DropdownMenuItem asChild>
+			<NavLink to={props.to}>{props.name}</NavLink>
+		</DropdownMenuItem>;
+	}
+
+	const contestItems = contests.map((contest) => <DropdownLinkItem key={contest.contestId} to={'/' + contest.symbol + '/' + contest.years.at(-1)?.year} name={contest.name} />)
+	const yearItems = selectedContest.years.map((year) => <DropdownLinkItem key={year.year} to={'/' + selectedContest.symbol + '/' + year.year} name={year.year + '. ročník'} />)
+
 	return <nav className="flex items-center justify-between flex-wrap lg:space-x-2">
 		<div>
 			Logo
@@ -37,29 +72,24 @@ export default function NavigationBar() {
 		<div className={(navHidden ? "hidden" : "flex") + " flex-col lg:flex lg:flex-row basis-full lg:basis-auto grow justify-between"}>
 			<div className={(navHidden ? "hidden" : "flex") + " lg:flex flex-col lg:flex-row w-full lg:w-auto lg:items-center lg:gap-2 my-2"}>
 				{links.map((link) => (
-					<NavLinkItem key={link.link} to={link.link} name={link.name} />
+					<NavLinkItem key={link.link} to={"/" + selectedContest.symbol + "/" + selectedYear.year + "/" + link.link} name={link.name} />
 				))}
 			</div>
 			<div className={(navHidden ? "hidden" : "flex") + " lg:flex flex-col lg:flex-row w-full lg:w-auto lg:items-center lg:gap-2 my-2"}>
 				<DropdownMenu>
 					<DropdownMenuTrigger>
-						<Button variant="ghost">38. ročník <ArrowDown /></Button>
+						<div className={cn(buttonVariants({ variant: 'ghost' }))}>{selectedYear.year}. ročník <ArrowDown /></div>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent>
-						<DropdownMenuItem>37. ročník</DropdownMenuItem>
-						<DropdownMenuItem>36. ročník</DropdownMenuItem>
-						<DropdownMenuItem>35. ročník</DropdownMenuItem>
-						<DropdownMenuItem>34. ročník</DropdownMenuItem>
+						{yearItems}
 					</DropdownMenuContent>
 				</DropdownMenu>
 				<DropdownMenu>
 					<DropdownMenuTrigger>
-						<Button variant="ghost">FYKOS<ArrowDown /></Button>
+						<div className={cn(buttonVariants({ variant: 'ghost' }))}>{selectedContest.name} <ArrowDown /></div>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent>
-						<DropdownMenuItem>Fyziklání</DropdownMenuItem>
-						<DropdownMenuItem>Fyziklání Online</DropdownMenuItem>
-						<DropdownMenuItem>Výfuk</DropdownMenuItem>
+						{contestItems}
 					</DropdownMenuContent>
 				</DropdownMenu>
 				<a>Adam Krška</a>

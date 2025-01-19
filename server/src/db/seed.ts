@@ -7,10 +7,10 @@ async function seed() {
 	console.log("Init contest");
 	await db.insert(schema.contestTable).values(
 		[
-			{ contestId: 1, name: 'FYKOS' },
-			{ contestId: 2, name: 'Fyziklání' },
-			{ contestId: 3, name: 'Fyziklání Online' },
-			{ contestId: 4, name: 'Výfuk' },
+			{ contestId: 1, name: 'FYKOS', symbol: 'fykos' },
+			{ contestId: 2, name: 'Fyziklání', symbol: 'fof' },
+			{ contestId: 3, name: 'Fyziklání Online', symbol: 'fol' },
+			{ contestId: 4, name: 'Výfuk', symbol: 'vyfuk' },
 		]
 	);
 

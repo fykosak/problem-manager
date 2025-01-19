@@ -9,12 +9,6 @@ export function meta({}: Route.MetaArgs) {
 	];
 }
 
-export async function clientLoader({}: Route.ClientActionArgs) {
-	//	const user = await trpc.getUser.query('2');
-	//	console.log(user);
-	await new Promise(r => setTimeout(r, 2000));
-}
-
 export default function Home() {
 	return <p>
 		home page

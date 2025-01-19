@@ -125,8 +125,6 @@ export function TaskDashboard() {
 		const { active, over } = event;
 		const overId = over?.id;
 
-		console.log(activeItemId);
-
 		if (overId == null) {
 			return;
 		}
