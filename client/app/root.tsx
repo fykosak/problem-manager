@@ -28,17 +28,15 @@ export const links: Route.LinksFunction = () => [
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
 		<ThemeProvider defaultTheme="system">
-			<html lang="cs">
+			<html lang="cs" className="h-full">
 				<head>
 					<meta charSet="utf-8" />
 					<meta name="viewport" content="width=device-width, initial-scale=1" />
 					<Meta />
 					<Links />
 				</head>
-				<body>
-					<div className="2xl:container 2xl:mx-auto px-4 sm:px-6 lg:px-8">
-						{children}
-					</div>
+				<body className="min-h-screen flex flex-col">
+					{children}
 					<ScrollRestoration />
 					<Scripts />
 				</body>
