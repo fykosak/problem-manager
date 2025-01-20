@@ -29,7 +29,7 @@ export default function Task() {
 				</SidebarGroup>
 			</SidebarContent>
 		</Sidebar>
-		<main>
+		<main className="w-full">
 			<SidebarTrigger />
 			<NavigationSuspense>
 				<Outlet />

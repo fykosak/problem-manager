@@ -9,6 +9,7 @@ export async function clientLoader({}: Route.ClientActionArgs) {
 
 	// map to shape
 	const transformedProblems: Array<Task> = problems.map((problem) => ({
+		problemId: problem.problemId,
 		name: problem.metadata.name.cs,
 		authors: problem.authors.map((author) => author.person.firstName + " " + author.person.lastName), // TODO
 		problemTopics: problem.problemTopics.map((problemTopic) => problemTopic.topic.label),
