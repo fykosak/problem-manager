@@ -1,51 +1,12 @@
-
 import * as Y from 'yjs';
-import { initTRPC } from '@trpc/server';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import cors from 'cors';
 import express from 'express';
-import { z } from 'zod';
 import * as http from 'http';
 import WebSocket from 'ws';
 // @ts-ignore
 import { setPersistence, setupWSConnection, WSSharedDoc } from './yjs';
-import { db } from './db';
-import { and, eq, getTableColumns } from 'drizzle-orm';
-import { contestTable, contestYearTable } from './db/schema';
-
-// created for each request
-const createContext = ({
-}: trpcExpress.CreateExpressContextOptions) => ({}); // no context
-type Context = Awaited<ReturnType<typeof createContext>>;
-
-const trpc = initTRPC.context<Context>().create();
-const appRouter = trpc.router({
-	getProblems: trpc.procedure.input(z.number()).query(async (opts) => {
-		return await db.query.problemTable.findMany({
-			with: {
-				problemTopics: {
-					with: {
-						topic: true
-					}
-				},
-				type: true,
-				authors: {
-					with: {
-						person: true
-					}
-				}
-			},
-			//where: eq(problemTable, opts.input)
-		});
-	}),
-	getContests: trpc.procedure.query(async () => {
-		return await db.query.contestTable.findMany({
-			with: {
-				years: true
-			}
-		})
-	}),
-});
+import { appRouter, createContext } from './trpc';
 
 const app = express();
 app.use(cors());

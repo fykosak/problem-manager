@@ -1,4 +1,4 @@
-import { Outlet, useNavigation } from "react-router";
+import { Outlet } from "react-router";
 import NavigationBar from "~/components/navigation/navigationBar";
 import { Route } from "./+types/layout";
 import { trpc } from "~/trpc";

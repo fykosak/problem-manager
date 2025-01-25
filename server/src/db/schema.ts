@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import { check, integer, json, pgEnum, pgTable, serial, text, timestamp, unique, varchar } from "drizzle-orm/pg-core";
+import { boolean, check, integer, json, pgEnum, pgTable, serial, text, timestamp, unique, varchar } from "drizzle-orm/pg-core";
 
 export const contestTable = pgTable("contest", {
 	contestId: serial().primaryKey(),
@@ -38,6 +38,7 @@ export const topicTable = pgTable("topic", {
 	topicId: serial().primaryKey(),
 	contestId: integer().notNull().references(() => contestTable.contestId),
 	label: varchar({ length: 255 }).notNull(),
+	available: boolean().notNull().default(true)
 }, (table) => [
 	unique().on(table.contestId, table.label)
 ]);
@@ -68,7 +69,8 @@ export const problemTopicRelations = relations(problemTopicTable, ({ one }) => (
 export const typeTable = pgTable("type", {
 	typeId: serial().primaryKey(),
 	contestId: integer().notNull().references(() => contestTable.contestId),
-	label: varchar({ length: 255 }).notNull()
+	label: varchar({ length: 255 }).notNull(),
+	available: boolean().notNull().default(true)
 }, (table) => [
 	unique().on(table.contestId, table.label)
 ])
@@ -99,7 +101,8 @@ export const problemRelations = relations(problemTable, ({ one, many }) => ({
 	type: one(typeTable, {
 		fields: [problemTable.typeId],
 		references: [typeTable.typeId]
-	})
+	}),
+	topics: many(problemTopicTable)
 }))
 
 export const langEnum = pgEnum('lang', ['cs', 'en']);

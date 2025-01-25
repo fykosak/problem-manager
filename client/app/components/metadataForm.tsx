@@ -15,78 +15,77 @@ import { Input } from "~/components/ui/input"
 import { Checkbox } from "./ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group"
 
+import { trpc, type trpcOutputTypes } from "~/trpc";
+import { toast } from "sonner"
+
 const formSchema = z.object({
-	name: z.object({
-		cs: z.string().optional(),
-		en: z.string().optional()
+	metadata: z.object({
+		name: z.object({
+			cs: z.string().optional(),
+			en: z.string().optional()
+		}),
+		origin: z.object({
+			cs: z.string().optional(),
+			en: z.string().optional()
+		}),
+		points: z.coerce.number().int().min(0, "Points must be positive"),
 	}),
-	origin: z.object({
-		cs: z.string().optional(),
-		en: z.string().optional()
-	}),
-	points: z.coerce.number().int().min(0, "Points must be positive"),
-	topics: z.number().array(),
-	type: z.coerce.number().nullable()
+	topics: z.number().array().min(1),
+	type: z.coerce.number()
 });
 
-const topics = [
+export function MetadataForm({ problemId, taskData, availableTopics, availableTypes }:
 	{
-		id: 1,
-		label: "Kinematika",
-	},
-	{
-		id: 2,
-		label: "Dynamika",
-	},
-	{
-		id: 3,
-		label: "Astro",
-	},
-];
-
-const types = [
-	{
-		id: 1,
-		label: "Jednoduchá"
-	},
-	{
-		id: 2,
-		label: "Složitá"
-	},
-	{
-		id: 3,
-		label: "Experimentální"
-	}
-]
-
-export function MetadataForm() {
+		problemId: number,
+		taskData: trpcOutputTypes['problem']['metadata'],
+		availableTopics: trpcOutputTypes['contest']['availableTopics'],
+		availableTypes: trpcOutputTypes['contest']['availableTypes']
+	}) {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			name: {
-				cs: "",
-				en: ""
+			metadata: {
+				name: {
+					cs: "",
+					en: ""
+				},
+				origin: {
+					cs: "",
+					en: ""
+				},
+				points: 0,
+				...(taskData.metadata) // overrites with already saved values
 			},
-			origin: {
-				cs: "",
-				en: ""
-			},
-			points: 0,
-			topics: [],
-			type: null
-		},
-	})
+			topics: taskData.topics,
+			type: taskData.type
+		}
+	});
 
-	function onSubmit(values: z.infer<typeof formSchema>) {
-		console.log(values)
+	async function onSubmit(values: z.infer<typeof formSchema>) {
+		await trpc.problem.updateMetadata.mutate({ ...values, problemId: problemId });
+		console.log("saved");
+		toast("Task data saved");
 	}
+
+	const { formState } = form;
+	const { errors } = formState;
 
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+			<div>{errors.root?.message}</div>
+			<form onSubmit={form.handleSubmit(async (values) => {
+				try {
+					await onSubmit(values);
+				} catch (exception) {
+					form.setError('root', {
+						message: (exception as Error).message ?? 'Error',
+						type: 'server'
+					})
+				}
+			})} className="space-y-8">
 				<FormField
 					control={form.control}
-					name="name.cs"
+					name="metadata.name.cs"
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>Název cs</FormLabel>
@@ -99,7 +98,7 @@ export function MetadataForm() {
 				/>
 				<FormField
 					control={form.control}
-					name="name.en"
+					name="metadata.name.en"
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>Název en</FormLabel>
@@ -112,7 +111,7 @@ export function MetadataForm() {
 				/>
 				<FormField
 					control={form.control}
-					name="origin.cs"
+					name="metadata.origin.cs"
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>Původ cs</FormLabel>
@@ -125,7 +124,7 @@ export function MetadataForm() {
 				/>
 				<FormField
 					control={form.control}
-					name="origin.en"
+					name="metadata.origin.en"
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>Původ en</FormLabel>
@@ -138,7 +137,7 @@ export function MetadataForm() {
 				/>
 				<FormField
 					control={form.control}
-					name="points"
+					name="metadata.points"
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>Body</FormLabel>
@@ -155,34 +154,36 @@ export function MetadataForm() {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>Témata</FormLabel>
-							{topics.map((item) => (
-								<FormField
-									key={item.id}
-									control={form.control}
-									name="topics"
-									render={({ field }) => (
-										<FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
-											<FormControl>
-												<Checkbox
-													checked={field.value?.includes(item.id)}
-													onCheckedChange={(checked) => {
-														return checked
-															? field.onChange([...field.value, item.id])
-															: field.onChange(
-																field.value?.filter(
-																	(value: any) => value !== item.id
+							<div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+								{availableTopics.map((item) => (
+									<FormField
+										key={item.topicId}
+										control={form.control}
+										name="topics"
+										render={({ field }) => (
+											<FormItem key={item.topicId} className="flex flex-row items-start space-x-3 space-y-0">
+												<FormControl>
+													<Checkbox
+														checked={field.value?.includes(item.topicId)}
+														onCheckedChange={(checked) => {
+															return checked
+																? field.onChange([...field.value, item.topicId])
+																: field.onChange(
+																	field.value?.filter(
+																		(value: any) => value !== item.topicId
+																	)
 																)
-															)
-													}}
-												/>
-											</FormControl>
-											<FormLabel className="text-sm font-normal">
-												{item.label}
-											</FormLabel>
-										</FormItem>
-									)}
-								/>
-							))}
+														}}
+													/>
+												</FormControl>
+												<FormLabel className="text-sm font-normal">
+													{item.label}
+												</FormLabel>
+											</FormItem>
+										)}
+									/>
+								))}
+							</div>
 							<FormMessage />
 						</FormItem>
 					)}
@@ -198,10 +199,10 @@ export function MetadataForm() {
 									onValueChange={field.onChange}
 									defaultValue={field.value?.toString()}
 								>
-									{types.map((type) => (
-										<FormItem className="flex items-center space-x-3 space-y-0" key={type.id}>
+									{availableTypes.map((type) => (
+										<FormItem className="flex items-center space-x-3 space-y-0" key={type.typeId}>
 											<FormControl>
-												<RadioGroupItem value={type.id.toString()} />
+												<RadioGroupItem value={type.typeId.toString()} />
 											</FormControl>
 											<FormLabel className="font-normal">
 												{type.label}
@@ -213,7 +214,7 @@ export function MetadataForm() {
 						</FormItem>
 					)}
 				/>
-				<Button type="submit">Submit</Button>
+				<Button type="submit" disabled={formState.isSubmitting}>Submit</Button>
 			</form>
 		</Form >
 	)

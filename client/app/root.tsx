@@ -10,6 +10,7 @@ import {
 import type { Route } from "./+types/root";
 import stylesheet from "./app.css?url";
 import { ThemeProvider } from "./components/themeProvider";
+import { Toaster } from "./components/ui/sonner";
 
 export const links: Route.LinksFunction = () => [
 	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -37,6 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				</head>
 				<body className="min-h-screen flex flex-col">
 					{children}
+					<Toaster />
 					<ScrollRestoration />
 					<Scripts />
 				</body>

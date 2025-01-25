@@ -17,7 +17,6 @@ services:
             dockerfile: Dockerfile.dev
         ports:
             - 8081:4000
-            - 8081:4000
         volumes:
             - ./server:/app
     db:
