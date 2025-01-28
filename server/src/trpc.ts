@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { db } from './db';
 import { and, eq } from 'drizzle-orm';
-import { problemTable, problemTopicTable, topicTable, typeTable } from './db/schema';
+import { problemTable, problemTopicTable, textTable, topicTable, typeTable } from './db/schema';
 
 // created for each request
 export const createContext = ({
@@ -63,6 +63,11 @@ export const appRouter = trpc.router({
 				topics: taskData.topics.map((topic) => topic.topicId),
 				type: taskData.type.typeId
 			};
+		}),
+		texts: trpc.procedure.input(z.number()).query(async (opts) => {
+			return await db.query.textTable.findMany({
+				where: eq(textTable.problemId, opts.input)
+			});
 		}),
 		updateMetadata: trpc.procedure.input(z.object({
 			problemId: z.number(),

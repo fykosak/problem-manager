@@ -1,5 +1,11 @@
 import { relations, sql } from "drizzle-orm";
-import { boolean, check, integer, json, pgEnum, pgTable, serial, text, timestamp, unique, varchar } from "drizzle-orm/pg-core";
+import { boolean, check, customType, integer, json, pgEnum, pgTable, serial, text, timestamp, unique, varchar } from "drizzle-orm/pg-core";
+
+const bytea = customType<{ data: Uint8Array }>({
+	dataType() {
+		return "bytea";
+	}
+})
 
 export const contestTable = pgTable("contest", {
 	contestId: serial().primaryKey(),
@@ -102,7 +108,8 @@ export const problemRelations = relations(problemTable, ({ one, many }) => ({
 		fields: [problemTable.typeId],
 		references: [typeTable.typeId]
 	}),
-	topics: many(problemTopicTable)
+	topics: many(problemTopicTable),
+	texts: many(textTable)
 }))
 
 export const langEnum = pgEnum('lang', ['cs', 'en']);
@@ -113,17 +120,37 @@ export const textTable = pgTable("text", {
 	problemId: integer().notNull().references(() => problemTable.problemId),
 	lang: langEnum().notNull(),
 	type: textTypeEnum().notNull(),
+	contents: bytea()
 }, (table) => [
 	unique().on(table.problemId, table.lang, table.type)
 ]);
 
-export const textContestTable = pgTable("text_content", {
+export const textRelations = relations(textTable, ({ one, many }) => ({
+	problem: one(problemTable, {
+		fields: [textTable.problemId],
+		references: [problemTable.problemId]
+	}),
+	contents: many(textContentTable)
+}));
+
+export const textContentTable = pgTable("text_content", {
 	textContentId: serial().primaryKey(),
 	textId: integer().notNull().references(() => textTable.textId),
 	contents: text().notNull(),
 	personId: integer().notNull().references(() => personTable.personId),
 	created: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
+
+export const textContentRelations = relations(textContentTable, ({ one }) => ({
+	person: one(personTable, {
+		fields: [textContentTable.personId],
+		references: [personTable.personId]
+	}),
+	text: one(textTable, {
+		fields: [textContentTable.textId],
+		references: [textTable.textId]
+	})
+}))
 
 export const personTable = pgTable("person", {
 	personId: serial().primaryKey(),

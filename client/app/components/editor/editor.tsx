@@ -4,14 +4,14 @@ import * as Y from 'yjs';
 import { yCollab } from 'y-codemirror.next';
 import { WebsocketProvider } from 'y-websocket';
 
-import CodeMirror from '@uiw/react-codemirror/src/index.js';
+import CodeMirror, { EditorView } from '@uiw/react-codemirror/src/index.js';
 import { material } from '@uiw/codemirror-theme-material';
 import { latex, latexLinter } from '~/libs/lang-latex/dist/index.js';
 import { linter, lintGutter } from '@codemirror/lint';
 
-export default function Editor() {
+export default function Editor({ textId }: { textId: number }) {
 	const ydoc = new Y.Doc();
-	const provider = new WebsocketProvider('ws://localhost:8081', 'my-roomname', ydoc);
+	const provider = new WebsocketProvider('ws://localhost:8081', textId.toString(), ydoc);
 	const yText = ydoc.getText('codemirror');
 	const undoManager = new Y.UndoManager(yText);
 
@@ -25,11 +25,16 @@ export default function Editor() {
 		});
 	}, []);
 
-	provider.awareness.setLocalStateField('user', {
+	const user = {
 		name: 'Anonymous ' + Math.floor(Math.random() * 100),
 		color: '#553322',
 		colorLight: '#998866'
-	});
+	};
+
+	provider.awareness.setLocalStateField('user', user);
+
+	const userData = new Y.PermanentUserData(ydoc);
+	userData.setUserMapping(ydoc, ydoc.clientID, user.name);
 
 	return <CodeMirror value={yText.toString()}
 		height="1200px"
@@ -42,7 +47,8 @@ export default function Editor() {
 			latex(),
 			linter(latexLinter),
 			lintGutter(),
-			yCollab(yText, provider.awareness, { undoManager })
+			yCollab(yText, provider.awareness, { undoManager }),
+			EditorView.lineWrapping
 		]}
 		basicSetup={
 			{ foldGutter: true }
