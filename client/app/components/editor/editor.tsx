@@ -12,7 +12,7 @@ import { linter, lintGutter } from '@codemirror/lint';
 export default function Editor({ textId }: { textId: number }) {
 	const ydoc = new Y.Doc();
 	const provider = new WebsocketProvider('ws://localhost:8081', textId.toString(), ydoc);
-	const yText = ydoc.getText('codemirror');
+	const yText = ydoc.getText();
 	const undoManager = new Y.UndoManager(yText);
 
 	useEffect(() => {

@@ -130,24 +130,24 @@ export const textRelations = relations(textTable, ({ one, many }) => ({
 		fields: [textTable.problemId],
 		references: [problemTable.problemId]
 	}),
-	contents: many(textContentTable)
+	contents: many(textVersionTable)
 }));
 
-export const textContentTable = pgTable("text_content", {
-	textContentId: serial().primaryKey(),
+export const textVersionTable = pgTable("text_version", {
+	textVersionId: serial().primaryKey(),
 	textId: integer().notNull().references(() => textTable.textId),
 	contents: text().notNull(),
-	personId: integer().notNull().references(() => personTable.personId),
+	personId: integer().references(() => personTable.personId),
 	created: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
-export const textContentRelations = relations(textContentTable, ({ one }) => ({
+export const textContentRelations = relations(textVersionTable, ({ one }) => ({
 	person: one(personTable, {
-		fields: [textContentTable.personId],
+		fields: [textVersionTable.personId],
 		references: [personTable.personId]
 	}),
 	text: one(textTable, {
-		fields: [textContentTable.textId],
+		fields: [textVersionTable.textId],
 		references: [textTable.textId]
 	})
 }))

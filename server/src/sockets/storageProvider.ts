@@ -16,6 +16,7 @@ export class StorageProvider {
 			return doc;
 		}
 
+		// restore doc by applying the saved data
 		Y.applyUpdate(doc, text.contents);
 		return doc;
 	}
