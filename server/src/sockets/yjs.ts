@@ -29,7 +29,7 @@ const wsReadyStateOpen = 1
 // disable gc when using snapshots!
 const gcEnabled = process.env.GC !== 'false' && process.env.GC !== '0'
 
-interface persistenceType { bindState: Function, writeState: Function, provider: any };
+export interface persistenceType { bindState: Function, writeState: Function, provider: any };
 let persistence: persistenceType | null = null
 
 export function setPersistence(persistence_: persistenceType) {

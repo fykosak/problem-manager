@@ -7,7 +7,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export default function TaskEdit({ loaderData }: Route.ComponentProps) {
-	console.log(loaderData);
 	const text = loaderData[0];
 	return <Editor textId={1601} />
 }

@@ -17,7 +17,6 @@ export const columns: ColumnDef<Task>[] = [
 		accessorKey: "name",
 		header: "Název",
 		cell: ({ row }) => {
-			console.log(row.original.problemId);
 			const problemId: number = row.original.problemId;
 			const name: string = row.getValue("name");
 			return <NavLink to={'../task/' + problemId}>{name}</NavLink >

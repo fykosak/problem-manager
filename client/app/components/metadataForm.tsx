@@ -63,7 +63,6 @@ export function MetadataForm({ problemId, taskData, availableTopics, availableTy
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		await trpc.problem.updateMetadata.mutate({ ...values, problemId: problemId });
-		console.log("saved");
 		toast("Task data saved");
 	}
 

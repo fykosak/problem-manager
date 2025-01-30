@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as Y from 'yjs';
 // @ts-ignore
 import { yCollab } from 'y-codemirror.next';
@@ -10,33 +10,54 @@ import { latex, latexLinter } from '~/libs/lang-latex/dist/index.js';
 import { linter, lintGutter } from '@codemirror/lint';
 
 export default function Editor({ textId }: { textId: number }) {
-	const ydoc = new Y.Doc();
-	const provider = new WebsocketProvider('ws://localhost:8081', textId.toString(), ydoc);
-	const yText = ydoc.getText();
-	const undoManager = new Y.UndoManager(yText);
+	const ydocRef = useRef(new Y.Doc());
+	const providerRef = useRef(new WebsocketProvider('ws://localhost:8081', textId.toString(), ydocRef.current, { connect: false }));
+	const yTextRef = useRef(ydocRef.current.getText());
+	const undoManagerRef = useRef(new Y.UndoManager(yTextRef.current));
 
+	const [connected, setConnected] = useState(false);
+
+	// Set user awareness on mount
 	useEffect(() => {
-		return (() => {
-			if (!provider.wsconnected) {
-				return;
-			}
+		console.log("runnning useEffect");
+		const ydoc = ydocRef.current;
+		const provider = new WebsocketProvider('ws://localhost:8081', textId.toString(), ydoc, { connect: false });
+		providerRef.current = provider;
+
+		provider.connect();
+		setConnected(true);
+
+		const user = {
+			name: 'Anonymous ' + Math.floor(Math.random() * 100),
+			color: '#553322',
+			colorLight: '#998866'
+		};
+		provider.awareness.setLocalStateField('user', user);
+
+		// Ensure user mapping
+		const userData = new Y.PermanentUserData(ydoc);
+		userData.setUserMapping(ydoc, ydoc.clientID, user.name);
+
+		return () => {
+			console.log("provider destroy");
 			provider.destroy();
 			ydoc.destroy();
-		});
+		};
 	}, []);
 
-	const user = {
-		name: 'Anonymous ' + Math.floor(Math.random() * 100),
-		color: '#553322',
-		colorLight: '#998866'
-	};
 
-	provider.awareness.setLocalStateField('user', user);
+	// Ensure yText is defined before rendering
+	if (!yTextRef.current) {
+		return null;
+	}
+	if (!providerRef.current) {
+		return null;
+	}
+	if (!undoManagerRef.current) {
+		return null;
+	}
 
-	const userData = new Y.PermanentUserData(ydoc);
-	userData.setUserMapping(ydoc, ydoc.clientID, user.name);
-
-	return <CodeMirror value={yText.toString()}
+	return <CodeMirror value={yTextRef.current.toString()}
 		height="1200px"
 		width="1000px"
 		theme={material}
@@ -47,7 +68,7 @@ export default function Editor({ textId }: { textId: number }) {
 			latex(),
 			linter(latexLinter),
 			lintGutter(),
-			yCollab(yText, provider.awareness, { undoManager }),
+			yCollab(yTextRef.current, providerRef.current.awareness, { undoManager: undoManagerRef.current }),
 			EditorView.lineWrapping
 		]}
 		basicSetup={

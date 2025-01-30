@@ -1,5 +1,5 @@
 import * as Y from 'yjs';
-import type { WSSharedDoc } from './yjs';
+import type { WSSharedDoc, persistenceType } from './yjs';
 import { StorageProvider } from './storageProvider';
 import { db } from '../db';
 import { desc, eq } from 'drizzle-orm';
@@ -10,70 +10,121 @@ const SNAPSHOT_PERIODICITY_THRESHOLD = 5 * 60 * 1000; // 5 minutes
 
 const storage = new StorageProvider();
 
-async function takeSnapshot(textId: number, ydoc: WSSharedDoc) {
-	console.log("take snapshot");
-	const text = ydoc.getText().toJSON();
-	await db.insert(textVersionTable).values({
-		textId: textId,
-		contents: text
-	})
-}
+// TODO better name
+class Keeper {
+	textId: number;
+	ydoc: WSSharedDoc;
+	inactivityTimeout: Timer | null = null;
+	editors: Set<any> = new Set();
+	permanentUserData: Y.PermanentUserData;
 
-let snapshotTimeouts = new Map<number, Timer>();
-
-/**
- * Creates a timeout that saves a document version after `SNAPSHOT_INACTIVITIY_THRESHOLD` miliseconds of inactivity.
- * When check, it takes it as a activity and resets the timeout back to its original value.
- */
-async function checkSnapshotTimeout(textId: number, ydoc: WSSharedDoc) {
-	const timeout = snapshotTimeouts.get(textId);
-	if (!timeout) {
-		snapshotTimeouts.set(textId, setTimeout(() => takeSnapshot(textId, ydoc), SNAPSHOT_INACTIVITIY_THRESHOLD));
-		return;
+	constructor(textId: number, ydoc: WSSharedDoc) {
+		this.textId = textId;
+		this.ydoc = ydoc;
+		this.setInactivityTimeout();
+		this.permanentUserData = new Y.PermanentUserData(ydoc);
 	}
 
-	clearTimeout(timeout);
-	snapshotTimeouts.set(textId, setTimeout(() => takeSnapshot(textId, ydoc), SNAPSHOT_INACTIVITIY_THRESHOLD));
-}
+	private setInactivityTimeout() {
+		this.inactivityTimeout = setTimeout(() => this.takeSnapshot(), SNAPSHOT_INACTIVITIY_THRESHOLD)
+	}
 
-/**
- * Checks if time from the last version is more then `SNAPSHOT_PERIODICITY_THRESHOLD` and if so, creates a new version.
- */
-async function checkSnapshotPeriodicity(textId: number, ydoc: WSSharedDoc) {
-	const lastSnapshot = await db.query.textVersionTable.findFirst({
-		where: eq(textVersionTable.textId, textId),
-		orderBy: desc(textVersionTable.created)
-	});
+	private async takeSnapshot() {
+		const text = this.ydoc.getText().toJSON();
+		const lastText = await db.query.textVersionTable.findFirst({
+			where: eq(textVersionTable.textId, this.textId),
+			orderBy: desc(textVersionTable.created)
+		});
 
-	if (lastSnapshot) {
-		if (((new Date()).getTime() - lastSnapshot.created.getTime()) < SNAPSHOT_PERIODICITY_THRESHOLD) {
+		if (lastText?.contents === text) {
 			return;
 		}
+
+		console.log("take snapshot");
+		await db.insert(textVersionTable).values({
+			textId: this.textId,
+			contents: text
+			// personId: editors // TODO
+		});
+		this.editors.clear();
 	}
 
-	console.log("take periodicity snapshot");
-	takeSnapshot(textId, ydoc);
+	/**
+	 * Creates a timeout that saves a document version after `SNAPSHOT_INACTIVITIY_THRESHOLD` miliseconds of inactivity.
+	 * When checked, it takes it as an activity and resets the timeout back to its original value.
+	 */
+	public async checkInactivity() {
+		// start first timeout if not set
+		if (!this.inactivityTimeout) {
+			this.setInactivityTimeout();
+			return;
+		}
+
+		// reset timeout
+		clearTimeout(this.inactivityTimeout);
+		this.setInactivityTimeout();
+	}
+
+	/**
+	 * Checks if time from the last version is more then `SNAPSHOT_PERIODICITY_THRESHOLD` and if so, creates a new version.
+	 */
+	public async checkPeriodicity() {
+		const lastSnapshot = await db.query.textVersionTable.findFirst({
+			where: eq(textVersionTable.textId, this.textId),
+			orderBy: desc(textVersionTable.created)
+		});
+
+		if (lastSnapshot) {
+			if (((new Date()).getTime() - lastSnapshot.created.getTime()) < SNAPSHOT_PERIODICITY_THRESHOLD) {
+				return;
+			}
+		}
+
+		console.log("take periodicity snapshot");
+		this.takeSnapshot();
+	}
+
+	public registerUpdate(updateData: Uint8Array) {
+		const update = Y.decodeUpdate(updateData);
+		for (const change of update.structs) {
+			let person = this.permanentUserData.getUserByClientId(change.id.client);
+			this.editors.add(person);
+		}
+	}
 }
 
-export const persistance = {
+let keepers = new Map<number, Keeper>();
+
+export const persistance: persistenceType = {
 	provider: null,
 	bindState: async (docName: string, ydoc: WSSharedDoc) => {
 		console.log("bind " + docName);
-		// Sync passed ydoc and persisted ydoc by getting all updates from
-		// passed ydoc, save them to persisted ydoc, get all updates
-		// from persisted doc and apply them to passed ydoc.
-		// This works because updates are idempotent and can be reapplied.
+
+		/**
+		 * Sync passed ydoc and persisted ydoc by getting all updates from
+		 * passed ydoc, save them to persisted ydoc, get all updates
+		 * from persisted doc and apply them to passed ydoc.
+		 * This works because updates are idempotent and can be reapplied.
+		 */
 		const textId = parseInt(docName);
 		const persistedYdoc = await storage.getYDoc(textId);
 		const currentUpdates = Y.encodeStateAsUpdate(ydoc);
 		storage.storeUpdate(textId, currentUpdates);
 		Y.applyUpdate(ydoc, Y.encodeStateAsUpdate(persistedYdoc));
 
+		let keeper = keepers.get(textId);
+		if (!keeper) {
+			keeper = new Keeper(textId, ydoc);
+			keepers.set(textId, keeper);
+		}
+
 		ydoc.on('update', (update: Uint8Array) => {
 			console.log("apply update " + ydoc.name);
 			storage.storeUpdate(textId, update);
-			checkSnapshotTimeout(textId, ydoc);
-			checkSnapshotPeriodicity(textId, ydoc);
+			keeper.registerUpdate(update);
+			keeper.checkInactivity();
+			keeper.checkPeriodicity();
+			console.log("current contensts: " + ydoc.getText().toJSON());
 		});
 		ydoc.on('destroy', (doc: Y.Doc) => {
 			console.log("apply destroy " + docName);
