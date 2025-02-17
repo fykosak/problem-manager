@@ -1,6 +1,6 @@
 FROM oven/bun:1 AS builder
-WORKDIR /app
-
 VOLUME /app
+
+WORKDIR /app/client
 
 CMD ["bun", "run", "dev", "--host", "0.0.0.0"]

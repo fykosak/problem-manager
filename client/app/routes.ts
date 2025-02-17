@@ -1,9 +1,10 @@
 import { type RouteConfig, index, route, layout } from "@react-router/dev/routes";
 
 export default [
+	route("/", "routes/home.tsx"),
 	route(":contest/:year", "routes/layout.tsx", [
 		layout("routes/contestLayout.tsx", [
-			index("routes/home.tsx"),
+			index("routes/contestHome.tsx"),
 			route("tasks", "routes/tasks.tsx"),
 			route("task-suggestions", "routes/taskSuggestions.tsx"),
 		]),

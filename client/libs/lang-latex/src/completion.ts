@@ -266,6 +266,69 @@ const arrowSymbols = [
 	["Updownarrow", "⇕"],
 ]
 
+const functionSymbols = [
+	["sum", "∑"],
+	["prod", "∏"],
+	["coprod", "∐"],
+	["int", "∫"],
+	["oint", "∮"],
+	["iint", "∫∫"],
+	["iiint", "∫∫∫"],
+	["iiiint", "∫∫∫∫"],
+]
+
+const mathFunctions = [
+	"arccos",
+	"arcsin",
+	"arctan",
+	"arctg",
+	"arg",
+	"cos",
+	"cosh",
+	"cot",
+	"cotg",
+	"coth",
+	"csc",
+	"deg",
+	"det",
+	"dim",
+	"exp",
+	"gcd",
+	"hom",
+	"inf",
+	"ker",
+	"lg",
+	"lim",
+	"liminf",
+	"limsup",
+	"ln",
+	"log",
+	"max",
+	"min",
+	"Pr",
+	"sec",
+	"sin",
+	"sinh",
+	"sup",
+	"tan",
+	"tg",
+	"tanh"
+]
+
+const mathCommands = [
+	"frac{}{}",
+	"sqrt{}",
+	"overline{}",
+	"underline{}",
+	"widehat{}",
+	"widetilde{}",
+	"overrightarrow{}",
+	"overleftarrow{}",
+	"overbrace{}",
+	"underbrace{}",
+];
+
+
 function getMathCompletion(context: CompletionContext): CompletionResult | null {
 	const node = syntaxTree(context.state).resolve(context.pos, -1).cursor();
 
@@ -283,7 +346,7 @@ function getMathCompletion(context: CompletionContext): CompletionResult | null 
 	}
 
 	// got to the top of the tree
-	const greekCommands = greekSymbols.concat(
+	const symbols = greekSymbols.concat(
 		relationSymbols,
 		binaryOperators,
 		negatedBinaryOperators,
@@ -296,9 +359,14 @@ function getMathCompletion(context: CompletionContext): CompletionResult | null 
 		detail: symbol[1]
 	}))
 
+	const commands = mathCommands.map((command) => ({
+		label: "\\" + command,
+		type: "keyword"
+	}))
+
 	return {
 		from: cursorPosition,
-		options: greekCommands
+		options: [...symbols, ...commands]
 	}
 }
 
@@ -306,8 +374,70 @@ export const mathCompletion = latexLanguage.data.of({
 	autocomplete: getMathCompletion
 })
 
+const textStyles = [
+	["em", "emphasis"],
+	["bf", "bold"],
+	["bfseries", "bold"],
+	["emph{}", "emphasis"],
+	["textit{}", "italic"],
+	["textsl{}", "slanted"],
+	["textsc{}", "small caps"],
+	["textup{}", "upright"],
+	["textbf{}", "bold"],
+	["textmd{}", "medium"],
+	["textrm{}", "roman"],
+	["textsf{}", "sans serif"],
+	["texttt{}", "typewriter"],
+	["tiny"],
+	["scriptsize"],
+	["footnotesize"],
+	["normalsize"],
+	["small"],
+	["large"],
+	["Large"],
+	["LARGE"],
+	["huge"],
+	["Huge"],
+]
+
+const textSections = [
+	"part",
+	"part*",
+	"chapter",
+	"chapter*",
+	"section",
+	"section*",
+	"subsection",
+	"subsection*",
+	"subsubsection",
+	"subsubsection*",
+	"paragraph",
+	"paragraph*",
+	"subparagraph",
+	"subparagraph*",
+]
+
+function getTextCompletion(context: CompletionContext): CompletionResult | null {
+	// got to the top of the tree
+	const commands = textStyles.map(command => ({
+		label: "\\" + command[0],
+		type: "keyword",
+		detail: command[1] ?? null
+	}))
+
+	const sections = textSections.map(section => ({
+		label: "\\" + section + "{}",
+		type: "keyword"
+	}))
+
+	const node = syntaxTree(context.state).resolve(context.pos, -1).cursor();
+	const cursorPosition = node.from;
+	return {
+		from: cursorPosition,
+		options: [...commands, ...sections]
+	}
+}
+
 export const basicCompletion = latexLanguage.data.of({
-	autocomplete: completeFromList([
-		{ label: "\\frac{}{}", type: "keyword" },
-	]),
+	autocomplete: getTextCompletion
 })

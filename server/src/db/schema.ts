@@ -193,6 +193,14 @@ export const workTable = pgTable("work", {
 	state: workStateEnum().notNull().default('waiting'),
 });
 
+export const workRelations = relations(workTable, ({ one, many }) => ({
+	problem: one(problemTable, {
+		fields: [workTable.problemId],
+		references: [problemTable.problemId],
+	}),
+	people: many(personWorkTable)
+}));
+
 export const personWorkTable = pgTable("person_work", {
 	personWorkId: serial().primaryKey(),
 	workId: integer().notNull().references(() => workTable.workId),
@@ -200,3 +208,14 @@ export const personWorkTable = pgTable("person_work", {
 }, (table) => [
 	unique().on(table.personId, table.workId)
 ]);
+
+export const personWorkRelations = relations(personWorkTable, ({ one }) => ({
+	person: one(personTable, {
+		fields: [personWorkTable.personId],
+		references: [personTable.personId]
+	}),
+	work: one(workTable, {
+		fields: [personWorkTable.workId],
+		references: [workTable.workId]
+	})
+}));

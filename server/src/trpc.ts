@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { db } from './db';
 import { and, eq } from 'drizzle-orm';
-import { problemTable, problemTopicTable, textTable, topicTable, typeTable } from './db/schema';
+import { personWorkTable, problemTable, problemTopicTable, textTable, topicTable, typeTable, workStateEnum, workTable } from './db/schema';
 
 // created for each request
 export const createContext = ({
@@ -69,6 +69,23 @@ export const appRouter = trpc.router({
 				where: eq(textTable.problemId, opts.input)
 			});
 		}),
+		work: trpc.procedure.input(z.number()).query(async (opts) => {
+			return await db.query.workTable.findMany({
+				with: {
+					people: true
+				},
+				where: eq(workTable.problemId, opts.input),
+				orderBy: workTable.workId
+			})
+		}),
+		updateWorkState: trpc.procedure.input(z.object({
+			workId: z.number(),
+			state: z.enum(workStateEnum.enumValues),
+		})).query(async (opts) => {
+			return await db.update(workTable).set({
+				state: opts.input.state
+			}).where(eq(workTable.workId, opts.input.workId))
+		}),
 		updateMetadata: trpc.procedure.input(z.object({
 			problemId: z.number(),
 			metadata: z.object<{ [key: string]: any }>({}).passthrough(),
@@ -98,6 +115,32 @@ export const appRouter = trpc.router({
 			return await db.query.typeTable.findMany({
 				where: and(eq(typeTable.contestId, opts.input), eq(typeTable.available, true))
 			})
+		}),
+		people: trpc.procedure.input(z.number()).query(async (opts) => {
+			// TODO filter by contest organizer
+			return await db.query.personTable.findMany();
+		})
+	}),
+	work: trpc.router({
+		updatePersonWork: trpc.procedure.input(z.object({
+			workId: z.number(),
+			personId: z.number(),
+			assigned: z.boolean()
+		})).query(async (opts) => {
+			if (opts.input.assigned) {
+				await db.insert(personWorkTable).values({
+					workId: opts.input.workId,
+					personId: opts.input.personId,
+				})
+			} else {
+				await db.delete(personWorkTable)
+					.where(
+						and(
+							eq(personWorkTable.workId, opts.input.workId),
+							eq(personWorkTable.personId, opts.input.personId)
+						)
+					)
+			}
 		})
 	})
 });
