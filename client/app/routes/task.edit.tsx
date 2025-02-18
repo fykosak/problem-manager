@@ -8,5 +8,5 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 export default function TaskEdit({ loaderData }: Route.ComponentProps) {
 	const text = loaderData[0];
-	return <Editor textId={1601} />
+	return <Editor textId={1601} />;
 }

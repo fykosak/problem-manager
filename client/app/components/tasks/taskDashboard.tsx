@@ -12,13 +12,10 @@ import {
 	rectIntersection,
 	useSensor,
 	useSensors,
-} from "@dnd-kit/core";
-import {
-	arrayMove,
-	sortableKeyboardCoordinates,
-} from '@dnd-kit/sortable';
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Series } from "~/components/tasks/series";
+} from '@dnd-kit/core';
+import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Series } from '~/components/tasks/series';
 
 type Groups = Record<UniqueIdentifier, UniqueIdentifier[]>;
 
@@ -26,12 +23,14 @@ type Groups = Record<UniqueIdentifier, UniqueIdentifier[]>;
 
 export function TaskDashboard() {
 	const [items, setItems] = useState<Groups>({
-		'groupA': ['A1', 'A2', 'A3'],
-		'groupB': ['B1', 'B2', 'B3'],
-		'groupC': ['C1', 'C2', 'C3'],
+		groupA: ['A1', 'A2', 'A3'],
+		groupB: ['B1', 'B2', 'B3'],
+		groupC: ['C1', 'C2', 'C3'],
 	});
 
-	const [activeItemId, setActiveItemId] = useState<UniqueIdentifier | null>(null);
+	const [activeItemId, setActiveItemId] = useState<UniqueIdentifier | null>(
+		null
+	);
 	const lastOverId = useRef<UniqueIdentifier | null>(null);
 	const recentlyMovedToNewContainer = useRef(false);
 
@@ -42,51 +41,54 @@ export function TaskDashboard() {
 		})
 	);
 
-	const collisionDetectionStrategy: CollisionDetection = useCallback((args) => {
-		// Start by finding any intersecting droppable
-		const pointerIntersections = pointerWithin(args);
-		const intersections =
-			pointerIntersections.length > 0
-				? // If there are droppables intersecting with the pointer, return those
-				pointerIntersections
-				: rectIntersection(args);
-		let overId = getFirstCollision(intersections, 'id');
+	const collisionDetectionStrategy: CollisionDetection = useCallback(
+		(args) => {
+			// Start by finding any intersecting droppable
+			const pointerIntersections = pointerWithin(args);
+			const intersections =
+				pointerIntersections.length > 0
+					? // If there are droppables intersecting with the pointer, return those
+						pointerIntersections
+					: rectIntersection(args);
+			let overId = getFirstCollision(intersections, 'id');
 
-		if (overId != null) {
-			// if overId is a group, find the nearest item
-			if (overId in items) {
-				const containerItems = items[overId];
-				// If a container is matched and it contains items
-				if (containerItems.length > 0) {
-					// Return the closest droppable within that container
-					overId = closestCenter({
-						...args,
-						droppableContainers: args.droppableContainers.filter(
-							(container) =>
-								container.id !== overId &&
-								containerItems.includes(container.id)
-						),
-					})[0]?.id;
+			if (overId != null) {
+				// if overId is a group, find the nearest item
+				if (overId in items) {
+					const containerItems = items[overId];
+					// If a container is matched and it contains items
+					if (containerItems.length > 0) {
+						// Return the closest droppable within that container
+						overId = closestCenter({
+							...args,
+							droppableContainers:
+								args.droppableContainers.filter(
+									(container) =>
+										container.id !== overId &&
+										containerItems.includes(container.id)
+								),
+						})[0]?.id;
+					}
 				}
+
+				lastOverId.current = overId;
+
+				return [{ id: overId }];
 			}
 
-			lastOverId.current = overId;
+			// When a draggable item moves to a new container, the layout may shift
+			// and the `overId` may become `null`. We manually set the cached `lastOverId`
+			// to the id of the draggable item that was moved to the new container, otherwise
+			// the previous `overId` will be returned which can cause items to incorrectly shift positions
+			if (recentlyMovedToNewContainer.current) {
+				lastOverId.current = activeItemId;
+			}
 
-			return [{ id: overId }];
-		}
-
-		// When a draggable item moves to a new container, the layout may shift
-		// and the `overId` may become `null`. We manually set the cached `lastOverId`
-		// to the id of the draggable item that was moved to the new container, otherwise
-		// the previous `overId` will be returned which can cause items to incorrectly shift positions
-		if (recentlyMovedToNewContainer.current) {
-			lastOverId.current = activeItemId;
-		}
-
-		// If no droppable is matched, return the last match
-		return lastOverId.current ? [{ id: lastOverId.current }] : [];
-
-	}, [activeItemId, items])
+			// If no droppable is matched, return the last match
+			return lastOverId.current ? [{ id: lastOverId.current }] : [];
+		},
+		[activeItemId, items]
+	);
 
 	useEffect(() => {
 		requestAnimationFrame(() => {
@@ -159,12 +161,14 @@ export function TaskDashboard() {
 					over &&
 					active.rect.current.translated &&
 					active.rect.current.translated.top >
-					over.rect.top + over.rect.height;
+						over.rect.top + over.rect.height;
 
 				const modifier = isBelowOverItem ? 1 : 0;
 
 				newIndex =
-					overIndex >= 0 ? overIndex + modifier : overItems.length + 1;
+					overIndex >= 0
+						? overIndex + modifier
+						: overItems.length + 1;
 			}
 
 			recentlyMovedToNewContainer.current = true;
@@ -185,7 +189,6 @@ export function TaskDashboard() {
 			};
 		});
 	}
-
 
 	function handleDragEnd(event: DragEndEvent) {
 		const { active, over } = event;
@@ -224,4 +227,3 @@ export function TaskDashboard() {
 		setActiveItemId(null);
 	}
 }
-

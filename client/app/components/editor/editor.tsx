@@ -11,7 +11,14 @@ import { linter, lintGutter } from '@codemirror/lint';
 
 export default function Editor({ textId }: { textId: number }) {
 	const ydocRef = useRef(new Y.Doc());
-	const providerRef = useRef(new WebsocketProvider('ws://localhost:8081', textId.toString(), ydocRef.current, { connect: false }));
+	const providerRef = useRef(
+		new WebsocketProvider(
+			'ws://localhost:8081',
+			textId.toString(),
+			ydocRef.current,
+			{ connect: false }
+		)
+	);
 	const yTextRef = useRef(ydocRef.current.getText());
 	const undoManagerRef = useRef(new Y.UndoManager(yTextRef.current));
 
@@ -19,9 +26,14 @@ export default function Editor({ textId }: { textId: number }) {
 
 	// Set user awareness on mount
 	useEffect(() => {
-		console.log("runnning useEffect");
+		console.log('runnning useEffect');
 		const ydoc = ydocRef.current;
-		const provider = new WebsocketProvider('ws://localhost:8081', textId.toString(), ydoc, { connect: false });
+		const provider = new WebsocketProvider(
+			'ws://localhost:8081',
+			textId.toString(),
+			ydoc,
+			{ connect: false }
+		);
 		providerRef.current = provider;
 
 		provider.connect();
@@ -30,7 +42,7 @@ export default function Editor({ textId }: { textId: number }) {
 		const user = {
 			name: 'Anonymous ' + Math.floor(Math.random() * 100),
 			color: '#553322',
-			colorLight: '#998866'
+			colorLight: '#998866',
 		};
 		provider.awareness.setLocalStateField('user', user);
 
@@ -39,12 +51,11 @@ export default function Editor({ textId }: { textId: number }) {
 		userData.setUserMapping(ydoc, ydoc.clientID, user.name);
 
 		return () => {
-			console.log("provider destroy");
+			console.log('provider destroy');
 			provider.destroy();
 			ydoc.destroy();
 		};
 	}, []);
-
 
 	// Ensure yText is defined before rendering
 	if (!yTextRef.current) {
@@ -57,22 +68,25 @@ export default function Editor({ textId }: { textId: number }) {
 		return null;
 	}
 
-	return <CodeMirror value={yTextRef.current.toString()}
-		height="1200px"
-		width="1000px"
-		theme={material}
-		style={{
-			fontSize: "16px"
-		}}
-		extensions={[
-			latex(),
-			linter(latexLinter),
-			lintGutter(),
-			yCollab(yTextRef.current, providerRef.current.awareness, { undoManager: undoManagerRef.current }),
-			EditorView.lineWrapping
-		]}
-		basicSetup={
-			{ foldGutter: true }
-		}
-	/>;
+	return (
+		<CodeMirror
+			value={yTextRef.current.toString()}
+			height="1200px"
+			width="1000px"
+			theme={material}
+			style={{
+				fontSize: '16px',
+			}}
+			extensions={[
+				latex(),
+				linter(latexLinter),
+				lintGutter(),
+				yCollab(yTextRef.current, providerRef.current.awareness, {
+					undoManager: undoManagerRef.current,
+				}),
+				EditorView.lineWrapping,
+			]}
+			basicSetup={{ foldGutter: true }}
+		/>
+	);
 }

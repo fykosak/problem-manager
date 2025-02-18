@@ -1,80 +1,99 @@
-import { ColumnDef } from "@tanstack/react-table"
-import { NavLink } from "react-router"
-import { DataTableColumnSorter, DataTableColumnUniqueFilter } from "~/components/ui/dataTable"
+import { ColumnDef } from '@tanstack/react-table';
+import { NavLink } from 'react-router';
+import {
+	DataTableColumnSorter,
+	DataTableColumnUniqueFilter,
+} from '~/components/ui/dataTable';
 
 export type Task = {
-	problemId: number
-	name: string | null
-	authors: string[]
-	problemTopics: string[]
-	type: string
-	state: string
-	created: Date
-}
+	problemId: number;
+	name: string | null;
+	authors: string[];
+	problemTopics: string[];
+	type: string;
+	state: string;
+	created: Date;
+};
 
 export const columns: ColumnDef<Task>[] = [
 	{
-		accessorKey: "name",
-		header: "Název",
+		accessorKey: 'name',
+		header: 'Název',
 		cell: ({ row }) => {
 			const problemId: number = row.original.problemId;
-			const name: string = row.getValue("name");
-			return <NavLink to={'../task/' + problemId}>{name}</NavLink >
+			const name: string = row.getValue('name');
+			return <NavLink to={'../task/' + problemId}>{name}</NavLink>;
 		},
 	},
 	{
-		accessorKey: "authors",
+		accessorKey: 'authors',
 		header: ({ column }) => {
-			return <div className="flex flex-nowrap items-center">
-				Autor
-				<DataTableColumnUniqueFilter column={column} />
-				<DataTableColumnSorter column={column} />
-			</div>;
+			return (
+				<div className="flex flex-nowrap items-center">
+					Autor
+					<DataTableColumnUniqueFilter column={column} />
+					<DataTableColumnSorter column={column} />
+				</div>
+			);
 		},
-		filterFn: "arrIncludes"
+		filterFn: 'arrIncludes',
 	},
 	{
-		accessorKey: "problemTopics",
+		accessorKey: 'problemTopics',
 		header: ({ column }) => {
-			return <div className="flex flex-nowrap items-center">
-				Téma
-				<DataTableColumnUniqueFilter column={column} />
-				<DataTableColumnSorter column={column} />
-			</div>;
+			return (
+				<div className="flex flex-nowrap items-center">
+					Téma
+					<DataTableColumnUniqueFilter column={column} />
+					<DataTableColumnSorter column={column} />
+				</div>
+			);
 		},
-		filterFn: "arrIncludes"
+		filterFn: 'arrIncludes',
 	},
 	{
-		accessorKey: "type",
+		accessorKey: 'type',
 		header: ({ column }) => {
-			return <div className="flex flex-nowrap items-center">
-				Typ
-				<DataTableColumnUniqueFilter column={column} />
-			</div>;
+			return (
+				<div className="flex flex-nowrap items-center">
+					Typ
+					<DataTableColumnUniqueFilter column={column} />
+				</div>
+			);
 		},
-		filterFn: "equalsString"
+		filterFn: 'equalsString',
 	},
 	{
-		accessorKey: "state",
+		accessorKey: 'state',
 		header: ({ column }) => {
-			return <div className="flex flex-nowrap items-center">
-				Stav
-				<DataTableColumnUniqueFilter column={column} />
-			</div>;
+			return (
+				<div className="flex flex-nowrap items-center">
+					Stav
+					<DataTableColumnUniqueFilter column={column} />
+				</div>
+			);
 		},
-		filterFn: "equalsString"
+		filterFn: 'equalsString',
 	},
 	{
-		accessorKey: "created",
+		accessorKey: 'created',
 		cell: ({ row }) => {
-			const created: Date = row.getValue("created")
-			return created.toLocaleString("cs-CZ", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+			const created: Date = row.getValue('created');
+			return created.toLocaleString('cs-CZ', {
+				day: '2-digit',
+				month: '2-digit',
+				year: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+			});
 		},
 		header: ({ column }) => {
-			return <div className="flex flex-nowrap items-center">
-				Vytvořeno
-				<DataTableColumnSorter column={column} />
-			</div>;
+			return (
+				<div className="flex flex-nowrap items-center">
+					Vytvořeno
+					<DataTableColumnSorter column={column} />
+				</div>
+			);
 		},
 	},
-]
+];

@@ -14,13 +14,13 @@ app.use(
 	trpcExpress.createExpressMiddleware({
 		router: appRouter,
 		createContext,
-	}),
+	})
 );
 
 const server = http.createServer(app).listen(4000);
 
 const websocketServer = new WebSocket.Server({
-	noServer: true
+	noServer: true,
 });
 
 websocketServer.on('connection', setupWSConnection);
@@ -28,7 +28,7 @@ websocketServer.on('connection', setupWSConnection);
 setPersistence(persistance);
 
 server.on('upgrade', (request, socket, head) => {
-	console.log("connection upgrade " + request.url);
+	console.log('connection upgrade ' + request.url);
 	websocketServer.handleUpgrade(request, socket, head, (ws) => {
 		websocketServer.emit('connection', ws, request);
 	});

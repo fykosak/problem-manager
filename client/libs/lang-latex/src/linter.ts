@@ -1,10 +1,13 @@
-import { syntaxTree } from "@codemirror/language";
-import { Diagnostic } from "@codemirror/lint";
-import { EditorView } from "@codemirror/view";
-import { SyntaxNodeRef } from "@lezer/common"
+import { syntaxTree } from '@codemirror/language';
+import { Diagnostic } from '@codemirror/lint';
+import { EditorView } from '@codemirror/view';
+import { SyntaxNodeRef } from '@lezer/common';
 
 // check correct begin and matching \end
-function checkEnvironment(beginNode: SyntaxNodeRef, view: EditorView): Diagnostic | null {
+function checkEnvironment(
+	beginNode: SyntaxNodeRef,
+	view: EditorView
+): Diagnostic | null {
 	const doc = view.state.doc;
 	const cursor = syntaxTree(view.state).cursor();
 
@@ -12,17 +15,20 @@ function checkEnvironment(beginNode: SyntaxNodeRef, view: EditorView): Diagnosti
 	cursor.moveTo(beginNode.to, -1);
 
 	// check for environment name argument
-	if (!cursor.nextSibling() || cursor.name != "CommandArgument") {
+	if (!cursor.nextSibling() || cursor.name != 'CommandArgument') {
 		return {
 			from: beginNode.from,
 			to: beginNode.to,
-			severity: "error",
-			message: "\\begin environment name must be an command argument \\begin{...}"
-		}
+			severity: 'error',
+			message:
+				'\\begin environment name must be an command argument \\begin{...}',
+		};
 	}
 
 	// extract the environment name
-	const environmentNameArgument = doc.slice(cursor.from, cursor.to).toString();
+	const environmentNameArgument = doc
+		.slice(cursor.from, cursor.to)
+		.toString();
 
 	// count nested environment to pick the correct \end
 	let nestingDepth = 0;
@@ -31,16 +37,17 @@ function checkEnvironment(beginNode: SyntaxNodeRef, view: EditorView): Diagnosti
 	while (cursor.next()) {
 		if (
 			// @ts-ignore
-			cursor.name == "CommandIdentifier" &&
-			doc.slice(cursor.from, cursor.to).toString() == "\\begin") {
+			cursor.name == 'CommandIdentifier' &&
+			doc.slice(cursor.from, cursor.to).toString() == '\\begin'
+		) {
 			nestingDepth++;
 			continue;
 		}
 
 		if (
 			// @ts-ignore-line
-			cursor.name == "CommandIdentifier" &&
-			doc.slice(cursor.from, cursor.to).toString() == "\\end"
+			cursor.name == 'CommandIdentifier' &&
+			doc.slice(cursor.from, cursor.to).toString() == '\\end'
 		) {
 			// if nested, go one step higher
 			if (nestingDepth > 0) {
@@ -52,28 +59,30 @@ function checkEnvironment(beginNode: SyntaxNodeRef, view: EditorView): Diagnosti
 				return {
 					from: cursor.from,
 					to: cursor.to,
-					severity: "error",
-					message: "\\end missing an environment name"
-				}
+					severity: 'error',
+					message: '\\end missing an environment name',
+				};
 			}
 
-			if (cursor.name != "CommandArgument") {
+			if (cursor.name != 'CommandArgument') {
 				return {
 					from: cursor.from,
 					to: cursor.to,
-					severity: "error",
-					message: "environment name for \\end expected"
-				}
+					severity: 'error',
+					message: 'environment name for \\end expected',
+				};
 			}
 
-			const environmentEndNameArgument = doc.slice(cursor.from, cursor.to).toString();
+			const environmentEndNameArgument = doc
+				.slice(cursor.from, cursor.to)
+				.toString();
 			if (environmentEndNameArgument != environmentNameArgument) {
 				return {
 					from: cursor.from,
 					to: cursor.to,
-					severity: "error",
-					message: `incorrect environment name, \\end${environmentNameArgument} expected, got \\end${environmentEndNameArgument}`
-				}
+					severity: 'error',
+					message: `incorrect environment name, \\end${environmentNameArgument} expected, got \\end${environmentEndNameArgument}`,
+				};
 			}
 
 			return null;
@@ -83,12 +92,17 @@ function checkEnvironment(beginNode: SyntaxNodeRef, view: EditorView): Diagnosti
 	return {
 		from: beginNode.from,
 		to: beginNode.to,
-		severity: "error",
-		message: "Matching \\end not found"
+		severity: 'error',
+		message: 'Matching \\end not found',
 	};
 }
 
-function checkForMatchingBrace(beginNode: SyntaxNodeRef, view: EditorView, diagnostics: Diagnostic[], forwards: boolean = true): void {
+function checkForMatchingBrace(
+	beginNode: SyntaxNodeRef,
+	view: EditorView,
+	diagnostics: Diagnostic[],
+	forwards: boolean = true
+): void {
 	const doc = view.state.doc;
 	const cursor = syntaxTree(view.state).cursor();
 
@@ -118,7 +132,10 @@ function checkForMatchingBrace(beginNode: SyntaxNodeRef, view: EditorView, diagn
 			continue;
 		}
 
-		if (cursor.name == "CommandIdentifier" && doc.slice(cursor.from, cursor.to).toString() == "\\begin") {
+		if (
+			cursor.name == 'CommandIdentifier' &&
+			doc.slice(cursor.from, cursor.to).toString() == '\\begin'
+		) {
 			if (forwards) {
 				environmentNestingDepth++;
 			} else {
@@ -126,7 +143,10 @@ function checkForMatchingBrace(beginNode: SyntaxNodeRef, view: EditorView, diagn
 			}
 		}
 
-		if (cursor.name == "CommandIdentifier" && doc.slice(cursor.from, cursor.to).toString() == "\\end") {
+		if (
+			cursor.name == 'CommandIdentifier' &&
+			doc.slice(cursor.from, cursor.to).toString() == '\\end'
+		) {
 			if (forwards) {
 				environmentNestingDepth--;
 			} else {
@@ -134,24 +154,28 @@ function checkForMatchingBrace(beginNode: SyntaxNodeRef, view: EditorView, diagn
 			}
 		}
 
-		const closedBeforeEndMessage = "Command closed before environment end";
-		const closedAfterEndMessage = "Command closed after environment end";
+		const closedBeforeEndMessage = 'Command closed before environment end';
+		const closedAfterEndMessage = 'Command closed after environment end';
 
 		if (cursor.name == nestingEndCharacter && braceNestingDepth == 0) {
 			if (environmentNestingDepth > 0) {
 				diagnostics.push({
 					from: cursor.from,
 					to: cursor.to,
-					severity: "error",
-					message: forwards ? closedBeforeEndMessage : closedAfterEndMessage
-				})
+					severity: 'error',
+					message: forwards
+						? closedBeforeEndMessage
+						: closedAfterEndMessage,
+				});
 			} else if (environmentNestingDepth < 0) {
 				diagnostics.push({
 					from: cursor.from,
 					to: cursor.to,
-					severity: "error",
-					message: forwards ? closedAfterEndMessage : closedBeforeEndMessage
-				})
+					severity: 'error',
+					message: forwards
+						? closedAfterEndMessage
+						: closedBeforeEndMessage,
+				});
 			}
 			return;
 		}
@@ -160,8 +184,8 @@ function checkForMatchingBrace(beginNode: SyntaxNodeRef, view: EditorView, diagn
 	diagnostics.push({
 		from: beginNode.from,
 		to: beginNode.to,
-		severity: "error",
-		message: `Unmatched ${nestingStartCharacter}, missing ${nestingEndCharacter}`
+		severity: 'error',
+		message: `Unmatched ${nestingStartCharacter}, missing ${nestingEndCharacter}`,
 	});
 }
 
@@ -171,8 +195,11 @@ export function latexLinter(view: EditorView): Diagnostic[] {
 	const doc = view.state.doc;
 	const tree = syntaxTree(view.state).cursor();
 
-	tree.iterate(node => {
-		if (node.name == "CommandIdentifier" && doc.slice(node.from, node.to).toString() == "\\begin") {
+	tree.iterate((node) => {
+		if (
+			node.name == 'CommandIdentifier' &&
+			doc.slice(node.from, node.to).toString() == '\\begin'
+		) {
 			// Find corresponding `\end`
 			const environmentError = checkEnvironment(node, view);
 			if (environmentError) {
@@ -180,15 +207,15 @@ export function latexLinter(view: EditorView): Diagnostic[] {
 			}
 		}
 
-		if (node.name == "{") {
+		if (node.name == '{') {
 			checkForMatchingBrace(node, view, diagnostics);
 		}
 
-		if (node.name == "}") {
+		if (node.name == '}') {
 			checkForMatchingBrace(node, view, diagnostics, false);
 		}
 
-		if (node.name == "Text") {
+		if (node.name == 'Text') {
 			const re = / - /;
 			const text = view.state.doc.slice(node.from, node.to).toString();
 			const match = re.exec(text);
@@ -196,12 +223,11 @@ export function latexLinter(view: EditorView): Diagnostic[] {
 				diagnostics.push({
 					from: node.from + match.index,
 					to: node.from + match.index + 3, // 3 is the length of ' - '
-					severity: "error",
+					severity: 'error',
 					message: "This is not a dash, use ' -- ' instead of ' - '",
-				})
+				});
 			}
 		}
 	});
 	return diagnostics;
 }
-

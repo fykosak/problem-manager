@@ -9,7 +9,7 @@ import {
 	getPaginationRowModel,
 	getSortedRowModel,
 	useReactTable,
-} from "@tanstack/react-table"
+} from '@tanstack/react-table';
 
 import {
 	Table,
@@ -18,58 +18,78 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from "~/components/ui/table"
-import { DataTablePagination } from "./dataTablePagination"
-import * as React from "react"
-import { Select, SelectContent, SelectItem, SelectTrigger } from "~/components/ui/select";
-import { ArrowDownUp, Filter } from "lucide-react";
-import { Button } from "./button";
+} from '~/components/ui/table';
+import { DataTablePagination } from './dataTablePagination';
+import * as React from 'react';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+} from '~/components/ui/select';
+import { ArrowDownUp, Filter } from 'lucide-react';
+import { Button } from './button';
 
 // Button to select a filter option to uniquely filter in a given column
-export function DataTableColumnUniqueFilter<TData, TValue>({ column }: { column: Column<TData, TValue> }) {
+export function DataTableColumnUniqueFilter<TData, TValue>({
+	column,
+}: {
+	column: Column<TData, TValue>;
+}) {
 	const possibleValues = column.getFacetedUniqueValues();
 	const ALL_VALUES = '__all__';
 
 	let options = [
-		<SelectItem key={ALL_VALUES} value={ALL_VALUES}>Vše</SelectItem>
+		<SelectItem key={ALL_VALUES} value={ALL_VALUES}>
+			Vše
+		</SelectItem>,
 	];
 	for (let [key, _] of possibleValues) {
 		options.push(
-			<SelectItem key={key} value={`${key}`}>{key}</SelectItem >
+			<SelectItem key={key} value={`${key}`}>
+				{key}
+			</SelectItem>
 		);
 	}
 
-	return <Select
-		onValueChange={(value) => {
-			if (value == ALL_VALUES) {
-				column.setFilterValue(undefined);
-			} else {
-				column.setFilterValue(value);
-			}
-		}}>
-		<SelectTrigger variant="ghost" size="icon" arrow={false}>
-			<Filter />
-		</SelectTrigger>
-		<SelectContent side="bottom">
-			{options}
-		</SelectContent>
-	</Select>;
+	return (
+		<Select
+			onValueChange={(value) => {
+				if (value == ALL_VALUES) {
+					column.setFilterValue(undefined);
+				} else {
+					column.setFilterValue(value);
+				}
+			}}
+		>
+			<SelectTrigger variant="ghost" size="icon" arrow={false}>
+				<Filter />
+			</SelectTrigger>
+			<SelectContent side="bottom">{options}</SelectContent>
+		</Select>
+	);
 }
 
 // Button that triggers column sorting
-export function DataTableColumnSorter<TData, TValue>({ column }: { column: Column<TData, TValue> }) {
-	return <Button
-		variant="ghost"
-		size="icon"
-		onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-	>
-		<ArrowDownUp />
-	</Button>
+export function DataTableColumnSorter<TData, TValue>({
+	column,
+}: {
+	column: Column<TData, TValue>;
+}) {
+	return (
+		<Button
+			variant="ghost"
+			size="icon"
+			onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+		>
+			<ArrowDownUp />
+		</Button>
+	);
 }
 
 interface DataTableProps<TData, TValue> {
-	columns: ColumnDef<TData, TValue>[]
-	data: TData[]
+	columns: ColumnDef<TData, TValue>[];
+	data: TData[];
 }
 
 export function DataTable<TData, TValue>({
@@ -77,7 +97,8 @@ export function DataTable<TData, TValue>({
 	data,
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
-	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+	const [columnFilters, setColumnFilters] =
+		React.useState<ColumnFiltersState>([]);
 
 	const table = useReactTable({
 		data,
@@ -92,7 +113,9 @@ export function DataTable<TData, TValue>({
 			// Custom implementation of unique values to account for array values
 			const uniqueValueMap = new Map<any, number>();
 
-			const facetedRowModel = table.getColumn(columnId)?.getFacetedRowModel();
+			const facetedRowModel = table
+				.getColumn(columnId)
+				?.getFacetedRowModel();
 
 			if (!facetedRowModel) {
 				return new Map();
@@ -133,11 +156,12 @@ export function DataTable<TData, TValue>({
 											{header.isPlaceholder
 												? null
 												: flexRender(
-													header.column.columnDef.header,
-													header.getContext()
-												)}
+														header.column.columnDef
+															.header,
+														header.getContext()
+													)}
 										</TableHead>
-									)
+									);
 								})}
 							</TableRow>
 						))}
@@ -147,18 +171,26 @@ export function DataTable<TData, TValue>({
 							table.getRowModel().rows.map((row) => (
 								<TableRow
 									key={row.id}
-									data-state={row.getIsSelected() && "selected"}
+									data-state={
+										row.getIsSelected() && 'selected'
+									}
 								>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell key={cell.id}>
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
+											{flexRender(
+												cell.column.columnDef.cell,
+												cell.getContext()
+											)}
 										</TableCell>
 									))}
 								</TableRow>
 							))
 						) : (
 							<TableRow>
-								<TableCell colSpan={columns.length} className="h-24 text-center">
+								<TableCell
+									colSpan={columns.length}
+									className="h-24 text-center"
+								>
 									No results.
 								</TableCell>
 							</TableRow>
@@ -168,5 +200,5 @@ export function DataTable<TData, TValue>({
 			</div>
 			<DataTablePagination table={table} />
 		</div>
-	)
+	);
 }

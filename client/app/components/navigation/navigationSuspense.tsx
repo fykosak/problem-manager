@@ -1,10 +1,14 @@
-import { useNavigation } from "react-router";
+import { useNavigation } from 'react-router';
 
 function Loading() {
 	return <p>Loading</p>;
 }
 
-export default function NavigationSuspense({ children }: { children: React.ReactNode }) {
+export default function NavigationSuspense({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
 	const navigation = useNavigation();
 	const isNavigating = Boolean(navigation.location);
 

@@ -1,5 +1,5 @@
-import { Text } from "@codemirror/state";
-import { TreeCursor } from "@lezer/common";
+import { Text } from '@codemirror/state';
+import { TreeCursor } from '@lezer/common';
 
 /**
  * Takes cursor as an argument and traverse the tree to find
@@ -23,16 +23,16 @@ export function moveToEnvironmentEnd(cursor: TreeCursor, doc: Text) {
 	while (cursor.next()) {
 		if (
 			// @ts-ignore
-			cursor.name == "CommandIdentifier" &&
-			doc.slice(cursor.from, cursor.to).toString() == "\\begin"
+			cursor.name == 'CommandIdentifier' &&
+			doc.slice(cursor.from, cursor.to).toString() == '\\begin'
 		) {
 			nestingDepth++;
 			continue;
 		}
 
 		if (
-			cursor.name == "CommandIdentifier" &&
-			doc.slice(cursor.from, cursor.to).toString() == "\\end"
+			cursor.name == 'CommandIdentifier' &&
+			doc.slice(cursor.from, cursor.to).toString() == '\\end'
 		) {
 			if (nestingDepth > 0) {
 				nestingDepth--;

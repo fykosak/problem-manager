@@ -1,6 +1,6 @@
-import { EditorState } from "@codemirror/state"
-import { foldService, syntaxTree } from "@codemirror/language";
-import { moveToEnvironmentEnd } from "./helpers";
+import { EditorState } from '@codemirror/state';
+import { foldService, syntaxTree } from '@codemirror/language';
+import { moveToEnvironmentEnd } from './helpers';
 
 /**
  * Computes the ranges of environments for folding.
@@ -10,9 +10,12 @@ import { moveToEnvironmentEnd } from "./helpers";
  * @param {EditorState} state - current editor state
  * @param {number} start - index inside state doc, where the line starts
  */
-export function foldEnvironment(state: EditorState, start: number): {
-	from: number,
-	to: number
+export function foldEnvironment(
+	state: EditorState,
+	start: number
+): {
+	from: number;
+	to: number;
 } | null {
 	const doc = state.doc;
 
@@ -22,11 +25,14 @@ export function foldEnvironment(state: EditorState, start: number): {
 
 	// find begin on selected line
 	while (true) {
-		if (cursor.name == "CommandIdentifier" && doc.slice(cursor.from, cursor.to).toString() == "\\begin") {
+		if (
+			cursor.name == 'CommandIdentifier' &&
+			doc.slice(cursor.from, cursor.to).toString() == '\\begin'
+		) {
 			break;
 		}
 
-		if (cursor.name == "Newline") {
+		if (cursor.name == 'Newline') {
 			return null;
 		}
 
@@ -37,7 +43,7 @@ export function foldEnvironment(state: EditorState, start: number): {
 
 	// get parent Command
 	// @ts-ignore
-	if (!cursor.parent() || cursor.name != "Command") {
+	if (!cursor.parent() || cursor.name != 'Command') {
 		throw new Error("Parent 'Command' expected for CommandIdentifier");
 	}
 
@@ -51,8 +57,8 @@ export function foldEnvironment(state: EditorState, start: number): {
 
 	return {
 		from: startPosition,
-		to: cursor.from
-	}
+		to: cursor.from,
+	};
 }
 
-export const environmentFolding = foldService.of(foldEnvironment)
+export const environmentFolding = foldService.of(foldEnvironment);

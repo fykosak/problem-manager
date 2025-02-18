@@ -6,7 +6,6 @@
 	border-right: 1px solid;
 }
 
-
 @layer base {
 	:root {
 		--background: 0 0% 100%;

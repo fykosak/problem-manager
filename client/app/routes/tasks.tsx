@@ -1,5 +1,5 @@
-import { TaskDashboard } from "~/components/tasks/taskDashboard";
+import { TaskDashboard } from '~/components/tasks/taskDashboard';
 
 export default function Tasks() {
-	return <TaskDashboard />
+	return <TaskDashboard />;
 }

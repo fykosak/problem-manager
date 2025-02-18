@@ -26,24 +26,27 @@ class Keeper {
 	}
 
 	private setInactivityTimeout() {
-		this.inactivityTimeout = setTimeout(() => this.takeSnapshot(), SNAPSHOT_INACTIVITIY_THRESHOLD)
+		this.inactivityTimeout = setTimeout(
+			() => this.takeSnapshot(),
+			SNAPSHOT_INACTIVITIY_THRESHOLD
+		);
 	}
 
 	private async takeSnapshot() {
 		const text = this.ydoc.getText().toJSON();
 		const lastText = await db.query.textVersionTable.findFirst({
 			where: eq(textVersionTable.textId, this.textId),
-			orderBy: desc(textVersionTable.created)
+			orderBy: desc(textVersionTable.created),
 		});
 
 		if (lastText?.contents === text) {
 			return;
 		}
 
-		console.log("take snapshot");
+		console.log('take snapshot');
 		await db.insert(textVersionTable).values({
 			textId: this.textId,
-			contents: text
+			contents: text,
 			// personId: editors // TODO
 		});
 		this.editors.clear();
@@ -71,23 +74,28 @@ class Keeper {
 	public async checkPeriodicity() {
 		const lastSnapshot = await db.query.textVersionTable.findFirst({
 			where: eq(textVersionTable.textId, this.textId),
-			orderBy: desc(textVersionTable.created)
+			orderBy: desc(textVersionTable.created),
 		});
 
 		if (lastSnapshot) {
-			if (((new Date()).getTime() - lastSnapshot.created.getTime()) < SNAPSHOT_PERIODICITY_THRESHOLD) {
+			if (
+				new Date().getTime() - lastSnapshot.created.getTime() <
+				SNAPSHOT_PERIODICITY_THRESHOLD
+			) {
 				return;
 			}
 		}
 
-		console.log("take periodicity snapshot");
+		console.log('take periodicity snapshot');
 		this.takeSnapshot();
 	}
 
 	public registerUpdate(updateData: Uint8Array) {
 		const update = Y.decodeUpdate(updateData);
 		for (const change of update.structs) {
-			let person = this.permanentUserData.getUserByClientId(change.id.client);
+			let person = this.permanentUserData.getUserByClientId(
+				change.id.client
+			);
 			this.editors.add(person);
 		}
 	}
@@ -98,7 +106,7 @@ let keepers = new Map<number, Keeper>();
 export const persistance: persistenceType = {
 	provider: null,
 	bindState: async (docName: string, ydoc: WSSharedDoc) => {
-		console.log("bind " + docName);
+		console.log('bind ' + docName);
 
 		/**
 		 * Sync passed ydoc and persisted ydoc by getting all updates from
@@ -119,18 +127,18 @@ export const persistance: persistenceType = {
 		}
 
 		ydoc.on('update', (update: Uint8Array) => {
-			console.log("apply update " + ydoc.name);
+			console.log('apply update ' + ydoc.name);
 			storage.storeUpdate(textId, update);
 			keeper.registerUpdate(update);
 			keeper.checkInactivity();
 			keeper.checkPeriodicity();
-			console.log("current contensts: " + ydoc.getText().toJSON());
+			console.log('current contensts: ' + ydoc.getText().toJSON());
 		});
 		ydoc.on('destroy', (doc: Y.Doc) => {
-			console.log("apply destroy " + docName);
+			console.log('apply destroy ' + docName);
 		});
 	},
 	writeState: async (_docName: string, ydoc: WSSharedDoc) => {
-		console.log("apply write " + ydoc.name);
-	}
-}
+		console.log('apply write ' + ydoc.name);
+	},
+};
