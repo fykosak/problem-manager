@@ -1,36 +1,48 @@
 services:
-    client:
-        image: problem-manager-client
-        restart: on-failure:3
-        build:
-            context: client
-            dockerfile: Dockerfile.dev
-        ports:
-            - 8080:5173
-        volumes:
-            - .:/app
-    server:
-        image: problem-manager-server
-        restart: on-failure:3
-        build:
-            context: server
-            dockerfile: Dockerfile.dev
-        ports:
-            - 8081:4000
-        volumes:
-            - ./server:/app
-    db:
-        image: postgres:17
-        restart: on-failure:3
-        shm_size: 128mb
-        environment:
-            POSTGRES_DB: problem_manager
-            POSTGRES_USER: pm
-            POSTGRES_PASSWORD: password
-        volumes:
-            - ./postgresql_data:/var/lib/postgresql/data
-    adminer:
-        image: adminer
-        restart: always
-        ports:
-            - 8082:8080
+  client:
+    image: problem-manager-client
+    restart: on-failure:3
+    build:
+      context: client
+      dockerfile: Dockerfile.dev
+    ports:
+      - 8080:5173
+    volumes:
+      - .:/app
+  server:
+    image: problem-manager-server
+    restart: on-failure:3
+    build:
+      context: server
+      dockerfile: Dockerfile.dev
+    ports:
+      - 8081:8080
+    volumes:
+      - ./server:/app
+      - ./task_data:/data
+  builder:
+    image: problem-manager-builder
+    restart: on-failure:3
+    build:
+      context: builder
+      dockerfile: Dockerfile.dev
+    ports:
+      - 8082:8080
+    volumes:
+      - ./builder:/app
+      - ./task_data:/data
+  db:
+    image: postgres:17
+    restart: on-failure:3
+    shm_size: 128mb
+    environment:
+      POSTGRES_DB: problem_manager
+      POSTGRES_USER: pm
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./postgresql_data:/var/lib/postgresql/data
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8083:8080

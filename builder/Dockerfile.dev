@@ -1,0 +1,7 @@
+FROM fykosak/buildtools
+
+RUN apt-get update && apt-get install -y nodejs npm
+
+WORKDIR /app
+VOLUME /app
+CMD ["npx", "tsx", "watch", "src/index.ts"]
