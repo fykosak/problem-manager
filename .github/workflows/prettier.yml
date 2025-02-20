@@ -12,10 +12,10 @@ jobs:
           node-version: 23
           cache: 'npm'
       - name: Install dependencies
-        working_directory: ./server
+        working-directory: ./server
         run: npm install
       - name: Check formatting
-        working_directory: ./server
+        working-directory: ./server
         run: npx prettier . --check
 
   client:
@@ -26,8 +26,8 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
       - name: Install dependencies
-        working_directory: ./client
+        working-directory: ./client
         run: bun install
       - name: Check formatting
-        working_directory: ./client
+        working-directory: ./client
         run: bunx prettier . --check
