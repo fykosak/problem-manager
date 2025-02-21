@@ -14,6 +14,7 @@ import {
 	workStateEnum,
 	workTable,
 } from './db/schema';
+import { Runner } from './runner/runner';
 
 // created for each request
 export const createContext =
@@ -135,6 +136,17 @@ export const appRouter = trpc.router({
 					}))
 				);
 			}),
+		build: trpc.procedure.input(z.number()).mutation(async (opts) => {
+			console.log('build ' + opts.input);
+			const runner = new Runner();
+			let returnValue = await runner.run(opts.input);
+			returnValue = {
+				...returnValue,
+				file: runner.getPdfContests(opts.input),
+			};
+			console.log(returnValue);
+			return returnValue;
+		}),
 	}),
 	contest: trpc.router({
 		availableTopics: trpc.procedure

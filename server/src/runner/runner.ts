@@ -12,6 +12,16 @@ export class Runner {
 		return 'http://builder:8080';
 	}
 
+	public getPdfContests(problemId: number): string {
+		const absolutePath = path.join(
+			'/data',
+			problemId.toString(),
+			'build',
+			'problem.cs.pdf'
+		); // TODO to config
+		return fs.readFileSync(absolutePath, { encoding: 'base64' });
+	}
+
 	public async run(problemId: number) {
 		const directoryName = problemId.toString();
 		const absolutePath = '/data/' + directoryName; // TODO to config

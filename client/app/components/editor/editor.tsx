@@ -71,8 +71,8 @@ export default function Editor({ textId }: { textId: number }) {
 	return (
 		<CodeMirror
 			value={yTextRef.current.toString()}
-			height="1200px"
-			width="1000px"
+			height="800px"
+			width="600px"
 			theme={material}
 			style={{
 				fontSize: '16px',

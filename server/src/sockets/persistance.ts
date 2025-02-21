@@ -126,13 +126,14 @@ export const persistance: persistenceType = {
 			keepers.set(textId, keeper);
 		}
 
-		ydoc.on('update', (update: Uint8Array) => {
+		ydoc.on('update', async (update: Uint8Array) => {
 			console.log('apply update ' + ydoc.name);
-			storage.storeUpdate(textId, update);
+			//await storage.storeUpdate(textId, update);
+			await storage.storeDocument(textId, ydoc);
 			keeper.registerUpdate(update);
 			keeper.checkInactivity();
 			keeper.checkPeriodicity();
-			console.log('current contensts: ' + ydoc.getText().toJSON());
+			//console.log('current contents: ' + ydoc.getText().toJSON());
 		});
 		ydoc.on('destroy', (doc: Y.Doc) => {
 			console.log('apply destroy ' + docName);
