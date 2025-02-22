@@ -28,7 +28,7 @@ export class StorageProvider {
 
 		Y.applyUpdate(doc, update);
 
-		console.log(`new contents: ${doc.getText().toJSON()}`);
+		//console.log(`new contents: ${doc.getText().toJSON()}`);
 
 		await db
 			.update(textTable)
@@ -41,7 +41,7 @@ export class StorageProvider {
 	async storeDocument(textId: number, ydoc: WSSharedDoc) {
 		console.log('StorageProvider: storeDocument');
 
-		console.log(`new contents: ${ydoc.getText().toJSON()}`);
+		//console.log(`new contents: ${ydoc.getText().toJSON()}`);
 
 		await db
 			.update(textTable)

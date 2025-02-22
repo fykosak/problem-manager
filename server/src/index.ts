@@ -38,12 +38,4 @@ server.on('upgrade', (request, socket, head) => {
 	});
 });
 
-// testing api
-app.get('/build', async (req, res) => {
-	const runner = new Runner();
-	const returnValue = await runner.run(401);
-	console.log(returnValue);
-	res.send(returnValue);
-});
-
 export type AppRouter = typeof appRouter;

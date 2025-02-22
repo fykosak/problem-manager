@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import * as Y from 'yjs';
 // @ts-ignore
 import { yCollab } from 'y-codemirror.next';
@@ -9,16 +9,9 @@ import { material } from '@uiw/codemirror-theme-material';
 import { latex, latexLinter } from '~/libs/lang-latex/dist/index.js';
 import { linter, lintGutter } from '@codemirror/lint';
 
-export default function Editor({ textId }: { textId: number }) {
+const Editor = forwardRef(({ textId }: { textId: number }, ref) => {
 	const ydocRef = useRef(new Y.Doc());
-	const providerRef = useRef(
-		new WebsocketProvider(
-			'ws://localhost:8081',
-			textId.toString(),
-			ydocRef.current,
-			{ connect: false }
-		)
-	);
+	const providerRef = useRef<WebsocketProvider | null>(null);
 	const yTextRef = useRef(ydocRef.current.getText());
 	const undoManagerRef = useRef(new Y.UndoManager(yTextRef.current));
 
@@ -26,7 +19,6 @@ export default function Editor({ textId }: { textId: number }) {
 
 	// Set user awareness on mount
 	useEffect(() => {
-		console.log('runnning useEffect');
 		const ydoc = ydocRef.current;
 		const provider = new WebsocketProvider(
 			'ws://localhost:8081',
@@ -51,7 +43,6 @@ export default function Editor({ textId }: { textId: number }) {
 		userData.setUserMapping(ydoc, ydoc.clientID, user.name);
 
 		return () => {
-			console.log('provider destroy');
 			provider.destroy();
 			ydoc.destroy();
 		};
@@ -69,24 +60,28 @@ export default function Editor({ textId }: { textId: number }) {
 	}
 
 	return (
-		<CodeMirror
-			value={yTextRef.current.toString()}
-			height="800px"
-			width="600px"
-			theme={material}
-			style={{
-				fontSize: '16px',
-			}}
-			extensions={[
-				latex(),
-				linter(latexLinter),
-				lintGutter(),
-				yCollab(yTextRef.current, providerRef.current.awareness, {
-					undoManager: undoManagerRef.current,
-				}),
-				EditorView.lineWrapping,
-			]}
-			basicSetup={{ foldGutter: true }}
-		/>
+		<div ref={ref}>
+			<CodeMirror
+				value={yTextRef.current.toString()}
+				height="800px"
+				//width="600px"
+				theme={material}
+				style={{
+					fontSize: '14px',
+				}}
+				extensions={[
+					latex(),
+					linter(latexLinter),
+					lintGutter(),
+					yCollab(yTextRef.current, providerRef.current.awareness, {
+						undoManager: undoManagerRef.current,
+					}),
+					EditorView.lineWrapping,
+				]}
+				basicSetup={{ foldGutter: true }}
+			/>
+		</div>
 	);
-}
+});
+
+export default Editor;

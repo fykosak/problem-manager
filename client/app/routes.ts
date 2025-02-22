@@ -17,6 +17,7 @@ export default [
 			index('routes/task.edit.tsx'),
 			route('work', 'routes/task.work.tsx'),
 			route('metadata', 'routes/task.metadata.tsx'),
+			route('files', 'routes/task.files.tsx'),
 		]),
 	]),
 ] satisfies RouteConfig;

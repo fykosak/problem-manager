@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Document, Outline, Page, pdfjs } from 'react-pdf';
 
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
@@ -17,21 +17,38 @@ export default function PdfViewer({
 	scale: number;
 }) {
 	const [numPages, setNumPages] = useState<number | null>(null);
-	const baseSize = 600; // TODO dynamic from div size
-	const pdfSize = baseSize * scale;
+	const [containerWidth, setContainerWidth] = useState(400);
+	const pdfSize = containerWidth * scale;
+
+	const container = useRef(null);
+
+	useEffect(() => {
+		const ro = new ResizeObserver((entries) => {
+			for (let entry of entries) {
+				setContainerWidth(entry.contentRect.width);
+			}
+		});
+
+		ro.observe(container.current);
+	});
 
 	function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
 		setNumPages(numPages);
 	}
 
 	return (
-		<div className="bg-gray-500 w-[610px] h-[800px] relative overflow-auto flex flex-col">
+		<div
+			className="bg-gray-500 h-[800px] relative overflow-auto flex flex-col"
+			ref={container}
+		>
 			<Document
 				file={file}
 				onLoadError={console.error}
 				onLoadSuccess={onDocumentLoadSuccess}
 			>
-				<Outline />
+				{
+					//<Outline />
+				}
 				<div className="m-auto" style={{ width: `${pdfSize + 10}px` }}>
 					{Array.from(new Array(numPages), (el, index) => (
 						<Page
