@@ -86,7 +86,7 @@ export default function TaskEdit({ loaderData }: Route.ComponentProps) {
 		<>
 			{isMobile ? (
 				<Tabs
-					className="w-full"
+					className="w-full h-full flex flex-col"
 					onValueChange={setActiveTab}
 					defaultValue="editor"
 				>
@@ -98,28 +98,28 @@ export default function TaskEdit({ loaderData }: Route.ComponentProps) {
 							PDF
 						</TabsTrigger>
 					</TabsList>
-					<TabsContent value="editor">
-						<div ref={editorContainerRef} />
+					<TabsContent value="editor" className="grow">
+						<div ref={editorContainerRef} className="h-full" />
 					</TabsContent>
-					<TabsContent value="pdf">
-						<div ref={pdfContainerRef} />
+					<TabsContent value="pdf" className="grow">
+						<div ref={pdfContainerRef} className="h-full" />
 					</TabsContent>
 				</Tabs>
 			) : (
 				<ResizablePanelGroup direction="horizontal">
 					<ResizablePanel>
-						<div ref={editorContainerRef} />
+						<div ref={editorContainerRef} className="h-full" />
 					</ResizablePanel>
 					<ResizableHandle withHandle />
 					<ResizablePanel>
-						<div ref={pdfContainerRef} />
+						<div ref={pdfContainerRef} className="h-full" />
 					</ResizablePanel>
 				</ResizablePanelGroup>
 			)}
 
 			<div style={{ display: 'none' }}>
-				<Editor textId={1601} ref={editorComponentRef} />
-				<TaskPdf ref={pdfComponentRef} />
+				<Editor textId={text.textId} ref={editorComponentRef} />
+				<TaskPdf problemId={text.problemId} ref={pdfComponentRef} />
 			</div>
 		</>
 	);

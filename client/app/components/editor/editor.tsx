@@ -59,16 +59,28 @@ const Editor = forwardRef(({ textId }: { textId: number }, ref) => {
 		return null;
 	}
 
+	/* CSS trick:
+	 * The container is a flex col with only the CodeMirror as a child with the
+	 * ability to grow. This means that the editor will be the size of the
+	 * parent. But this also fixes an issue of when the editor is larger then
+	 * the container, the container (and all containers it's inside of) expands,
+	 * which creates new 100% height that is larger than the original container
+	 * meant to take up certain space.
+	 * This way the editor is only 1 px tall, so the container does not have
+	 * a reason to expand when thanks to the flex and grow, the editor is
+	 * expanded as if it was height: 100%.
+	 */
 	return (
-		<div ref={ref}>
+		<div ref={ref} className="h-full flex flex-col">
 			<CodeMirror
 				value={yTextRef.current.toString()}
-				height="800px"
+				height="100%"
 				//width="600px"
 				theme={material}
 				style={{
 					fontSize: '14px',
 				}}
+				className="grow h-px"
 				extensions={[
 					latex(),
 					linter(latexLinter),

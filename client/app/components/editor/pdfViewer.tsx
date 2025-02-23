@@ -3,6 +3,7 @@ import { Document, Outline, Page, pdfjs } from 'react-pdf';
 
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
+import { cn } from '~/lib/utils';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -11,26 +12,16 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 export default function PdfViewer({
 	file,
-	scale,
+	width: width,
+	className,
 }: {
 	file: string | null;
-	scale: number;
+	width: number;
+	className: string | undefined;
 }) {
 	const [numPages, setNumPages] = useState<number | null>(null);
-	const [containerWidth, setContainerWidth] = useState(400);
-	const pdfSize = containerWidth * scale;
 
 	const container = useRef(null);
-
-	useEffect(() => {
-		const ro = new ResizeObserver((entries) => {
-			for (let entry of entries) {
-				setContainerWidth(entry.contentRect.width);
-			}
-		});
-
-		ro.observe(container.current);
-	});
 
 	function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
 		setNumPages(numPages);
@@ -38,23 +29,27 @@ export default function PdfViewer({
 
 	return (
 		<div
-			className="bg-gray-500 h-[800px] relative overflow-auto flex flex-col"
+			className={cn(
+				'bg-gray-500 relative overflow-auto flex flex-col',
+				className
+			)}
 			ref={container}
 		>
 			<Document
 				file={file}
 				onLoadError={console.error}
 				onLoadSuccess={onDocumentLoadSuccess}
+				externalLinkTarget="_blank"
 			>
 				{
 					//<Outline />
 				}
-				<div className="m-auto" style={{ width: `${pdfSize + 10}px` }}>
+				<div className="m-auto" style={{ width: `${width + 10}px` }}>
 					{Array.from(new Array(numPages), (el, index) => (
 						<Page
 							pageNumber={index + 1}
 							key={'page_' + index}
-							width={pdfSize}
+							width={width}
 							className="mt-5 mx-[5px]"
 						/>
 					))}

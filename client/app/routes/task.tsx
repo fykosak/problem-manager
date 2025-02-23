@@ -44,7 +44,7 @@ export default function Task() {
 				</SidebarContent>
 			</Sidebar>
 			<main className="w-full">
-				<SidebarTrigger />
+				<SidebarTrigger className="absolute top-0 left-0" />
 				<NavigationSuspense>
 					<Outlet />
 				</NavigationSuspense>
