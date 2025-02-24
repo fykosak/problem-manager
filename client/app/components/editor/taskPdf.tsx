@@ -3,10 +3,11 @@ import { Button } from '../ui/button';
 import PdfViewer from './pdfViewer';
 import {
 	KeyboardEvent,
-	WheelEvent,
 	forwardRef,
 	useCallback,
 	useEffect,
+	useImperativeHandle,
+	useRef,
 	useState,
 } from 'react';
 import { Loader, Minus, Plus } from 'lucide-react';
@@ -14,7 +15,10 @@ import { Loader, Minus, Plus } from 'lucide-react';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 
-const TaskPdf = forwardRef(({ problemId }: { problemId: number }, ref) => {
+const TaskPdf = forwardRef(({ problemId }: { problemId: number }, outerRef) => {
+	const innerRef = useRef<HTMLDivElement>(null);
+	useImperativeHandle(outerRef, () => innerRef.current!, []);
+
 	const [isRunning, setIsRunning] = useState(false);
 	const [file, setFile] = useState<string | null>(null);
 
@@ -56,7 +60,7 @@ const TaskPdf = forwardRef(({ problemId }: { problemId: number }, ref) => {
 		}
 	}
 
-	function handleWheel(event: WheelEvent<HTMLDivElement>) {
+	function handleWheel(this: HTMLDivElement, event: WheelEvent): any {
 		if (event.ctrlKey || event.metaKey) {
 			event.stopPropagation();
 			event.preventDefault();
@@ -69,13 +73,21 @@ const TaskPdf = forwardRef(({ problemId }: { problemId: number }, ref) => {
 	}
 
 	useEffect(() => {
-		ref.current.addEventListener('wheel', handleWheel, { passive: false });
-		return () => ref.current.removeEventListener('wheel', handleWheel);
+		if (innerRef.current) {
+			innerRef.current.addEventListener('wheel', handleWheel, {
+				passive: false,
+			});
+		}
+		return () => {
+			if (innerRef.current) {
+				innerRef.current.removeEventListener('wheel', handleWheel);
+			}
+		};
 	}, [pdfWidth]);
 
 	return (
 		<div
-			ref={ref}
+			ref={innerRef}
 			className="flex flex-col h-full"
 			onKeyDown={handleKeyDown}
 			/* make this div selectable for it to handle key down events*/

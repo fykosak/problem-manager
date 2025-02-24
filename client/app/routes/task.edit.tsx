@@ -46,15 +46,18 @@ export default function TaskEdit({ loaderData }: Route.ComponentProps) {
 
 	const editorComponentRef = useRef<HTMLDivElement>(null);
 	const pdfComponentRef = useRef<HTMLDivElement>(null);
-	const editorContainerRef = useRef(null);
-	const pdfContainerRef = useRef(null);
+	const editorContainerRef = useRef<HTMLDivElement>(null);
+	const pdfContainerRef = useRef<HTMLDivElement>(null);
 	useEffect(() => {
 		if (!componentLoaded) {
 			//component not loaded, skipping append
 			return;
 		}
 
-		function appendChildRef(container: Element, child: Element) {
+		function appendChildRef(
+			container: Element | null,
+			child: Element | null
+		) {
 			if (container && child && container.childElementCount === 0) {
 				container.appendChild(child);
 			}

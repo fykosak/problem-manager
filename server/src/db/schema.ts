@@ -132,7 +132,7 @@ export const problemTable = pgTable('problem', {
 	typeId: integer()
 		.notNull()
 		.references(() => typeTable.typeId),
-	metadata: json().notNull().$type<{ [key: string]: any }>(),
+	metadata: json().notNull().$type<Record<string, unknown>>(),
 	created: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -91,12 +91,22 @@ async function seed() {
 
 	console.log('Init person');
 	for (let i = 1; i <= 20; i++) {
-		let firstName = ['James', 'Michael', 'Robert', 'John', 'Mary', 'Betty'][
-			Math.floor(Math.random() * 6)
-		];
-		let lastName = ['Elsher', 'Solace', 'Raven', 'Ashley', 'West', 'Adler'][
-			Math.floor(Math.random() * 6)
-		];
+		const firstName = [
+			'James',
+			'Michael',
+			'Robert',
+			'John',
+			'Mary',
+			'Betty',
+		][Math.floor(Math.random() * 6)];
+		const lastName = [
+			'Elsher',
+			'Solace',
+			'Raven',
+			'Ashley',
+			'West',
+			'Adler',
+		][Math.floor(Math.random() * 6)];
 		await db.insert(schema.personTable).values({
 			personId: i,
 			firstName: firstName,
@@ -164,7 +174,8 @@ async function seed() {
 					const [text] = await db
 						.insert(schema.textTable)
 						.values({
-							// @ts-ignore
+							// @ts-expect-error Lang and type not beeing enum
+							// types throws type error
 							problemId: problem.problemId,
 							lang: lang,
 							type: type,
@@ -223,7 +234,7 @@ async function seed() {
 		await db.select().from(schema.workTable),
 		(work) => work.workId
 	);
-	for (let workId of works) {
+	for (const workId of works) {
 		await db.insert(schema.personWorkTable).values({
 			personId: 1 + Math.floor(Math.random() * 20),
 			workId: workId,
@@ -233,4 +244,4 @@ async function seed() {
 	console.log('Seeding finished');
 }
 
-seed();
+await seed();

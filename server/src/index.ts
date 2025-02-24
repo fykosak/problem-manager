@@ -6,7 +6,6 @@ import WebSocket from 'ws';
 import { setPersistence, setupWSConnection } from './sockets/yjs';
 import { appRouter, createContext } from './trpc';
 import { persistance } from './sockets/persistance';
-import { Runner } from './runner/runner';
 
 const app = express();
 app.use(cors());
@@ -32,7 +31,6 @@ websocketServer.on('connection', setupWSConnection);
 setPersistence(persistance);
 
 server.on('upgrade', (request, socket, head) => {
-	console.log('connection upgrade ' + request.url);
 	websocketServer.handleUpgrade(request, socket, head, (ws) => {
 		websocketServer.emit('connection', ws, request);
 	});

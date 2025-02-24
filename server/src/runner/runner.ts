@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { db } from '../db';
-import { contestTable, textTable } from '../db/schema';
+import { textTable } from '../db/schema';
 import { and, eq } from 'drizzle-orm';
 import { StorageProvider } from '../sockets/storageProvider';
 
@@ -82,7 +82,7 @@ export class Runner {
 
 		try {
 			const response = await fetch(request);
-			return response.json();
+			return await response.json(); // eslint-disable-line
 		} catch (error) {
 			console.error(error);
 			return {

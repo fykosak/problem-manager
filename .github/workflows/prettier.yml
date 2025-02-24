@@ -24,11 +24,15 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+          cache: 'npm'
+          cache-dependency-path: ./client/package-lock.json
       - name: Install dependencies
         working-directory: ./client
-        run: bun install
+        run: npm install
       - name: Check formatting
         working-directory: ./client
-        run: bunx prettier . --check --config ../.prettierrc
+        run: npx prettier . --check --config ../.prettierrc

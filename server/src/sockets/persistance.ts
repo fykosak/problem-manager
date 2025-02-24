@@ -15,7 +15,7 @@ class Keeper {
 	textId: number;
 	ydoc: WSSharedDoc;
 	inactivityTimeout: Timer | null = null;
-	editors: Set<any> = new Set();
+	editors = new Set<number>();
 	permanentUserData: Y.PermanentUserData;
 
 	constructor(textId: number, ydoc: WSSharedDoc) {
@@ -27,7 +27,7 @@ class Keeper {
 
 	private setInactivityTimeout() {
 		this.inactivityTimeout = setTimeout(
-			() => this.takeSnapshot(),
+			async () => { await this.takeSnapshot(); },
 			SNAPSHOT_INACTIVITIY_THRESHOLD
 		);
 	}
@@ -56,7 +56,7 @@ class Keeper {
 	 * Creates a timeout that saves a document version after `SNAPSHOT_INACTIVITIY_THRESHOLD` miliseconds of inactivity.
 	 * When checked, it takes it as an activity and resets the timeout back to its original value.
 	 */
-	public async checkInactivity() {
+	public checkInactivity() {
 		// start first timeout if not set
 		if (!this.inactivityTimeout) {
 			this.setInactivityTimeout();
@@ -93,7 +93,7 @@ class Keeper {
 	public registerUpdate(updateData: Uint8Array) {
 		const update = Y.decodeUpdate(updateData);
 		for (const change of update.structs) {
-			let person = this.permanentUserData.getUserByClientId(
+			const person = this.permanentUserData.getUserByClientId(
 				change.id.client
 			);
 			this.editors.add(person);
@@ -101,7 +101,7 @@ class Keeper {
 	}
 }
 
-let keepers = new Map<number, Keeper>();
+const keepers = new Map<number, Keeper>();
 
 export const persistance: persistenceType = {
 	provider: null,

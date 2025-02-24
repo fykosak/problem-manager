@@ -1,5 +1,4 @@
 import { initTRPC, TRPCError } from '@trpc/server';
-import * as trpcExpress from '@trpc/server/adapters/express';
 import { z } from 'zod';
 
 import { db } from './db';
@@ -17,13 +16,12 @@ import {
 import { Runner } from './runner/runner';
 
 // created for each request
-export const createContext =
-	({}: trpcExpress.CreateExpressContextOptions) => ({}); // no context
+export const createContext = () => ({}); // no context
 type Context = Awaited<ReturnType<typeof createContext>>;
 
 const trpc = initTRPC.context<Context>().create();
 export const appRouter = trpc.router({
-	getProblems: trpc.procedure.input(z.number()).query(async (opts) => {
+	getProblems: trpc.procedure.input(z.number()).query(async () => {
 		return await db.query.problemTable.findMany({
 			with: {
 				problemTopics: {
@@ -107,9 +105,7 @@ export const appRouter = trpc.router({
 			.input(
 				z.object({
 					problemId: z.number(),
-					metadata: z
-						.object<{ [key: string]: any }>({})
-						.passthrough(),
+					metadata: z.object<Record<string, any>>({}).passthrough(), // eslint-disable-line
 					topics: z.number().array(),
 					type: z.number(),
 				})
@@ -145,7 +141,7 @@ export const appRouter = trpc.router({
 				file: runner.getPdfContests(opts.input),
 			};
 			console.log(returnValue);
-			return returnValue;
+			return returnValue; // @ts-expect-error any return value
 		}),
 	}),
 	contest: trpc.router({
@@ -167,7 +163,7 @@ export const appRouter = trpc.router({
 				),
 			});
 		}),
-		people: trpc.procedure.input(z.number()).query(async (opts) => {
+		people: trpc.procedure.input(z.number()).query(async () => {
 			// TODO filter by contest organizer
 			return await db.query.personTable.findMany();
 		}),

@@ -36,7 +36,7 @@ const gcEnabled = process.env.GC !== 'false' && process.env.GC !== '0';
 export interface persistenceType {
 	bindState: Function;
 	writeState: Function;
-	provider: any;
+	provider: unknown;
 }
 let persistence: persistenceType | null = null;
 
@@ -64,7 +64,9 @@ const updateHandler = (
 	encoding.writeVarUint(encoder, messageSync);
 	syncProtocol.writeUpdate(encoder, update);
 	const message = encoding.toUint8Array(encoder);
-	doc.conns.forEach((_, conn) => send(doc, conn, message));
+	doc.conns.forEach((_, conn) => {
+		send(doc, conn, message);
+	});
 };
 
 let contentInitializor = (_ydoc: Y.Doc) => Promise.resolve();
@@ -79,7 +81,7 @@ export class WSSharedDoc extends Y.Doc {
 	/**
 	 * Maps from conn to set of controlled user ids. Delete all user ids from awareness when this conn is closed
 	 */
-	public conns: Map<Object, Set<number>> = new Map();
+	public conns = new Map<object, Set<number>>();
 	public awareness: awarenessProtocol.Awareness;
 	public whenInitialized: Promise<void>;
 
@@ -100,11 +102,11 @@ export class WSSharedDoc extends Y.Doc {
 				updated,
 				removed,
 			}: {
-				added: Array<number>;
-				updated: Array<number>;
-				removed: Array<number>;
+				added: number[];
+				updated: number[];
+				removed: number[];
 			},
-			conn: Object | null
+			conn: object | null
 		) => {
 			const changedClients = added.concat(updated, removed);
 			if (conn !== null) {
@@ -155,7 +157,7 @@ export class WSSharedDoc extends Y.Doc {
  *
  * @return {WSSharedDoc}
  */
-export function getYDoc(docname: string, gc: boolean = true): WSSharedDoc {
+export function getYDoc(docname: string, gc = true): WSSharedDoc {
 	return map.setIfUndefined(docs, docname, () => {
 		const doc = new WSSharedDoc(docname);
 		doc.gc = gc;
@@ -236,6 +238,7 @@ const send = (
 		conn.send(m, {}, (err) => {
 			err != null && closeConn(doc, conn);
 		});
+		// eslint-disable-next-line
 	} catch (e) {
 		closeConn(doc, conn);
 	}
@@ -253,9 +256,9 @@ export function setupWSConnection(
 	const doc = getYDoc(docName, gc);
 	doc.conns.set(conn, new Set());
 	// listen and reply to events
-	conn.on('message', (message: ArrayBuffer) =>
-		messageListener(conn, doc, new Uint8Array(message))
-	);
+	conn.on('message', (message: ArrayBuffer) => {
+		messageListener(conn, doc, new Uint8Array(message));
+	});
 
 	// Check if connection is still alive
 	let pongReceived = true;
@@ -269,6 +272,7 @@ export function setupWSConnection(
 			pongReceived = false;
 			try {
 				conn.ping();
+				// eslint-disable-next-line
 			} catch (e) {
 				closeConn(doc, conn);
 				clearInterval(pingInterval);
