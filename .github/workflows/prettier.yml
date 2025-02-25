@@ -2,7 +2,6 @@ name: Prettier
 on: [push, pull_request]
 jobs:
   server:
-    name: Prettier - server
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -20,7 +19,6 @@ jobs:
         run: npx prettier . --check --config ../.prettierrc
 
   client:
-    name: Prettier - client
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4

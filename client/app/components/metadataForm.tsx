@@ -95,13 +95,13 @@ export function MetadataForm({
 										? field.onChange([
 												...field.value,
 												item.topicId,
-										  ])
+											])
 										: field.onChange(
 												field.value?.filter(
 													(value) =>
 														value !== item.topicId
 												)
-										  );
+											);
 								}}
 							/>
 						</FormControl>

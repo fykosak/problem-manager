@@ -13,7 +13,7 @@ export async function clientLoader() {
 		name:
 			'name' in problem.metadata
 				? // @ts-expect-error not defined metadata type
-				  'cs' in problem.metadata.name
+					'cs' in problem.metadata.name
 					? (problem.metadata.name.cs as string) // TODO
 					: ''
 				: '',

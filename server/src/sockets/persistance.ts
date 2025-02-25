@@ -26,10 +26,9 @@ class Keeper {
 	}
 
 	private setInactivityTimeout() {
-		this.inactivityTimeout = setTimeout(
-			async () => { await this.takeSnapshot(); },
-			SNAPSHOT_INACTIVITIY_THRESHOLD
-		);
+		this.inactivityTimeout = setTimeout(async () => {
+			await this.takeSnapshot();
+		}, SNAPSHOT_INACTIVITIY_THRESHOLD);
 	}
 
 	private async takeSnapshot() {
