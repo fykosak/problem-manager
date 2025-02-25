@@ -42,7 +42,7 @@ export function foldEnvironment(
 	}
 
 	// get parent Command
-	// @ts-ignore
+	// @ts-expect-error TS does not handle the change by .parent()
 	if (!cursor.parent() || cursor.name != 'Command') {
 		throw new Error("Parent 'Command' expected for CommandIdentifier");
 	}

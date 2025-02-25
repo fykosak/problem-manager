@@ -1,8 +1,4 @@
-import {
-	CompletionContext,
-	CompletionResult,
-	completeFromList,
-} from '@codemirror/autocomplete';
+import { CompletionContext, CompletionResult } from '@codemirror/autocomplete';
 import { latexLanguage } from './language';
 import { syntaxTree } from '@codemirror/language';
 
@@ -358,7 +354,8 @@ function getMathCompletion(
 			negatedBinaryOperators,
 			setAndLogicSymbols,
 			delimiterSymbols,
-			arrowSymbols
+			arrowSymbols,
+			functionSymbols
 		)
 		.map((symbol) => ({
 			label: '\\' + symbol[0],
@@ -366,7 +363,7 @@ function getMathCompletion(
 			detail: symbol[1],
 		}));
 
-	const commands = mathCommands.map((command) => ({
+	const commands = mathCommands.concat(mathFunctions).map((command) => ({
 		label: '\\' + command,
 		type: 'keyword',
 	}));

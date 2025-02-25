@@ -1,0 +1,20 @@
+name: Prettier
+on: [push, pull_request]
+jobs:
+  client:
+    name: Eslint - client
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+          cache: 'npm'
+          cache-dependency-path: ./client/package-lock.json
+      - name: Install dependencies
+        working-directory: ./client
+        run: npm install
+      - name: Run eslint
+        working-directory: ./client
+        run: npm run lint

@@ -22,7 +22,6 @@ export function moveToEnvironmentEnd(cursor: TreeCursor, doc: Text) {
 	// traverse the node tree and search for an end
 	while (cursor.next()) {
 		if (
-			// @ts-ignore
 			cursor.name == 'CommandIdentifier' &&
 			doc.slice(cursor.from, cursor.to).toString() == '\\begin'
 		) {

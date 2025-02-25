@@ -44,10 +44,10 @@ export default function WorkComponent({
 	work: trpcOutputTypes['problem']['work'][0];
 	people: trpcOutputTypes['contest']['people'];
 }) {
-	let [state, setState] = useState(work.state);
+	const [state, setState] = useState(work.state);
 
-	function updateState(state) {
-		trpc.problem.updateWorkState.query({
+	async function updateState(state: typeof work.state) {
+		await trpc.problem.updateWorkState.query({
 			workId: work.workId,
 			state: state,
 		});
@@ -59,8 +59,9 @@ export default function WorkComponent({
 				{work.label}
 				<Select
 					value={state}
-					onValueChange={(value) => {
-						updateState(value);
+					// eslint-disable-next-line
+					onValueChange={async (value: typeof work.state) => {
+						await updateState(value);
 						setState(value);
 					}}
 				>

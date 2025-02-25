@@ -76,10 +76,49 @@ export function MetadataForm({
 	const { formState } = form;
 	const { errors } = formState;
 
+	function getAvailableTopicsCheckboxComponents() {
+		return availableTopics.map((item) => (
+			<FormField
+				key={item.topicId}
+				control={form.control}
+				name="topics"
+				render={({ field }) => (
+					<FormItem
+						key={item.topicId}
+						className="flex flex-row items-start space-x-3 space-y-0"
+					>
+						<FormControl>
+							<Checkbox
+								checked={field.value?.includes(item.topicId)}
+								onCheckedChange={(checked) => {
+									return checked
+										? field.onChange([
+												...field.value,
+												item.topicId,
+										  ])
+										: field.onChange(
+												field.value?.filter(
+													(value) =>
+														value !== item.topicId
+												)
+										  );
+								}}
+							/>
+						</FormControl>
+						<FormLabel className="text-sm font-normal">
+							{item.label}
+						</FormLabel>
+					</FormItem>
+				)}
+			/>
+		));
+	}
+
 	return (
 		<Form {...form}>
 			<div>{errors.root?.message}</div>
 			<form
+				// eslint-disable-next-line
 				onSubmit={form.handleSubmit(async (values) => {
 					try {
 						await onSubmit(values);
@@ -164,54 +203,11 @@ export function MetadataForm({
 				<FormField
 					control={form.control}
 					name="topics"
-					render={({ field }) => (
+					render={() => (
 						<FormItem>
 							<FormLabel>Témata</FormLabel>
 							<div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-								{availableTopics.map((item) => (
-									<FormField
-										key={item.topicId}
-										control={form.control}
-										name="topics"
-										render={({ field }) => (
-											<FormItem
-												key={item.topicId}
-												className="flex flex-row items-start space-x-3 space-y-0"
-											>
-												<FormControl>
-													<Checkbox
-														checked={field.value?.includes(
-															item.topicId
-														)}
-														onCheckedChange={(
-															checked
-														) => {
-															return checked
-																? field.onChange(
-																		[
-																			...field.value,
-																			item.topicId,
-																		]
-																	)
-																: field.onChange(
-																		field.value?.filter(
-																			(
-																				value: any
-																			) =>
-																				value !==
-																				item.topicId
-																		)
-																	);
-														}}
-													/>
-												</FormControl>
-												<FormLabel className="text-sm font-normal">
-													{item.label}
-												</FormLabel>
-											</FormItem>
-										)}
-									/>
-								))}
+								{getAvailableTopicsCheckboxComponents()}
 							</div>
 							<FormMessage />
 						</FormItem>

@@ -10,8 +10,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export default function Work({ loaderData }: Route.ComponentProps) {
-	let groups = new Map<string | null, Array<ReactElement>>();
-	for (let work of loaderData.work) {
+	const groups = new Map<string | null, ReactElement[]>();
+	for (const work of loaderData.work) {
 		if (!groups.has(work.group)) {
 			groups.set(work.group, []);
 		}
@@ -23,8 +23,8 @@ export default function Work({ loaderData }: Route.ComponentProps) {
 		);
 	}
 
-	let groupElements = [];
-	for (let [key, elements] of groups.entries()) {
+	const groupElements = [];
+	for (const [key, elements] of groups.entries()) {
 		groupElements.push(
 			<div key={key} className="flex flex-col gap-2">
 				{key}

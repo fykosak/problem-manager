@@ -25,7 +25,9 @@ const TaskPdf = forwardRef(({ problemId }: { problemId: number }, outerRef) => {
 	const buildPdf = useCallback(async () => {
 		setIsRunning(true);
 		try {
+			// eslint-disable-next-line
 			const data = await trpc.problem.build.mutate(problemId);
+			// eslint-disable-next-line
 			setFile(`data:application/pdf;base64,${data['file']}`);
 		} finally {
 			setIsRunning(false);
@@ -60,7 +62,7 @@ const TaskPdf = forwardRef(({ problemId }: { problemId: number }, outerRef) => {
 		}
 	}
 
-	function handleWheel(this: HTMLDivElement, event: WheelEvent): any {
+	function handleWheel(this: HTMLDivElement, event: WheelEvent) {
 		if (event.ctrlKey || event.metaKey) {
 			event.stopPropagation();
 			event.preventDefault();
@@ -94,6 +96,7 @@ const TaskPdf = forwardRef(({ problemId }: { problemId: number }, outerRef) => {
 			tabIndex={1}
 		>
 			<div className="flex flex-row align-center gap-1">
+				{/* eslint-disable-next-line */}
 				<Button onClick={buildPdf}>
 					{!isRunning ? (
 						'Zkompilovat'

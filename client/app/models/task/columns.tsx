@@ -5,7 +5,7 @@ import {
 	DataTableColumnUniqueFilter,
 } from '~/components/ui/dataTable';
 
-export type Task = {
+export interface Task {
 	problemId: number;
 	name: string | null;
 	authors: string[];
@@ -13,7 +13,7 @@ export type Task = {
 	type: string;
 	state: string;
 	created: Date;
-};
+}
 
 export const columns: ColumnDef<Task>[] = [
 	{

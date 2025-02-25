@@ -36,7 +36,7 @@ function checkEnvironment(
 	// traverse the node tree and search for an end
 	while (cursor.next()) {
 		if (
-			// @ts-ignore
+			// @ts-expect-error TS does not handle the change by .next()
 			cursor.name == 'CommandIdentifier' &&
 			doc.slice(cursor.from, cursor.to).toString() == '\\begin'
 		) {
@@ -45,7 +45,7 @@ function checkEnvironment(
 		}
 
 		if (
-			// @ts-ignore-line
+			// @ts-expect-error TS does not handle the change by .next()
 			cursor.name == 'CommandIdentifier' &&
 			doc.slice(cursor.from, cursor.to).toString() == '\\end'
 		) {
@@ -101,7 +101,7 @@ function checkForMatchingBrace(
 	beginNode: SyntaxNodeRef,
 	view: EditorView,
 	diagnostics: Diagnostic[],
-	forwards: boolean = true
+	forwards = true
 ): void {
 	const doc = view.state.doc;
 	const cursor = syntaxTree(view.state).cursor();
@@ -190,7 +190,7 @@ function checkForMatchingBrace(
 }
 
 export function latexLinter(view: EditorView): Diagnostic[] {
-	let diagnostics: Diagnostic[] = [];
+	const diagnostics: Diagnostic[] = [];
 
 	const doc = view.state.doc;
 	const tree = syntaxTree(view.state).cursor();

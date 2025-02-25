@@ -1,6 +1,5 @@
 import { ForwardedRef, forwardRef, useEffect, useRef, useState } from 'react';
 import * as Y from 'yjs';
-// @ts-ignore
 import { yCollab } from 'y-codemirror.next';
 import { WebsocketProvider } from 'y-websocket';
 
@@ -59,6 +58,9 @@ const Editor = forwardRef(
 		if (!undoManagerRef.current) {
 			return null;
 		}
+		if (!connected) {
+			return null;
+		}
 
 		/* CSS trick:
 		 * The container is a flex col with only the CodeMirror as a child with the
@@ -74,7 +76,7 @@ const Editor = forwardRef(
 		return (
 			<div ref={ref} className="h-full flex flex-col">
 				<CodeMirror
-					value={yTextRef.current.toString()}
+					value={yTextRef.current.toJSON()}
 					height="100%"
 					//width="600px"
 					theme={material}

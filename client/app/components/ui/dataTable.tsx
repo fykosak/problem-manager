@@ -39,13 +39,14 @@ export function DataTableColumnUniqueFilter<TData, TValue>({
 	const possibleValues = column.getFacetedUniqueValues();
 	const ALL_VALUES = '__all__';
 
-	let options = [
+	const options = [
 		<SelectItem key={ALL_VALUES} value={ALL_VALUES}>
 			Vše
 		</SelectItem>,
 	];
-	for (let [key, _] of possibleValues) {
+	for (const [key] of possibleValues) {
 		options.push(
+			// eslint-disable-next-line
 			<SelectItem key={key} value={`${key}`}>
 				{key}
 			</SelectItem>
@@ -111,7 +112,7 @@ export function DataTable<TData, TValue>({
 		getFilteredRowModel: getFilteredRowModel(),
 		getFacetedUniqueValues: (table, columnId) => () => {
 			// Custom implementation of unique values to account for array values
-			const uniqueValueMap = new Map<any, number>();
+			const uniqueValueMap = new Map<unknown, number>();
 
 			const facetedRowModel = table
 				.getColumn(columnId)
@@ -121,10 +122,10 @@ export function DataTable<TData, TValue>({
 				return new Map();
 			}
 
-			for (let row of facetedRowModel.flatRows) {
-				for (let columnValue of row.getUniqueValues(columnId)) {
+			for (const row of facetedRowModel.flatRows) {
+				for (const columnValue of row.getUniqueValues(columnId)) {
 					if (Array.isArray(columnValue)) {
-						for (let value of columnValue) {
+						for (const value of columnValue) {
 							const prevCount = uniqueValueMap.get(value) || 0;
 							uniqueValueMap.set(value, prevCount + 1);
 						}
@@ -159,7 +160,7 @@ export function DataTable<TData, TValue>({
 														header.column.columnDef
 															.header,
 														header.getContext()
-													)}
+												  )}
 										</TableHead>
 									);
 								})}

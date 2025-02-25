@@ -33,24 +33,25 @@ export default function WorkPersonSelect({
 		});
 	}
 
-	let personOptions = [];
-	for (let person of people) {
+	const personOptions = [];
+	for (const person of people) {
 		const isSelected = selectedValues.has(person.personId);
 		personOptions.push(
 			<CommandItem
 				key={person.personId}
-				onSelect={() => {
+				// eslint-disable-next-line
+				onSelect={async () => {
 					if (isSelected) {
 						setSelectedValues((prev) => {
 							prev.delete(person.personId);
 							return new Set(prev);
 						});
-						updateWorkPerson(person.personId, false);
+						await updateWorkPerson(person.personId, false);
 					} else {
 						setSelectedValues(
 							new Set(selectedValues.add(person.personId))
 						);
-						updateWorkPerson(person.personId, true);
+						await updateWorkPerson(person.personId, true);
 					}
 				}}
 			>
@@ -71,8 +72,8 @@ export default function WorkPersonSelect({
 		);
 	}
 
-	let selectedPeopleBadges = [];
-	for (let person of people) {
+	const selectedPeopleBadges = [];
+	for (const person of people) {
 		if (selectedValues.has(person.personId)) {
 			selectedPeopleBadges.push(
 				<Badge key={person.personId} variant="outline" className="h-9">

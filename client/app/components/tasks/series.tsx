@@ -12,7 +12,7 @@ export function Series({
 	id: UniqueIdentifier;
 	items: UniqueIdentifier[];
 }) {
-	const { isOver, setNodeRef } = useDroppable({
+	const { setNodeRef } = useDroppable({
 		id: id,
 	});
 

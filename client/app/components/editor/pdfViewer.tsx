@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Document, Outline, Page, pdfjs } from 'react-pdf';
+import { useRef, useState } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
 
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
