@@ -17,5 +17,10 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm install
+      - name: See directory setup
+        run: |
+          ls -al .
+          ls -al ..
+          ls -al ../server
       - name: Run client eslint
         run: npm run lint
