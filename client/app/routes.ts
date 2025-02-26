@@ -12,6 +12,7 @@ export default [
 			index('routes/contestHome.tsx'),
 			route('tasks', 'routes/tasks.tsx'),
 			route('task-suggestions', 'routes/taskSuggestions.tsx'),
+			route('create', 'routes/contestTaskSuggetion.tsx'),
 		]),
 		route('task/:taskId', 'routes/task.tsx', [
 			index('routes/task.edit.tsx'),

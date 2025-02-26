@@ -1,0 +1,287 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '../ui/form';
+import { trpc, type trpcOutputTypes } from '~/trpc';
+import { toast } from 'sonner';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
+import { Checkbox } from '../ui/checkbox';
+import {
+	Select,
+	SelectTrigger,
+	SelectValue,
+	SelectItem,
+	SelectContent,
+} from '../ui/select';
+import { useEffect } from 'react';
+import { Textarea } from '../ui/textarea';
+import { langEnum } from '~/server/db/schema';
+
+const formSchema = z.object({
+	contestId: z.coerce.number(),
+	lang: z.enum(langEnum.enumValues),
+	name: z.string(),
+	origin: z.string().optional(),
+	task: z.string(),
+	topics: z.number().array().min(1),
+	type: z.coerce.number(),
+});
+
+export function CreateProblemForm({
+	contests,
+}: {
+	contests: trpcOutputTypes['contest']['createProblemData'];
+}) {
+	const form = useForm<z.infer<typeof formSchema>>({
+		resolver: zodResolver(formSchema),
+		defaultValues: {
+			contestId: 1, // TODO select by selected contest
+			lang: 'cs', // TODO from config?
+			name: '',
+			origin: '',
+			task: '',
+			topics: [],
+		},
+	});
+
+	async function onSubmit(values: z.infer<typeof formSchema>) {
+		await trpc.problem.create.mutate({
+			...values,
+		});
+		toast('Task saved');
+		// TODO redirect or reset form
+	}
+
+	const { formState, resetField, watch } = form;
+	const { errors } = formState;
+
+	const contestId = Number(watch('contestId'));
+	useEffect(() => {
+		resetField('type');
+	}, [contestId]);
+
+	const selectedContest = contests.find(
+		(contest) => contest.contestId === contestId
+	);
+
+	function getTopicsCheckboxes() {
+		const selectableTopics = selectedContest ? selectedContest.topics : [];
+		return selectableTopics.map((topic) => (
+			<FormField
+				key={topic.topicId}
+				control={form.control}
+				name="topics"
+				render={({ field }) => (
+					<FormItem
+						key={topic.topicId}
+						className="flex flex-row items-start space-x-3 space-y-0"
+					>
+						<FormControl>
+							<Checkbox
+								checked={field.value?.includes(topic.topicId)}
+								onCheckedChange={(checked) => {
+									return checked
+										? field.onChange([
+												...field.value,
+												topic.topicId,
+											])
+										: field.onChange(
+												field.value?.filter(
+													(value) =>
+														value !== topic.topicId
+												)
+											);
+								}}
+							/>
+						</FormControl>
+						<FormLabel className="text-sm font-normal">
+							{topic.label}
+						</FormLabel>
+					</FormItem>
+				)}
+			/>
+		));
+	}
+
+	return (
+		<Form {...form}>
+			<div>{errors.root?.message}</div>
+			<form
+				// eslint-disable-next-line
+				onSubmit={form.handleSubmit(async (values) => {
+					try {
+						await onSubmit(values);
+					} catch (exception) {
+						form.setError('root', {
+							message: (exception as Error).message ?? 'Error',
+							type: 'server',
+						});
+					}
+				})}
+				className="space-y-8"
+			>
+				<FormField
+					control={form.control}
+					name="contestId"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Soutěž</FormLabel>
+							<Select
+								onValueChange={field.onChange}
+								value={
+									field.value ? field.value.toString() : ''
+								}
+							>
+								<SelectTrigger>
+									<SelectValue placeholder="Select contest" />
+								</SelectTrigger>
+								<SelectContent>
+									{contests.map((contest) => (
+										<SelectItem
+											value={contest.contestId.toString()}
+											key={contest.contestId}
+										>
+											{contest.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormField
+					control={form.control}
+					name="lang"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Jazyk návrhu</FormLabel>
+							<Select
+								onValueChange={field.onChange}
+								value={
+									field.value ? field.value.toString() : ''
+								}
+							>
+								<SelectTrigger>
+									<SelectValue placeholder="Select lang" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="cs">Čeština</SelectItem>
+									<SelectItem value="en">
+										Angličtina
+									</SelectItem>
+								</SelectContent>
+							</Select>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormField
+					control={form.control}
+					name="name"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Název</FormLabel>
+							<FormControl>
+								<Input placeholder="Název" {...field} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormField
+					control={form.control}
+					name="origin"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Origin</FormLabel>
+							<FormControl>
+								<Input placeholder="Origin" {...field} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormField
+					control={form.control}
+					name="task"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Zadání</FormLabel>
+							<FormControl>
+								<Textarea
+									placeholder="Text zadání"
+									size="lg"
+									{...field}
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormField
+					control={form.control}
+					name="topics"
+					render={() => (
+						<FormItem>
+							<FormLabel>Témata</FormLabel>
+							<div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+								{getTopicsCheckboxes()}
+							</div>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormField
+					control={form.control}
+					name="type"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Typ úlohy</FormLabel>
+							<Select
+								onValueChange={field.onChange}
+								// select value placeholder if field.value undefined
+								value={
+									field.value ? field.value.toString() : ''
+								}
+							>
+								<SelectTrigger>
+									<SelectValue placeholder="Select type" />
+								</SelectTrigger>
+								<SelectContent>
+									{selectedContest?.types.map((type) => (
+										<SelectItem
+											value={type.typeId.toString()}
+											key={type.typeId}
+										>
+											{type.label}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<Button type="submit" disabled={formState.isSubmitting}>
+					Submit
+				</Button>
+			</form>
+		</Form>
+	);
+}

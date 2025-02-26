@@ -3,6 +3,8 @@ import { DataTable } from '~/components/ui/dataTable';
 import { Task, columns } from '~/models/task/columns';
 import { trpc } from '~/trpc';
 import { Route } from './+types/taskSuggestions';
+import { NavLink } from 'react-router';
+import { Plus } from 'lucide-react';
 
 export async function clientLoader() {
 	const problems = await trpc.getProblems.query(1);
@@ -35,7 +37,11 @@ export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
 	return (
 		<>
 			<div className="py-5">
-				<Button>+ Navrhnout úlohu</Button>
+				<Button asChild>
+					<NavLink to={'../create'}>
+						<Plus /> Navrhnout úlohu
+					</NavLink>
+				</Button>
 			</div>
 			<DataTable columns={columns} data={loaderData} />
 		</>

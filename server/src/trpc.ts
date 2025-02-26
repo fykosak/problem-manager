@@ -1,9 +1,11 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
+import * as Y from 'yjs';
 import { db } from './db';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import {
+	langEnum,
 	personWorkTable,
 	problemTable,
 	problemTopicTable,
@@ -143,8 +145,90 @@ export const appRouter = trpc.router({
 			console.log(returnValue);
 			return returnValue; // @ts-expect-error any return value
 		}),
+		create: trpc.procedure
+			.input(
+				z.object({
+					contestId: z.number(),
+					lang: z.enum(langEnum.enumValues),
+					name: z.string(),
+					origin: z.string().optional(),
+					task: z.string(),
+					topics: z.number().array().min(1),
+					type: z.coerce.number(),
+				})
+			)
+			.mutation(async (opts) => {
+				// TODO validate contestId for available contests of user
+				// TODO to db transaction
+
+				// filter topics by contest
+				const filteredTopics = await db.query.topicTable.findMany({
+					where: and(
+						eq(topicTable.contestId, opts.input.contestId),
+						inArray(topicTable.topicId, opts.input.topics)
+					),
+				});
+
+				if (filteredTopics.length < 1) {
+					throw new TRPCError({
+						code: 'BAD_REQUEST',
+						message: 'No topic specify within the defined contest',
+					});
+				}
+
+				// create problem
+				let metadata = {
+					name: {
+						[opts.input.lang]: opts.input.name,
+					},
+					origin: {},
+				};
+				if (opts.input.origin) {
+					metadata['origin'] = {
+						[opts.input.lang]: opts.input.origin,
+					};
+				}
+				const problem = (
+					await db
+						.insert(problemTable)
+						.values({
+							typeId: opts.input.type,
+							metadata: metadata,
+						})
+						.returning()
+				)[0];
+
+				// add text
+				const taskYDoc = new Y.Doc();
+				taskYDoc.getText().insert(0, opts.input.task);
+				await db.insert(textTable).values({
+					problemId: problem.problemId,
+					lang: opts.input.lang,
+					type: 'task',
+					contents: Y.encodeStateAsUpdate(taskYDoc),
+				});
+
+				// add topics
+				await db.insert(problemTopicTable).values(
+					Array.from(filteredTopics, (topic) => ({
+						problemId: problem.problemId,
+						topicId: topic.topicId,
+					}))
+				);
+
+				// TODO add author
+			}),
 	}),
 	contest: trpc.router({
+		// TODO filter by organizer contests
+		createProblemData: trpc.procedure.query(async () => {
+			return await db.query.contestTable.findMany({
+				with: {
+					topics: true,
+					types: true,
+				},
+			});
+		}),
 		availableTopics: trpc.procedure
 			.input(z.number())
 			.query(async (opts) => {

@@ -73,9 +73,6 @@ export function MetadataForm({
 		toast('Task data saved');
 	}
 
-	const { formState } = form;
-	const { errors } = formState;
-
 	function getAvailableTopicsCheckboxComponents() {
 		return availableTopics.map((item) => (
 			<FormField
@@ -113,6 +110,9 @@ export function MetadataForm({
 			/>
 		));
 	}
+
+	const { formState } = form;
+	const { errors } = formState;
 
 	return (
 		<Form {...form}>

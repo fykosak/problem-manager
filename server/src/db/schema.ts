@@ -28,6 +28,8 @@ export const contestTable = pgTable('contest', {
 
 export const contestRelations = relations(contestTable, ({ many }) => ({
 	years: many(contestYearTable),
+	topics: many(topicTable),
+	types: many(typeTable),
 }));
 
 export const contestYearTable = pgTable(
@@ -74,8 +76,12 @@ export const topicTable = pgTable(
 	(table) => [unique().on(table.contestId, table.label)]
 );
 
-export const topicRelations = relations(topicTable, ({ many }) => ({
+export const topicRelations = relations(topicTable, ({ one, many }) => ({
 	problemTopics: many(problemTopicTable),
+	contest: one(contestTable, {
+		fields: [topicTable.contestId],
+		references: [contestTable.contestId],
+	}),
 }));
 
 export const problemTopicTable = pgTable(
@@ -119,8 +125,12 @@ export const typeTable = pgTable(
 	(table) => [unique().on(table.contestId, table.label)]
 );
 
-export const typeRelations = relations(typeTable, ({ many }) => ({
+export const typeRelations = relations(typeTable, ({ one, many }) => ({
 	problems: many(problemTable),
+	contest: one(contestTable, {
+		fields: [typeTable.contestId],
+		references: [contestTable.contestId],
+	}),
 }));
 
 export const problemStateEnum = pgEnum('problem_state', ['active', 'deleted']);
