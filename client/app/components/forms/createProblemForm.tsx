@@ -24,13 +24,14 @@ import {
 import { useEffect } from 'react';
 import { Textarea } from '../ui/textarea';
 import { langEnum } from '~/server/db/schema';
+import { useNavigate } from 'react-router';
 
 const formSchema = z.object({
 	contestId: z.coerce.number(),
 	lang: z.enum(langEnum.enumValues),
-	name: z.string(),
+	name: z.string().nonempty(),
 	origin: z.string().optional(),
-	task: z.string(),
+	task: z.string().nonempty(),
 	topics: z.number().array().min(1),
 	type: z.coerce.number(),
 });
@@ -52,12 +53,13 @@ export function CreateProblemForm({
 		},
 	});
 
+	const navigate = useNavigate();
 	async function onSubmit(values: z.infer<typeof formSchema>) {
-		await trpc.problem.create.mutate({
+		const problem = await trpc.problem.create.mutate({
 			...values,
 		});
-		toast('Task saved');
-		// TODO redirect or reset form
+		toast.success('Task created');
+		await navigate('../task/' + problem.problemId);
 	}
 
 	const { formState, resetField, watch } = form;
@@ -279,7 +281,7 @@ export function CreateProblemForm({
 				/>
 
 				<Button type="submit" disabled={formState.isSubmitting}>
-					Submit
+					Uložit a pokračovat v editaci
 				</Button>
 			</form>
 		</Form>

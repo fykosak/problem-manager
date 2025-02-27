@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router';
+import { NavLink, generatePath, useLocation } from 'react-router';
 import { ArrowDown, Menu, Moon, Sun } from 'lucide-react';
 import { Button, buttonVariants } from '~/components/ui/button';
 import {
@@ -10,6 +10,7 @@ import {
 } from '~/components/ui/dropdown-menu';
 import { useTheme } from '~/components/themeProvider';
 import { cn } from '~/lib/utils';
+import useCurrentRoute from './useCurrentRoute';
 
 const links = [
 	{ name: 'Home', link: '' },
@@ -79,20 +80,39 @@ export default function NavigationBar({
 		);
 	}
 
-	const contestItems = contests.map((contest) => (
-		<DropdownLinkItem
-			key={contest.contestId}
-			to={'/' + contest.symbol + '/' + contest.years.at(-1)?.year}
-			name={contest.name}
-		/>
-	));
-	const yearItems = selectedContest.years.map((year) => (
-		<DropdownLinkItem
-			key={year.year}
-			to={'/' + selectedContest.symbol + '/' + year.year}
-			name={year.year + '. ročník'}
-		/>
-	));
+	const currentRoute = useCurrentRoute();
+	if (!currentRoute) {
+		throw new Error('No route matched');
+	}
+
+	const contestItems = contests.map((contest) => {
+		const contestYear = contest.years.at(-1)?.year;
+		const path = generatePath('/' + currentRoute.route.path, {
+			...currentRoute.params,
+			contest: contest.symbol,
+			year: contestYear,
+		});
+		return (
+			<DropdownLinkItem
+				key={contest.contestId}
+				to={path}
+				name={contest.name}
+			/>
+		);
+	});
+	const yearItems = selectedContest.years.map((year) => {
+		const path = generatePath('/' + currentRoute.route.path, {
+			...currentRoute.params,
+			year: year.year,
+		});
+		return (
+			<DropdownLinkItem
+				key={year.year}
+				to={path}
+				name={year.year + '. ročník'}
+			/>
+		);
+	});
 
 	return (
 		<div className="w-full bg-sidebar">

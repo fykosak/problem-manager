@@ -150,9 +150,9 @@ export const appRouter = trpc.router({
 				z.object({
 					contestId: z.number(),
 					lang: z.enum(langEnum.enumValues),
-					name: z.string(),
+					name: z.string().nonempty(),
 					origin: z.string().optional(),
-					task: z.string(),
+					task: z.string().nonempty(),
 					topics: z.number().array().min(1),
 					type: z.coerce.number(),
 				})
@@ -217,6 +217,8 @@ export const appRouter = trpc.router({
 				);
 
 				// TODO add author
+
+				return problem;
 			}),
 	}),
 	contest: trpc.router({

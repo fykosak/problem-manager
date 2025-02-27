@@ -7,7 +7,8 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc --build --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "prettier": "prettier . --check"
   },
   "dependencies": {
     "@codemirror/lint": "^6.8.4",

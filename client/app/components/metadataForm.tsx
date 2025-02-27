@@ -70,7 +70,7 @@ export function MetadataForm({
 			...values,
 			problemId: problemId,
 		});
-		toast('Task data saved');
+		toast.success('Task data saved');
 	}
 
 	function getAvailableTopicsCheckboxComponents() {
