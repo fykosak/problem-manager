@@ -5,12 +5,15 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
+	useLocation,
 } from 'react-router';
 
 import type { Route } from './+types/root';
 import stylesheet from './app.css?url';
 import { ThemeProvider } from './components/themeProvider';
 import { Toaster } from './components/ui/sonner';
+import { AuthProvider, useAuth } from 'react-oidc-context';
+import { Button } from './components/ui/button';
 
 export const links: Route.LinksFunction = () => [
 	{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -26,31 +29,78 @@ export const links: Route.LinksFunction = () => [
 	{ rel: 'stylesheet', href: stylesheet },
 ];
 
+const oidcConfig = {
+	authority: 'http://localhost:8000/realms/master', // TODO config
+	client_id: 'problem-manager', // TODO config
+	onSigninCallback: (): void => {
+		window.history.replaceState(
+			{},
+			document.title,
+			window.location.pathname
+		);
+	},
+};
+
 export function Layout({ children }: { children: React.ReactNode }) {
+	const { pathname, hash, search } = useLocation();
+	const rootUrl = 'http://localhost:8080'; // TODO config
+	let redirectUri = rootUrl + pathname;
+	if (hash) {
+		redirectUri += hash;
+	}
+	if (search) {
+		redirectUri += search;
+	}
+
 	return (
-		<ThemeProvider defaultTheme="system">
-			<html lang="cs" className="h-full">
-				<head>
-					<meta charSet="utf-8" />
-					<meta
-						name="viewport"
-						content="width=device-width, initial-scale=1"
-					/>
-					<Meta />
-					<Links />
-				</head>
-				<body className="min-h-screen flex flex-col">
-					{children}
-					<Toaster />
-					<ScrollRestoration />
-					<Scripts />
-				</body>
-			</html>
-		</ThemeProvider>
+		<AuthProvider {...{ ...oidcConfig, redirect_uri: redirectUri }}>
+			<ThemeProvider defaultTheme="system">
+				<html lang="cs" className="h-full">
+					<head>
+						<meta charSet="utf-8" />
+						<meta
+							name="viewport"
+							content="width=device-width, initial-scale=1"
+						/>
+						<Meta />
+						<Links />
+					</head>
+					<body className="min-h-screen flex flex-col">
+						{children}
+						<Toaster />
+						<ScrollRestoration />
+						<Scripts />
+					</body>
+				</html>
+			</ThemeProvider>
+		</AuthProvider>
 	);
 }
 
 export default function App() {
+	const auth = useAuth();
+
+	switch (auth.activeNavigator) {
+		case 'signinSilent':
+			return <div>Signing you in...</div>;
+		case 'signoutRedirect':
+			return <div>Signing you out...</div>;
+	}
+
+	if (auth.isLoading) {
+		return <div>Loading...</div>;
+	}
+
+	if (auth.error) {
+		return <div>Oops... {auth.error.message}</div>;
+	}
+
+	if (!auth.isAuthenticated) {
+		return (
+			<Button onClick={() => void auth.signinRedirect()}>Log in</Button>
+		);
+	}
+
 	return <Outlet />;
 }
 

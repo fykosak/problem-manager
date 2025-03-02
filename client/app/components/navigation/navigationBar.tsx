@@ -11,6 +11,7 @@ import {
 import { useTheme } from '~/components/themeProvider';
 import { cn } from '~/lib/utils';
 import useCurrentRoute from './useCurrentRoute';
+import { useAuth } from 'react-oidc-context';
 
 const links = [
 	{ name: 'Home', link: '' },
@@ -51,6 +52,7 @@ export default function NavigationBar({
 }) {
 	const [navHidden, setNavHidden] = useState(true);
 	const { setTheme } = useTheme();
+	const auth = useAuth();
 
 	function switchVisible() {
 		setNavHidden(!navHidden);
@@ -126,6 +128,7 @@ export default function NavigationBar({
 					>
 						<Menu />
 					</Button>
+
 					<div
 						className={
 							(navHidden ? 'hidden' : 'flex') +
@@ -167,6 +170,7 @@ export default function NavigationBar({
 									{yearItems}
 								</DropdownMenuContent>
 							</DropdownMenu>
+
 							<DropdownMenu>
 								<DropdownMenuTrigger>
 									<div
@@ -181,7 +185,22 @@ export default function NavigationBar({
 									{contestItems}
 								</DropdownMenuContent>
 							</DropdownMenu>
-							<a>Adam Krška</a>
+
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button variant="outline">
+										Adam Krška
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent>
+									<DropdownMenuItem
+										onClick={() => void auth.removeUser()}
+									>
+										Log out
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
 									<Button variant="outline" size="icon">
