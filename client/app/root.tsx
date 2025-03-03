@@ -14,6 +14,7 @@ import { ThemeProvider } from './components/themeProvider';
 import { Toaster } from './components/ui/sonner';
 import { AuthProvider, useAuth } from 'react-oidc-context';
 import { Button } from './components/ui/button';
+import config from './config';
 
 export const links: Route.LinksFunction = () => [
 	{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -30,8 +31,8 @@ export const links: Route.LinksFunction = () => [
 ];
 
 const oidcConfig = {
-	authority: 'http://localhost:8000/realms/master', // TODO config
-	client_id: 'problem-manager', // TODO config
+	authority: config.OIDC_AUTHORITY_URL,
+	client_id: config.OIDC_CLIENT_ID,
 	onSigninCallback: (): void => {
 		window.history.replaceState(
 			{},
@@ -43,7 +44,7 @@ const oidcConfig = {
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	const { pathname, hash, search } = useLocation();
-	const rootUrl = 'http://localhost:8080'; // TODO config
+	const rootUrl = config.ROOT_URL;
 	let redirectUri = rootUrl + pathname;
 	if (hash) {
 		redirectUri += hash;

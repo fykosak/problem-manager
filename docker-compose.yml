@@ -20,6 +20,8 @@ services:
     volumes:
       - ./server:/app
       - ./task_data:/data
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
   builder:
     image: problem-manager-builder
     restart: on-failure:3

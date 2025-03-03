@@ -22,6 +22,7 @@
     "cors": "^2.8.5",
     "drizzle-orm": "^0.38.3",
     "express": "^4.21.2",
+    "jose": "^6.0.8",
     "pg": "^8.13.1",
     "tsx": "^4.19.2",
     "y-websocket": "^2.1.0",
@@ -29,6 +30,7 @@
   },
   "scripts": {
     "dev": "bun --watch src/index.ts",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "prettier": "prettier . --check"
   }
 }

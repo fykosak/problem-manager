@@ -3,11 +3,9 @@
 To install dependencies:
 
 ```bash
-bun install
+npm install
 ```
 
-To run:
+## config
 
-```bash
-bun run src/index.ts
-```
+Copy `config.env.sample` to `config.env` and fill in the needed values

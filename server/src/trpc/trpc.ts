@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 import * as Y from 'yjs';
-import { db } from './db';
+import { db } from '../db';
 import { and, eq, inArray } from 'drizzle-orm';
 import {
 	langEnum,
@@ -14,12 +14,9 @@ import {
 	typeTable,
 	workStateEnum,
 	workTable,
-} from './db/schema';
-import { Runner } from './runner/runner';
-
-// created for each request
-export const createContext = () => ({}); // no context
-type Context = Awaited<ReturnType<typeof createContext>>;
+} from '../db/schema';
+import { Runner } from '../runner/runner';
+import type { Context } from '../trpc/context';
 
 const trpc = initTRPC.context<Context>().create();
 export const appRouter = trpc.router({

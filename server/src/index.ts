@@ -4,8 +4,9 @@ import express from 'express';
 import * as http from 'http';
 import WebSocket from 'ws';
 import { setPersistence, setupWSConnection } from './sockets/yjs';
-import { appRouter, createContext } from './trpc';
+import { appRouter } from './trpc/trpc';
 import { persistance } from './sockets/persistance';
+import { createContext } from './trpc/context';
 
 const app = express();
 app.use(cors());

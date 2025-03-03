@@ -189,7 +189,7 @@ export default function NavigationBar({
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
 									<Button variant="outline">
-										Adam Krška
+										{auth.user?.profile.name}
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent>
