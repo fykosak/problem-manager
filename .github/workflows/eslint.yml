@@ -11,12 +11,25 @@ jobs:
         with:
           node-version: 23
           cache: 'npm'
+
       - name: Install dependencies
         working-directory: client
         run: npm install
       - name: Install server dependencies
         working-directory: server
         run: npm install
+      - name: Install latex lib dependencies
+        working-directory: client/libs/lang-latex
+        run: npm install
+
+      - name: Generate lang-latex
+        working-directory: client/libs/lang-latex
+        run: npm run prepare
+
+      - name: Generate react router types
+        working-directory: client
+        run: npm run typegen
+
       - name: Run client eslint
         working-directory: client
         run: npm run lint
