@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { Button } from '~/components/ui/button';
+import { Button } from '@client/components/ui/button';
 import {
 	Form,
 	FormControl,
@@ -10,12 +10,12 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from '~/components/ui/form';
-import { Input } from '~/components/ui/input';
+} from '@client/components/ui/form';
+import { Input } from '@client/components/ui/input';
 import { Checkbox } from './ui/checkbox';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
-import { trpc, type trpcOutputTypes } from '~/trpc';
+import { trpc, type trpcOutputTypes } from '@client/trpc';
 import { toast } from 'sonner';
 
 const formSchema = z.object({

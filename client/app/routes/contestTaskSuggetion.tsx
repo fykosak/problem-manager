@@ -1,6 +1,6 @@
-import { CreateProblemForm } from '~/components/forms/createProblemForm';
+import { CreateProblemForm } from '@client/components/forms/createProblemForm';
 import { Route } from './+types/contestTaskSuggetion';
-import { trpc } from '~/trpc';
+import { trpc } from '@client/trpc';
 
 export async function clientLoader() {
 	const contests = await trpc.contest.createProblemData.query();

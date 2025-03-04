@@ -26,6 +26,7 @@ function getRequiredString(property: string): string {
  * Typed config values derived from config.json
  */
 const config = {
+	/** Root app url, for example https://pm.example.com */
 	ROOT_URL: getRequiredString('ROOT_URL'),
 	/** URL to oidc realm certs, for example https://mykeycloak.example.com/realms/master/protocol/openid-connect/certs */
 	OIDC_AUTHORITY_URL: getRequiredString('OIDC_AUTHORITY_URL'),

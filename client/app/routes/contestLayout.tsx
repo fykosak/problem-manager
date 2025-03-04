@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router';
-import NavigationSuspense from '~/components/navigation/navigationSuspense';
+import NavigationSuspense from '@client/components/navigation/navigationSuspense';
 
 export default function Layout() {
 	return (

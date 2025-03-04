@@ -1,13 +1,18 @@
-import Editor from '~/components/editor/editor';
+import Editor from '@client/components/editor/editor';
 import { Route } from './+types/task.edit';
-import { trpc } from '~/trpc';
-import TaskPdf from '~/components/editor/taskPdf';
+import { trpc } from '@client/trpc';
+import TaskPdf from '@client/components/editor/taskPdf';
 import {
 	ResizableHandle,
 	ResizablePanel,
 	ResizablePanelGroup,
-} from '~/components/ui/resizable';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs';
+} from '@client/components/ui/resizable';
+import {
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+} from '@client/components/ui/tabs';
 import { useEffect, useRef, useState } from 'react';
 
 const MOBILE_WIDTH_THRESHOLD = 768;

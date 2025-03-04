@@ -15,7 +15,7 @@ import {
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Series } from '~/components/tasks/series';
+import { Series } from '@client/components/tasks/series';
 
 type Groups = Record<UniqueIdentifier, UniqueIdentifier[]>;
 

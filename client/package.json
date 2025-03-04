@@ -33,6 +33,7 @@
     "@react-router/serve": "^7.1.5",
     "@tanstack/react-table": "^8.21.2",
     "@trpc/client": "^10.45.2",
+    "@trpc/server": "^10.45.2",
     "@uiw/codemirror-theme-material": "^4.23.8",
     "@uiw/react-codemirror": "^4.23.8",
     "class-variance-authority": "^0.7.1",

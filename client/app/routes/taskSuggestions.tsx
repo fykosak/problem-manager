@@ -1,7 +1,7 @@
-import { Button } from '~/components/ui/button';
-import { DataTable } from '~/components/ui/dataTable';
-import { Task, columns } from '~/models/task/columns';
-import { trpc } from '~/trpc';
+import { Button } from '@client/components/ui/button';
+import { DataTable } from '@client/components/ui/dataTable';
+import { Task, columns } from '@client/models/task/columns';
+import { trpc } from '@client/trpc';
 import { Route } from './+types/taskSuggestions';
 import { NavLink } from 'react-router';
 import { Plus } from 'lucide-react';
@@ -29,11 +29,13 @@ export async function clientLoader() {
 		state: problem.state,
 		created: new Date(problem.created),
 	}));
-
 	return transformedProblems;
 }
 
 export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
+	if (!loaderData) {
+		return <div>Failed to load problem data</div>;
+	}
 	return (
 		<>
 			<div className="py-5">

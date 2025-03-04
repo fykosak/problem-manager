@@ -1,5 +1,5 @@
-import { MetadataForm } from '~/components/metadataForm';
-import { trpc } from '~/trpc';
+import { MetadataForm } from '@client/components/metadataForm';
+import { trpc } from '@client/trpc';
 import { Route } from './+types/task.metadata';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {

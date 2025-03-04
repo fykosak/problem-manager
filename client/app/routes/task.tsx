@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router';
-import NavigationSuspense from '~/components/navigation/navigationSuspense';
+import NavigationSuspense from '@client/components/navigation/navigationSuspense';
 import {
 	Sidebar,
 	SidebarContent,
@@ -11,7 +11,7 @@ import {
 	SidebarMenuItem,
 	SidebarProvider,
 	SidebarTrigger,
-} from '~/components/ui/sidebar';
+} from '@client/components/ui/sidebar';
 
 export default function Task() {
 	return (

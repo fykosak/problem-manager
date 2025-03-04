@@ -4,9 +4,9 @@ import express from 'express';
 import * as http from 'http';
 import WebSocket from 'ws';
 import { setPersistence, setupWSConnection } from './sockets/yjs';
-import { appRouter } from './trpc/trpc';
 import { persistance } from './sockets/persistance';
 import { createContext } from './trpc/context';
+import { appRouter } from './trpc/appRouter';
 
 const app = express();
 app.use(cors());
@@ -36,5 +36,3 @@ server.on('upgrade', (request, socket, head) => {
 		websocketServer.emit('connection', ws, request);
 	});
 });
-
-export type AppRouter = typeof appRouter;

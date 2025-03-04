@@ -1,4 +1,4 @@
-import { trpc, trpcOutputTypes } from '~/trpc';
+import { trpc, trpcOutputTypes } from '@client/trpc';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import {
 	Select,
@@ -6,9 +6,9 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from '~/components/ui/select';
+} from '@client/components/ui/select';
 import { useState } from 'react';
-import { workStateEnum } from '~/server/db/schema';
+import { workStateEnum } from '@server/db/schema';
 import WorkPersonSelect from './workPersonSelect';
 
 function getWorkStateLabel(
@@ -47,7 +47,7 @@ export default function WorkComponent({
 	const [state, setState] = useState(work.state);
 
 	async function updateState(state: typeof work.state) {
-		await trpc.problem.updateWorkState.query({
+		await trpc.problem.updateWorkState.mutate({
 			workId: work.workId,
 			state: state,
 		});

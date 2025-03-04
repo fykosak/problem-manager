@@ -3,7 +3,7 @@ import { NavLink } from 'react-router';
 import {
 	DataTableColumnSorter,
 	DataTableColumnUniqueFilter,
-} from '~/components/ui/dataTable';
+} from '@client/components/ui/dataTable';
 
 export interface Task {
 	problemId: number;

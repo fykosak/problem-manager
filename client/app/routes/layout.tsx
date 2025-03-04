@@ -1,7 +1,8 @@
 import { Outlet } from 'react-router';
-import NavigationBar from '~/components/navigation/navigationBar';
+import NavigationBar from '@client/components/navigation/navigationBar';
 import { Route } from './+types/layout';
-import { trpc } from '~/trpc';
+import { trpc } from '@client/trpc';
+import { TRPCError } from '@trpc/server';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const contests = await trpc.getContests.query();
@@ -24,6 +25,9 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export default function Layout({ loaderData }: Route.ComponentProps) {
+	if (!loaderData) {
+		return <div>Failed to load data</div>;
+	}
 	return (
 		<>
 			<NavigationBar
@@ -34,4 +38,17 @@ export default function Layout({ loaderData }: Route.ComponentProps) {
 			<Outlet />
 		</>
 	);
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+	if (error instanceof TRPCError) {
+		if (error.message === 'UNAUTHORIZED') {
+			return (
+				<main className="pt-16 p-4 container mx-auto">
+					<h1>UNAUTHORIZED</h1>
+					<p>You cannot access this site</p>
+				</main>
+			);
+		}
+	}
 }

@@ -15,9 +15,9 @@
     "rootDirs": [".", "./.react-router/types"],
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./app/*"],
-      "~/server/*": ["../server/src/*"],
-      "~/libs/*": ["./libs/*"]
+      "@client/*": ["./app/*"],
+      "@server/*": ["../server/src/*"],
+      "@client/libs/*": ["./libs/*"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

@@ -1,4 +1,4 @@
-import { trpc } from '~/trpc';
+import { trpc } from '@client/trpc';
 import { Button } from '../ui/button';
 import PdfViewer from './pdfViewer';
 import {

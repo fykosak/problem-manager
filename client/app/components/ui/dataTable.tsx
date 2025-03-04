@@ -19,7 +19,7 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from '~/components/ui/table';
+} from '@client/components/ui/table';
 import { DataTablePagination } from './dataTablePagination';
 import * as React from 'react';
 import {
@@ -27,7 +27,7 @@ import {
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
-} from '~/components/ui/select';
+} from '@client/components/ui/select';
 import { ArrowDownUp, Filter } from 'lucide-react';
 import { Button } from './button';
 

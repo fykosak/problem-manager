@@ -9,9 +9,9 @@ import {
 	CommandItem,
 	CommandList,
 } from '../ui/command';
-import { cn } from '~/lib/utils';
+import { cn } from '@client/lib/utils';
 import { useState } from 'react';
-import { trpc, trpcOutputTypes } from '~/trpc';
+import { trpc, trpcOutputTypes } from '@client/trpc';
 import { Badge } from '../ui/badge';
 
 export default function WorkPersonSelect({

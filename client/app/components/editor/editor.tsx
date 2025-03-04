@@ -5,7 +5,7 @@ import { WebsocketProvider } from 'y-websocket';
 
 import CodeMirror, { EditorView } from '@uiw/react-codemirror/src/index.js';
 import { material } from '@uiw/codemirror-theme-material';
-import { latex, latexLinter } from '~/libs/lang-latex/dist/index.js';
+import { latex, latexLinter } from '@client/libs/lang-latex/dist/index.js';
 import { linter, lintGutter } from '@codemirror/lint';
 
 const Editor = forwardRef(

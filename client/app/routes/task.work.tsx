@@ -1,6 +1,6 @@
-import { trpc } from '~/trpc';
+import { trpc } from '@client/trpc';
 import { Route } from './+types/task.work';
-import WorkComponent from '~/components/tasks/workComponent';
+import WorkComponent from '@client/components/tasks/workComponent';
 import { ReactElement } from 'react';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {

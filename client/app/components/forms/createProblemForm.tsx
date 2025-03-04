@@ -9,7 +9,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from '../ui/form';
-import { trpc, type trpcOutputTypes } from '~/trpc';
+import { trpc, type trpcOutputTypes } from '@client/trpc';
 import { toast } from 'sonner';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -23,7 +23,7 @@ import {
 } from '../ui/select';
 import { useEffect } from 'react';
 import { Textarea } from '../ui/textarea';
-import { langEnum } from '~/server/db/schema';
+import { langEnum } from '@server/db/schema';
 import { useNavigate } from 'react-router';
 
 const formSchema = z.object({
