@@ -18,5 +18,20 @@ jobs:
         working-directory: server
         run: npm install
       - name: Run client eslint
+        working-directory: client
+        run: npm run lint
+  server:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+          cache: 'npm'
+      - name: Install dependencies
+        working-directory: server
+        run: npm install
+      - name: Run client eslint
         working-directory: server
         run: npm run lint

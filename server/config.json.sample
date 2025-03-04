@@ -1,1 +1,6 @@
-{OIDC_CERTS_URL = ''}
+{
+  "OIDC_CERTS_URL": "",
+  "FKSDB_API_URL": "https://db.fykos.cz",
+  "FKSDB_LOGIN": "",
+  "FKSDB_PASSWORD": ""
+}

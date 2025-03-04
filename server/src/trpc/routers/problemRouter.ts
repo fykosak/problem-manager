@@ -116,13 +116,14 @@ export const problemRouter = trpc.router({
 	build: protectedProcedure.input(z.number()).mutation(async (opts) => {
 		console.log('build ' + opts.input);
 		const runner = new Runner();
-		let returnValue = await runner.run(opts.input);
+		let returnValue = await runner.run(opts.input); // eslint-disable-line
+		// eslint-disable-next-line
 		returnValue = {
 			...returnValue,
 			file: runner.getPdfContests(opts.input),
 		};
 		console.log(returnValue);
-		return returnValue; // @ts-expect-error any return value
+		return returnValue; // eslint-disable-line
 	}),
 	create: protectedProcedure
 		.input(
@@ -156,7 +157,7 @@ export const problemRouter = trpc.router({
 			}
 
 			// create problem
-			let metadata = {
+			const metadata = {
 				name: {
 					[opts.input.lang]: opts.input.name,
 				},

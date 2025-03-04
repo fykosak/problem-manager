@@ -1,10 +1,7 @@
 import { Button } from '@client/components/ui/button';
 
 export function meta() {
-	return [
-		{ title: 'New React Router App' },
-		{ name: 'description', content: 'Welcome to React Router!' },
-	];
+	return [{ title: 'Problem manager' }];
 }
 
 export default function Home() {

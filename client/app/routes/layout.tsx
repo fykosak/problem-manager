@@ -42,6 +42,11 @@ export default function Layout({ loaderData }: Route.ComponentProps) {
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 	if (error instanceof TRPCClientError) {
+		if (!error.data) {
+			throw error;
+		}
+
+		// eslint-disable-next-line
 		if (error.data.code === 'UNAUTHORIZED') {
 			return (
 				<main className="pt-16 p-4 container mx-auto">
@@ -51,6 +56,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 			);
 		}
 
+		// eslint-disable-next-line
 		if (error.data.code === 'NOT_FOUND') {
 			return (
 				<main className="pt-16 p-4 container mx-auto">

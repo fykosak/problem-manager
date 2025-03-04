@@ -212,12 +212,25 @@ export const personTable = pgTable('person', {
 	personId: serial().primaryKey(),
 	firstName: varchar({ length: 255 }).notNull(),
 	lastName: varchar({ length: 255 }).notNull(),
-	texSignature: varchar({ length: 255 }).notNull(),
+	//texSignature: varchar({ length: 255 }).notNull(),
 });
 
 export const personRelations = relations(personTable, ({ many }) => ({
 	authors: many(authorTable),
 }));
+
+export const organizerTable = pgTable('organizer', {
+	organizerId: serial().primaryKey(),
+	personId: integer()
+		.notNull()
+		.references(() => personTable.personId),
+	contestId: integer()
+		.notNull()
+		.references(() => contestTable.contestId),
+	email: varchar().notNull(),
+	since: integer().notNull(),
+	until: integer(),
+});
 
 export const authorTable = pgTable(
 	'author',
