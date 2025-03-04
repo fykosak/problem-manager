@@ -2,7 +2,7 @@ import { Outlet } from 'react-router';
 import NavigationBar from '@client/components/navigation/navigationBar';
 import { Route } from './+types/layout';
 import { trpc } from '@client/trpc';
-import { TRPCError } from '@trpc/server';
+import { TRPCClientError } from '@trpc/client';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const contests = await trpc.getContests.query();
@@ -41,8 +41,8 @@ export default function Layout({ loaderData }: Route.ComponentProps) {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-	if (error instanceof TRPCError) {
-		if (error.message === 'UNAUTHORIZED') {
+	if (error instanceof TRPCClientError) {
+		if (error.data.code === 'UNAUTHORIZED') {
 			return (
 				<main className="pt-16 p-4 container mx-auto">
 					<h1>UNAUTHORIZED</h1>
@@ -50,5 +50,17 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 				</main>
 			);
 		}
+
+		if (error.data.code === 'NOT_FOUND') {
+			return (
+				<main className="pt-16 p-4 container mx-auto">
+					<h1>NOT FOUND</h1>
+					<p>{error.message}</p>
+				</main>
+			);
+		}
 	}
+
+	// bubble the error up if not handled
+	throw error;
 }

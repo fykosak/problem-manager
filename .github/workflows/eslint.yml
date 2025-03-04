@@ -1,10 +1,6 @@
 name: Eslint
 on: [push, pull_request]
 
-defaults:
-  run:
-    working-directory: client
-
 jobs:
   client:
     runs-on: ubuntu-24.04
@@ -16,6 +12,11 @@ jobs:
           node-version: 23
           cache: 'npm'
       - name: Install dependencies
+        working-directory: client
+        run: npm install
+      - name: Install server dependencies
+        working-directory: server
         run: npm install
       - name: Run client eslint
+        working-directory: server
         run: npm run lint

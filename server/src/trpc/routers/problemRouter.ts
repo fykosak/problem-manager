@@ -45,9 +45,18 @@ export const problemRouter = trpc.router({
 		};
 	}),
 	texts: protectedProcedure.input(z.number()).query(async (opts) => {
-		return await db.query.textTable.findMany({
+		const texts = await db.query.textTable.findMany({
 			where: eq(textTable.problemId, opts.input),
 		});
+
+		if (texts.length === 0) {
+			throw new TRPCError({
+				code: 'NOT_FOUND',
+				message: 'No text found for problem',
+			});
+		}
+
+		return texts;
 	}),
 	work: protectedProcedure.input(z.number()).query(async (opts) => {
 		return await db.query.workTable.findMany({
@@ -66,12 +75,14 @@ export const problemRouter = trpc.router({
 			})
 		)
 		.mutation(async (opts) => {
-			return await db
+			const work = await db
 				.update(workTable)
 				.set({
 					state: opts.input.state,
 				})
-				.where(eq(workTable.workId, opts.input.workId));
+				.where(eq(workTable.workId, opts.input.workId))
+				.returning();
+			return work;
 		}),
 	updateMetadata: protectedProcedure
 		.input(
@@ -140,7 +151,7 @@ export const problemRouter = trpc.router({
 			if (filteredTopics.length < 1) {
 				throw new TRPCError({
 					code: 'BAD_REQUEST',
-					message: 'No topic specify within the defined contest',
+					message: 'No topic specified within the defined contest',
 				});
 			}
 
