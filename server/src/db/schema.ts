@@ -217,6 +217,7 @@ export const personTable = pgTable('person', {
 
 export const personRelations = relations(personTable, ({ many }) => ({
 	authors: many(authorTable),
+	organizers: many(organizerTable),
 }));
 
 export const organizerTable = pgTable('organizer', {
@@ -231,6 +232,17 @@ export const organizerTable = pgTable('organizer', {
 	since: integer().notNull(),
 	until: integer(),
 });
+
+export const organizerRelations = relations(organizerTable, ({ one }) => ({
+	person: one(personTable, {
+		fields: [organizerTable.personId],
+		references: [personTable.personId],
+	}),
+	contest: one(contestTable, {
+		fields: [organizerTable.contestId],
+		references: [contestTable.contestId],
+	}),
+}));
 
 export const authorTable = pgTable(
 	'author',

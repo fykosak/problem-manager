@@ -5,7 +5,7 @@ import { ReactElement } from 'react';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const work = await trpc.problem.work.query(Number(params.taskId));
-	const people = await trpc.contest.people.query(1); // TODO contest id
+	const people = await trpc.contest.organizers.query({ contestId: 1 }); // TODO contest id
 	return { work, people };
 }
 
@@ -18,7 +18,7 @@ export default function Work({ loaderData }: Route.ComponentProps) {
 
 		groups.get(work.group)?.push(
 			<div key={work.workId}>
-				<WorkComponent work={work} people={loaderData.people} />
+				<WorkComponent work={work} organizers={loaderData.people} />
 			</div>
 		);
 	}

@@ -16,10 +16,10 @@ import {
 	workStateEnum,
 	workTable,
 } from '@server/db/schema';
-import { protectedProcedure } from '../middleware';
+import { authedProcedure } from '../middleware';
 
 export const problemRouter = trpc.router({
-	metadata: protectedProcedure.input(z.number()).query(async (opts) => {
+	metadata: authedProcedure.input(z.number()).query(async (opts) => {
 		const taskData = await db.query.problemTable.findFirst({
 			columns: {
 				metadata: true,
@@ -44,7 +44,7 @@ export const problemRouter = trpc.router({
 			type: taskData.type.typeId,
 		};
 	}),
-	texts: protectedProcedure.input(z.number()).query(async (opts) => {
+	texts: authedProcedure.input(z.number()).query(async (opts) => {
 		const texts = await db.query.textTable.findMany({
 			where: eq(textTable.problemId, opts.input),
 		});
@@ -58,7 +58,7 @@ export const problemRouter = trpc.router({
 
 		return texts;
 	}),
-	work: protectedProcedure.input(z.number()).query(async (opts) => {
+	work: authedProcedure.input(z.number()).query(async (opts) => {
 		return await db.query.workTable.findMany({
 			with: {
 				people: true,
@@ -67,7 +67,7 @@ export const problemRouter = trpc.router({
 			orderBy: workTable.workId,
 		});
 	}),
-	updateWorkState: protectedProcedure
+	updateWorkState: authedProcedure
 		.input(
 			z.object({
 				workId: z.number(),
@@ -84,7 +84,7 @@ export const problemRouter = trpc.router({
 				.returning();
 			return work;
 		}),
-	updateMetadata: protectedProcedure
+	updateMetadata: authedProcedure
 		.input(
 			z.object({
 				problemId: z.number(),
@@ -113,7 +113,7 @@ export const problemRouter = trpc.router({
 				}))
 			);
 		}),
-	build: protectedProcedure.input(z.number()).mutation(async (opts) => {
+	build: authedProcedure.input(z.number()).mutation(async (opts) => {
 		console.log('build ' + opts.input);
 		const runner = new Runner();
 		let returnValue = await runner.run(opts.input); // eslint-disable-line
@@ -125,7 +125,7 @@ export const problemRouter = trpc.router({
 		console.log(returnValue);
 		return returnValue; // eslint-disable-line
 	}),
-	create: protectedProcedure
+	create: authedProcedure
 		.input(
 			z.object({
 				contestId: z.number(),

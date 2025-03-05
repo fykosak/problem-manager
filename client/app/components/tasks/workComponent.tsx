@@ -39,10 +39,10 @@ function getWorkStateColor(
 
 export default function WorkComponent({
 	work,
-	people,
+	organizers,
 }: {
 	work: trpcOutputTypes['problem']['work'][0];
-	people: trpcOutputTypes['contest']['people'];
+	organizers: trpcOutputTypes['contest']['organizers'];
 }) {
 	const [state, setState] = useState(work.state);
 
@@ -78,7 +78,7 @@ export default function WorkComponent({
 				</Select>
 			</CardHeader>
 			<CardContent>
-				<WorkPersonSelect work={work} people={people} />
+				<WorkPersonSelect work={work} organizers={organizers} />
 			</CardContent>
 		</Card>
 	);

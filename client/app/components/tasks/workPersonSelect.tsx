@@ -16,10 +16,10 @@ import { Badge } from '../ui/badge';
 
 export default function WorkPersonSelect({
 	work,
-	people,
+	organizers,
 }: {
 	work: trpcOutputTypes['problem']['work'][0];
-	people: trpcOutputTypes['contest']['people'];
+	organizers: trpcOutputTypes['contest']['organizers'];
 }) {
 	const [selectedValues, setSelectedValues] = useState(
 		new Set<number>(Array.from(work.people, (person) => person.personId))
@@ -34,7 +34,8 @@ export default function WorkPersonSelect({
 	}
 
 	const personOptions = [];
-	for (const person of people) {
+	for (const organizer of organizers) {
+		const person = organizer.person;
 		const isSelected = selectedValues.has(person.personId);
 		personOptions.push(
 			<CommandItem
@@ -73,11 +74,15 @@ export default function WorkPersonSelect({
 	}
 
 	const selectedPeopleBadges = [];
-	for (const person of people) {
-		if (selectedValues.has(person.personId)) {
+	for (const organizer of organizers) {
+		if (selectedValues.has(organizer.personId)) {
 			selectedPeopleBadges.push(
-				<Badge key={person.personId} variant="outline" className="h-9">
-					{person.firstName} {person.lastName}
+				<Badge
+					key={organizer.person.personId}
+					variant="outline"
+					className="h-9"
+				>
+					{organizer.person.firstName} {organizer.person.lastName}
 				</Badge>
 			);
 		}

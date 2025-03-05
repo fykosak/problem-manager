@@ -6,10 +6,10 @@ import { contestRouter } from './routers/contestRouter';
 import { personWorkTable } from '@server/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { trpc } from './trpc';
-import { protectedProcedure } from './middleware';
+import { authedProcedure } from './middleware';
 
 export const appRouter = trpc.router({
-	getProblems: protectedProcedure.input(z.number()).query(async () => {
+	getProblems: authedProcedure.input(z.number()).query(async () => {
 		return await db.query.problemTable.findMany({
 			with: {
 				problemTopics: {
@@ -27,7 +27,7 @@ export const appRouter = trpc.router({
 			//where: eq(problemTable, opts.input)
 		});
 	}),
-	getContests: protectedProcedure.query(async () => {
+	getContests: authedProcedure.query(async () => {
 		return await db.query.contestTable.findMany({
 			with: {
 				years: true,
@@ -37,7 +37,7 @@ export const appRouter = trpc.router({
 	problem: problemRouter,
 	contest: contestRouter,
 	work: trpc.router({
-		updatePersonWork: protectedProcedure
+		updatePersonWork: authedProcedure
 			.input(
 				z.object({
 					workId: z.number(),
