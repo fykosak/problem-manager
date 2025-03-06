@@ -6,9 +6,8 @@
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
-    "typegen": "react-router typegen",
     "typecheck": "react-router typegen && tsc --build --noEmit",
-    "lint": "eslint .",
+    "lint": "react-router typegen && eslint .",
     "prettier": "prettier . --check"
   },
   "dependencies": {
@@ -70,7 +69,7 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^9.21.0",
     "jiti": "^2.4.2",
-    "postcss": "^8.5.2",
+    "postcss": "^8.5.3",
     "prettier": "^3.5.2",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",

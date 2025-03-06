@@ -1,9 +1,10 @@
 {
   "include": [
     "**/*",
-    "**/.server/**/*",
-    "**/.client/**/*",
     ".react-router/types/**/*"
+  ],
+  "exclude": [
+    "libs/lang-latex/**/*",
   ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],

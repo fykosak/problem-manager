@@ -1,4 +1,4 @@
-name: Eslint
+name: Typecheck
 on: [push, pull_request]
 
 jobs:
@@ -21,9 +21,9 @@ jobs:
       - name: Install latex lib
         working-directory: client/libs/lang-latex
         run: npm install
-      - name: Run client eslint
+      - name: Run client typecheck
         working-directory: client
-        run: npm run lint
+        run: npm run typecheck
 
   server:
     runs-on: ubuntu-24.04
@@ -37,6 +37,6 @@ jobs:
       - name: Install dependencies
         working-directory: server
         run: npm install
-      - name: Run client eslint
+      - name: Run client typecheck
         working-directory: server
-        run: npm run lint
+        run: npm run typecheck

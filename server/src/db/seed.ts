@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from '.';
 import * as schema from './schema';
+import * as Y from 'yjs';
 
 async function seed() {
 	console.log('Init contest');
@@ -111,7 +112,7 @@ async function seed() {
 			personId: i,
 			firstName: firstName,
 			lastName: lastName,
-			texSignature: (firstName + lastName).toLowerCase(),
+			//texSignature: (firstName + lastName).toLowerCase(),
 		});
 	}
 
@@ -171,21 +172,18 @@ async function seed() {
 			// texts
 			for (const lang of ['cs', 'en']) {
 				for (const type of ['task', 'solution']) {
-					const [text] = await db
+					const taskYDoc = new Y.Doc();
+					taskYDoc.getText().insert(0, 'Lorem ipsum dolor sit amet');
+					await db
 						.insert(schema.textTable)
 						.values({
 							// @ts-expect-error Lang and type not beeing enum
 							// types throws type error
 							problemId: problem.problemId,
 							lang: lang,
-							type: type,
+							contents: type,
 						})
 						.returning();
-					await db.insert(schema.textContestTable).values({
-						textId: text.textId,
-						contents: 'Lorem ipsum dolor sit amet',
-						personId: 1 + Math.floor(Math.random() * 20),
-					});
 				}
 			}
 
