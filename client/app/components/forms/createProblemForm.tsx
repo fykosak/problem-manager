@@ -24,10 +24,10 @@ import {
 import { useEffect } from 'react';
 import { Textarea } from '../ui/textarea';
 import { langEnum } from '@server/db/schema';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 const formSchema = z.object({
-	contestId: z.coerce.number(),
+	contestSymbol: z.string(),
 	lang: z.enum(langEnum.enumValues),
 	name: z.string().nonempty(),
 	origin: z.string().optional(),
@@ -37,14 +37,16 @@ const formSchema = z.object({
 });
 
 export function CreateProblemForm({
+	currentContestSymbol,
 	contests,
 }: {
+	currentContestSymbol: string;
 	contests: trpcOutputTypes['contest']['createProblemData'];
 }) {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			contestId: 1, // TODO select by selected contest
+			contestSymbol: currentContestSymbol,
 			lang: 'cs', // TODO from config?
 			name: '',
 			origin: '',
@@ -65,13 +67,13 @@ export function CreateProblemForm({
 	const { formState, resetField, watch } = form;
 	const { errors } = formState;
 
-	const contestId = Number(watch('contestId'));
+	const contestSymbol = watch('contestSymbol');
 	useEffect(() => {
 		resetField('type');
-	}, [contestId]);
+	}, [contestSymbol]);
 
 	const selectedContest = contests.find(
-		(contest) => contest.contestId === contestId
+		(contest) => contest.symbol === contestSymbol
 	);
 
 	function getTopicsCheckboxes() {
@@ -132,15 +134,13 @@ export function CreateProblemForm({
 			>
 				<FormField
 					control={form.control}
-					name="contestId"
+					name="contestSymbol"
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>Soutěž</FormLabel>
 							<Select
 								onValueChange={field.onChange}
-								value={
-									field.value ? field.value.toString() : ''
-								}
+								value={field.value ? field.value : ''}
 							>
 								<SelectTrigger>
 									<SelectValue placeholder="Select contest" />
@@ -148,8 +148,8 @@ export function CreateProblemForm({
 								<SelectContent>
 									{contests.map((contest) => (
 										<SelectItem
-											value={contest.contestId.toString()}
-											key={contest.contestId}
+											value={contest.symbol}
+											key={contest.symbol}
 										>
 											{contest.name}
 										</SelectItem>

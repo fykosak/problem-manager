@@ -59,18 +59,17 @@ export default function NavigationBar({
 	}
 
 	function NavLinkItem(props: { to: string; name: string }) {
-		const location = useLocation();
-		const isActive = location.pathname === props.to;
 		return (
-			<Button
-				variant={isActive ? 'default' : 'outline'}
-				asChild
-				onClick={() => setNavHidden(true)}
-			>
-				<NavLink to={props.to} end>
-					{props.name}
-				</NavLink>
-			</Button>
+			<NavLink to={props.to} end>
+				{({ isActive }) => (
+					<Button
+						variant={isActive ? 'default' : 'outline'}
+						onClick={() => setNavHidden(true)}
+					>
+						{props.name}
+					</Button>
+				)}
+			</NavLink>
 		);
 	}
 

@@ -8,12 +8,16 @@ export async function clientLoader() {
 }
 
 export default function ContestTaskSuggestion({
+	params,
 	loaderData,
 }: Route.ComponentProps) {
 	return (
 		<div className="max-w-screen-sm mx-auto">
 			<h1>Navrhnout úlohu</h1>
-			<CreateProblemForm contests={loaderData} />
+			<CreateProblemForm
+				currentContestSymbol={params.contest}
+				contests={loaderData}
+			/>
 		</div>
 	);
 }

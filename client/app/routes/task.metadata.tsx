@@ -5,10 +5,10 @@ import { Route } from './+types/task.metadata';
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const taskData = await trpc.problem.metadata.query(parseInt(params.taskId));
 	const availableTopics = await trpc.contest.availableTopics.query({
-		contestId: 1,
+		contestSymbol: params.contest,
 	});
 	const availableTypes = await trpc.contest.availableTypes.query({
-		contestId: 1,
+		contestSymbol: params.contest,
 	});
 	return { taskData, availableTypes, availableTopics };
 }

@@ -92,14 +92,14 @@ export default function App() {
 		return <div>Loading...</div>;
 	}
 
-	if (auth.error) {
-		return <div>Oops... {auth.error.message}</div>;
-	}
-
 	if (!auth.isAuthenticated) {
 		return (
 			<Button onClick={() => void auth.signinRedirect()}>Log in</Button>
 		);
+	}
+
+	if (auth.error) {
+		return <div>Oops... {auth.error.message}</div>;
 	}
 
 	return <Outlet />;

@@ -38,10 +38,10 @@ export const authedProcedure = trpc.procedure.use(async ({ ctx, next }) => {
 });
 
 export const contestProcedure = authedProcedure
-	.input(z.object({ contestId: z.number() }))
+	.input(z.object({ contestSymbol: z.string() }))
 	.use(async ({ input, ctx, next }) => {
 		const contest = await db.query.contestTable.findFirst({
-			where: eq(contestTable.contestId, input.contestId),
+			where: eq(contestTable.symbol, input.contestSymbol),
 		});
 
 		if (!contest) {
@@ -53,7 +53,7 @@ export const contestProcedure = authedProcedure
 
 		function isPersonOrganizer() {
 			for (const organizer of ctx.person.organizers) {
-				if (organizer.contestId === input.contestId) {
+				if (organizer.contestId === contest?.contestId) {
 					return true;
 				}
 			}

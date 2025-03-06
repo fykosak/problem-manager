@@ -16,25 +16,25 @@ export const contestRouter = trpc.router({
 			},
 		});
 	}),
-	availableTopics: contestProcedure.query(async ({ input }) => {
+	availableTopics: contestProcedure.query(async ({ ctx }) => {
 		return await db.query.topicTable.findMany({
 			where: and(
-				eq(topicTable.contestId, input.contestId),
+				eq(topicTable.contestId, ctx.contest.contestId),
 				eq(topicTable.available, true)
 			),
 		});
 	}),
-	availableTypes: contestProcedure.query(async ({ input }) => {
+	availableTypes: contestProcedure.query(async ({ ctx }) => {
 		return await db.query.typeTable.findMany({
 			where: and(
-				eq(typeTable.contestId, input.contestId),
+				eq(typeTable.contestId, ctx.contest.contestId),
 				eq(typeTable.available, true)
 			),
 		});
 	}),
-	organizers: contestProcedure.query(async ({ input }) => {
+	organizers: contestProcedure.query(async ({ ctx }) => {
 		return await db.query.organizerTable.findMany({
-			where: eq(organizerTable.contestId, input.contestId),
+			where: eq(organizerTable.contestId, ctx.contest.contestId),
 			with: { person: true },
 		});
 	}),

@@ -8,6 +8,7 @@ import * as Y from 'yjs';
 import { and, eq, inArray } from 'drizzle-orm';
 import { Runner } from '@server/runner/runner';
 import {
+	authorTable,
 	langEnum,
 	problemTable,
 	problemTopicTable,
@@ -16,7 +17,7 @@ import {
 	workStateEnum,
 	workTable,
 } from '@server/db/schema';
-import { authedProcedure } from '../middleware';
+import { authedProcedure, contestProcedure } from '../middleware';
 
 export const problemRouter = trpc.router({
 	metadata: authedProcedure.input(z.number()).query(async (opts) => {
@@ -125,10 +126,9 @@ export const problemRouter = trpc.router({
 		console.log(returnValue);
 		return returnValue; // eslint-disable-line
 	}),
-	create: authedProcedure
+	create: contestProcedure
 		.input(
 			z.object({
-				contestId: z.number(),
 				lang: z.enum(langEnum.enumValues),
 				name: z.string().nonempty(),
 				origin: z.string().optional(),
@@ -137,15 +137,15 @@ export const problemRouter = trpc.router({
 				type: z.coerce.number(),
 			})
 		)
-		.mutation(async (opts) => {
+		.mutation(async ({ ctx, input }) => {
 			// TODO validate contestId for available contests of user
 			// TODO to db transaction
 
 			// filter topics by contest
 			const filteredTopics = await db.query.topicTable.findMany({
 				where: and(
-					eq(topicTable.contestId, opts.input.contestId),
-					inArray(topicTable.topicId, opts.input.topics)
+					eq(topicTable.contestId, ctx.contest.contestId),
+					inArray(topicTable.topicId, input.topics)
 				),
 			});
 
@@ -159,20 +159,20 @@ export const problemRouter = trpc.router({
 			// create problem
 			const metadata = {
 				name: {
-					[opts.input.lang]: opts.input.name,
+					[input.lang]: input.name,
 				},
 				origin: {},
 			};
-			if (opts.input.origin) {
+			if (input.origin) {
 				metadata['origin'] = {
-					[opts.input.lang]: opts.input.origin,
+					[input.lang]: input.origin,
 				};
 			}
 			const problem = (
 				await db
 					.insert(problemTable)
 					.values({
-						typeId: opts.input.type,
+						typeId: input.type,
 						metadata: metadata,
 					})
 					.returning()
@@ -180,10 +180,10 @@ export const problemRouter = trpc.router({
 
 			// add text
 			const taskYDoc = new Y.Doc();
-			taskYDoc.getText().insert(0, opts.input.task);
+			taskYDoc.getText().insert(0, input.task);
 			await db.insert(textTable).values({
 				problemId: problem.problemId,
-				lang: opts.input.lang,
+				lang: input.lang,
 				type: 'task',
 				contents: Y.encodeStateAsUpdate(taskYDoc),
 			});
@@ -196,7 +196,11 @@ export const problemRouter = trpc.router({
 				}))
 			);
 
-			// TODO add author
+			await db.insert(authorTable).values({
+				personId: ctx.person.personId,
+				problemId: problem.problemId,
+				type: 'task',
+			});
 
 			return problem;
 		}),
