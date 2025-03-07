@@ -10,11 +10,10 @@ import {
 
 import type { Route } from './+types/root';
 import stylesheet from './app.css?url';
-import { ThemeProvider } from './components/themeProvider';
+import { ThemeProvider } from './hooks/themeProvider';
 import { Toaster } from './components/ui/sonner';
-import { AuthProvider, useAuth } from 'react-oidc-context';
-import { Button } from './components/ui/button';
-import config from './config';
+import { AuthProvider } from 'react-oidc-context';
+import { setConfig } from './config';
 
 export const links: Route.LinksFunction = () => [
 	{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -30,19 +29,40 @@ export const links: Route.LinksFunction = () => [
 	{ rel: 'stylesheet', href: stylesheet },
 ];
 
-const oidcConfig = {
-	authority: config.OIDC_AUTHORITY_URL,
-	client_id: config.OIDC_CLIENT_ID,
-	onSigninCallback: (): void => {
-		window.history.replaceState(
-			{},
-			document.title,
-			window.location.pathname
-		);
-	},
-};
-
 export function Layout({ children }: { children: React.ReactNode }) {
+	return (
+		<ThemeProvider defaultTheme="system">
+			<html lang="cs" className="h-full">
+				<head>
+					<meta charSet="utf-8" />
+					<meta
+						name="viewport"
+						content="width=device-width, initial-scale=1"
+					/>
+					<Meta />
+					<Links />
+				</head>
+				<body className="min-h-screen flex flex-col">
+					{children}
+					<Toaster />
+					<ScrollRestoration />
+					<Scripts />
+				</body>
+			</html>
+		</ThemeProvider>
+	);
+}
+
+export async function clientLoader() {
+	const response = await fetch('/config.json');
+	const json = (await response.json()) as Record<string, unknown>;
+	const config = setConfig(json);
+	return config;
+}
+
+export default function App({ loaderData }: Route.ComponentProps) {
+	const config = loaderData;
+
 	const { pathname, hash, search } = useLocation();
 	const rootUrl = config.ROOT_URL;
 	let redirectUri = rootUrl + pathname;
@@ -53,56 +73,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
 		redirectUri += search;
 	}
 
+	const oidcConfig = {
+		authority: config.OIDC_AUTHORITY_URL,
+		client_id: config.OIDC_CLIENT_ID,
+		redirect_uri: redirectUri,
+		onSigninCallback: (): void => {
+			window.history.replaceState(
+				{},
+				document.title,
+				window.location.pathname
+			);
+		},
+	};
+
 	return (
-		<AuthProvider {...{ ...oidcConfig, redirect_uri: redirectUri }}>
-			<ThemeProvider defaultTheme="system">
-				<html lang="cs" className="h-full">
-					<head>
-						<meta charSet="utf-8" />
-						<meta
-							name="viewport"
-							content="width=device-width, initial-scale=1"
-						/>
-						<Meta />
-						<Links />
-					</head>
-					<body className="min-h-screen flex flex-col">
-						{children}
-						<Toaster />
-						<ScrollRestoration />
-						<Scripts />
-					</body>
-				</html>
-			</ThemeProvider>
+		<AuthProvider {...oidcConfig}>
+			<Outlet />
 		</AuthProvider>
 	);
-}
-
-export default function App() {
-	const auth = useAuth();
-
-	switch (auth.activeNavigator) {
-		case 'signinSilent':
-			return <div>Signing you in...</div>;
-		case 'signoutRedirect':
-			return <div>Signing you out...</div>;
-	}
-
-	if (auth.isLoading) {
-		return <div>Loading...</div>;
-	}
-
-	if (!auth.isAuthenticated) {
-		return (
-			<Button onClick={() => void auth.signinRedirect()}>Log in</Button>
-		);
-	}
-
-	if (auth.error) {
-		return <div>Oops... {auth.error.message}</div>;
-	}
-
-	return <Outlet />;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

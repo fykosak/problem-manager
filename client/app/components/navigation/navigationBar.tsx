@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, generatePath, useLocation } from 'react-router';
+import { NavLink, generatePath } from 'react-router';
 import { ArrowDown, Menu, Moon, Sun } from 'lucide-react';
 import { Button, buttonVariants } from '@client/components/ui/button';
 import {
@@ -8,7 +8,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@client/components/ui/dropdown-menu';
-import { useTheme } from '@client/components/themeProvider';
+import { useTheme } from '@client/hooks/themeProvider';
 import { cn } from '@client/lib/utils';
 import useCurrentRoute from './useCurrentRoute';
 import { useAuth } from 'react-oidc-context';

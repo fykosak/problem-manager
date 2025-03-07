@@ -2,11 +2,11 @@ import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import { User } from 'oidc-client-ts';
 import type { AppRouter } from '@server/trpc/appRouter';
-import config from './config';
+import { config } from './config';
 
 function getUser() {
-	const authority = config.OIDC_AUTHORITY_URL;
-	const clientId = config.OIDC_CLIENT_ID;
+	const authority = config?.OIDC_AUTHORITY_URL;
+	const clientId = config?.OIDC_CLIENT_ID;
 	const oidcStorage = sessionStorage.getItem(
 		`oidc.user:${authority}:${clientId}`
 	);

@@ -24,7 +24,7 @@ import {
 import { useEffect } from 'react';
 import { Textarea } from '../ui/textarea';
 import { langEnum } from '@server/db/schema';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate } from 'react-router';
 
 const formSchema = z.object({
 	contestSymbol: z.string(),
