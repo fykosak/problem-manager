@@ -1,0 +1,106 @@
+import useCurrentRoute from '@client/hooks/useCurrentRoute';
+import NavigationBar from './navigationBar';
+import { generatePath } from 'react-router';
+import DropdownLinkItem from './dropdownLinkItem';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
+import { buttonVariants } from '../ui/button';
+import { ArrowDown } from 'lucide-react';
+import { cn } from '@client/lib/utils';
+
+const links = [
+	{ name: 'Home', link: '' },
+	{ name: 'Úlohy', link: 'tasks' },
+	{ name: 'Návrhy na úlohy', link: 'task-suggestions' },
+];
+
+export default function ContestNavigationBar({
+	contests,
+	selectedContest,
+	selectedYear,
+}: {
+	contests: {
+		contestId: number;
+		name: string;
+		symbol: string;
+		years: {
+			contestYearId: number;
+			contestId: number;
+			year: number;
+		}[];
+	}[];
+	selectedContest: {
+		contestId: number;
+		name: string;
+		symbol: string;
+		years: {
+			contestYearId: number;
+			contestId: number;
+			year: number;
+		}[];
+	};
+	selectedYear: {
+		contestYearId: number;
+		contestId: number;
+		year: number;
+	};
+}) {
+	const currentRoute = useCurrentRoute();
+	if (!currentRoute) {
+		throw new Error('No route matched');
+	}
+
+	const contestItems = contests.map((contest) => {
+		const contestYear = contest.years.at(-1)?.year;
+		const path = generatePath('/' + currentRoute.route.path, {
+			...currentRoute.params,
+			contest: contest.symbol,
+			year: contestYear,
+		});
+		return (
+			<DropdownLinkItem
+				key={contest.contestId}
+				to={path}
+				name={contest.name}
+			/>
+		);
+	});
+	const yearItems = selectedContest.years.map((year) => {
+		const path = generatePath('/' + currentRoute.route.path, {
+			...currentRoute.params,
+			year: year.year,
+		});
+		return (
+			<DropdownLinkItem
+				key={year.year}
+				to={path}
+				name={year.year + '. ročník'}
+			/>
+		);
+	});
+
+	return (
+		<NavigationBar links={links}>
+			<DropdownMenu>
+				<DropdownMenuTrigger>
+					<div className={cn(buttonVariants({ variant: 'ghost' }))}>
+						{selectedYear.year}. ročník <ArrowDown />
+					</div>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent>{yearItems}</DropdownMenuContent>
+			</DropdownMenu>
+
+			<DropdownMenu>
+				<DropdownMenuTrigger>
+					<div className={cn(buttonVariants({ variant: 'ghost' }))}>
+						{selectedContest.name} <ArrowDown />
+					</div>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent>{contestItems}</DropdownMenuContent>
+			</DropdownMenu>
+		</NavigationBar>
+	);
+}

@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss';
 import colors from 'tailwindcss/colors';
 import animatePlugin from 'tailwindcss-animate';
+import plugin from 'tailwindcss/plugin';
 
 export default {
 	darkMode: ['class'],
@@ -80,5 +81,28 @@ export default {
 			},
 		},
 	},
-	plugins: [animatePlugin],
+	plugins: [
+		animatePlugin,
+		plugin(({ addBase, theme }) => {
+			addBase({
+				h1: {
+					fontSize: theme('fontSize.2xl'),
+					fontWeight: theme('fontWeight.bold'),
+					paddingTop: theme('padding.5'),
+					paddingBottom: theme('padding.2'),
+				},
+				h2: {
+					fontSize: theme('fontSize.xl'),
+					fontWeight: theme('fontWeight.semibold'),
+					paddingTop: theme('padding.3'),
+					paddingBottom: theme('padding.1'),
+				},
+				h3: {
+					fontSize: theme('fontSize.lg'),
+					paddingTop: theme('padding.1'),
+					paddingBottom: theme('padding.1'),
+				},
+			});
+		}),
+	],
 } satisfies Config;

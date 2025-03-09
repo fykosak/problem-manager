@@ -9,11 +9,13 @@ interface ThemeProviderProps {
 
 interface ThemeProviderState {
 	theme: Theme;
+	usedColor: 'dark' | 'light';
 	setTheme: (theme: Theme) => void;
 }
 
 const initialState: ThemeProviderState = {
 	theme: 'system',
+	usedColor: 'light',
 	setTheme: () => null,
 };
 
@@ -25,6 +27,7 @@ export function ThemeProvider({
 	...props
 }: ThemeProviderProps) {
 	const [theme, setTheme] = useState<Theme>(defaultTheme);
+	const [usedColor, setUsedColor] = useState<'dark' | 'light'>('light');
 
 	useEffect(() => {
 		const root = window.document.documentElement;
@@ -39,14 +42,17 @@ export function ThemeProvider({
 				: 'light';
 
 			root.classList.add(systemTheme);
+			setUsedColor(systemTheme);
 			return;
 		}
 
 		root.classList.add(theme);
+		setUsedColor(theme);
 	}, [theme]);
 
 	const value = {
 		theme,
+		usedColor,
 		setTheme: (theme: Theme) => {
 			setTheme(theme);
 		},

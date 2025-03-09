@@ -1,8 +1,7 @@
 import { Outlet } from 'react-router';
-import NavigationBar from '@client/components/navigation/navigationBar';
 import { Route } from './+types/layout';
 import { trpc } from '@client/trpc';
-import { TRPCClientError } from '@trpc/client';
+import ContestNavigationBar from '@client/components/navigation/contestNavigationBar';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const contests = await trpc.getContests.query();
@@ -24,13 +23,19 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	return { contests, selectedContest, selectedYear };
 }
 
+export function meta({ data }: Route.MetaArgs) {
+	return [
+		{ title: data.selectedContest.name + ' ' + data.selectedYear.year },
+	];
+}
+
 export default function Layout({ loaderData }: Route.ComponentProps) {
 	if (!loaderData) {
 		return <div>Failed to load data</div>;
 	}
 	return (
 		<>
-			<NavigationBar
+			<ContestNavigationBar
 				contests={loaderData.contests}
 				selectedContest={loaderData.selectedContest}
 				selectedYear={loaderData.selectedYear}
@@ -38,35 +43,4 @@ export default function Layout({ loaderData }: Route.ComponentProps) {
 			<Outlet />
 		</>
 	);
-}
-
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-	if (error instanceof TRPCClientError) {
-		if (!error.data) {
-			throw error;
-		}
-
-		// eslint-disable-next-line
-		if (error.data.code === 'UNAUTHORIZED') {
-			return (
-				<main className="pt-16 p-4 container mx-auto">
-					<h1>UNAUTHORIZED</h1>
-					<p>You cannot access this site</p>
-				</main>
-			);
-		}
-
-		// eslint-disable-next-line
-		if (error.data.code === 'NOT_FOUND') {
-			return (
-				<main className="pt-16 p-4 container mx-auto">
-					<h1>NOT FOUND</h1>
-					<p>{error.message}</p>
-				</main>
-			);
-		}
-	}
-
-	// bubble the error up if not handled
-	throw error;
 }

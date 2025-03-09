@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { NavLink, generatePath } from 'react-router';
-import { ArrowDown, Menu, Moon, Sun } from 'lucide-react';
-import { Button, buttonVariants } from '@client/components/ui/button';
+import { Menu, Moon, Sun } from 'lucide-react';
+import { Button } from '@client/components/ui/button';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -9,46 +8,20 @@ import {
 	DropdownMenuTrigger,
 } from '@client/components/ui/dropdown-menu';
 import { useTheme } from '@client/hooks/themeProvider';
-import { cn } from '@client/lib/utils';
-import useCurrentRoute from './useCurrentRoute';
 import { useAuth } from 'react-oidc-context';
-
-const links = [
-	{ name: 'Home', link: '' },
-	{ name: 'Úlohy', link: 'tasks' },
-	{ name: 'Návrhy na úlohy', link: 'task-suggestions' },
-];
+import NavLinkItem from './navLinkItem';
+import Logo from '../ui/logo';
+import { NavLink } from 'react-router';
 
 export default function NavigationBar({
-	contests,
-	selectedContest,
-	selectedYear,
+	links,
+	children,
 }: {
-	contests: {
-		contestId: number;
+	links: {
 		name: string;
-		symbol: string;
-		years: {
-			contestYearId: number;
-			contestId: number;
-			year: number;
-		}[];
+		link: string;
 	}[];
-	selectedContest: {
-		contestId: number;
-		name: string;
-		symbol: string;
-		years: {
-			contestYearId: number;
-			contestId: number;
-			year: number;
-		}[];
-	};
-	selectedYear: {
-		contestYearId: number;
-		contestId: number;
-		year: number;
-	};
+	children?: React.ReactNode;
 }) {
 	const [navHidden, setNavHidden] = useState(true);
 	const { setTheme } = useTheme();
@@ -58,68 +31,13 @@ export default function NavigationBar({
 		setNavHidden(!navHidden);
 	}
 
-	function NavLinkItem(props: { to: string; name: string }) {
-		return (
-			<NavLink to={props.to} end>
-				{({ isActive }) => (
-					<Button
-						variant={isActive ? 'default' : 'outline'}
-						onClick={() => setNavHidden(true)}
-					>
-						{props.name}
-					</Button>
-				)}
-			</NavLink>
-		);
-	}
-
-	function DropdownLinkItem(props: { to: string; name: string }) {
-		return (
-			<DropdownMenuItem asChild>
-				<NavLink to={props.to}>{props.name}</NavLink>
-			</DropdownMenuItem>
-		);
-	}
-
-	const currentRoute = useCurrentRoute();
-	if (!currentRoute) {
-		throw new Error('No route matched');
-	}
-
-	const contestItems = contests.map((contest) => {
-		const contestYear = contest.years.at(-1)?.year;
-		const path = generatePath('/' + currentRoute.route.path, {
-			...currentRoute.params,
-			contest: contest.symbol,
-			year: contestYear,
-		});
-		return (
-			<DropdownLinkItem
-				key={contest.contestId}
-				to={path}
-				name={contest.name}
-			/>
-		);
-	});
-	const yearItems = selectedContest.years.map((year) => {
-		const path = generatePath('/' + currentRoute.route.path, {
-			...currentRoute.params,
-			year: year.year,
-		});
-		return (
-			<DropdownLinkItem
-				key={year.year}
-				to={path}
-				name={year.year + '. ročník'}
-			/>
-		);
-	});
-
 	return (
 		<div className="w-full bg-sidebar">
 			<div className="2xl:container 2xl:mx-auto px-4 sm:px-6 lg:px-8 m-auto h-full">
 				<nav className="flex items-center justify-between flex-wrap lg:space-x-2 h-full">
-					<div>Logo</div>
+					<NavLink to="/">
+						<Logo className="h-[4rem]" />
+					</NavLink>
 					<Button
 						className="lg:hidden"
 						onClick={switchVisible}
@@ -142,6 +60,7 @@ export default function NavigationBar({
 						>
 							{links.map((link) => (
 								<NavLinkItem
+									onClick={() => setNavHidden(true)}
 									key={link.link}
 									to={link.link}
 									name={link.name}
@@ -154,37 +73,7 @@ export default function NavigationBar({
 								' lg:flex flex-col lg:flex-row w-full lg:w-auto lg:items-center lg:gap-2 my-2'
 							}
 						>
-							<DropdownMenu>
-								<DropdownMenuTrigger>
-									<div
-										className={cn(
-											buttonVariants({ variant: 'ghost' })
-										)}
-									>
-										{selectedYear.year}. ročník{' '}
-										<ArrowDown />
-									</div>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent>
-									{yearItems}
-								</DropdownMenuContent>
-							</DropdownMenu>
-
-							<DropdownMenu>
-								<DropdownMenuTrigger>
-									<div
-										className={cn(
-											buttonVariants({ variant: 'ghost' })
-										)}
-									>
-										{selectedContest.name} <ArrowDown />
-									</div>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent>
-									{contestItems}
-								</DropdownMenuContent>
-							</DropdownMenu>
-
+							{children}
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
 									<Button variant="outline">

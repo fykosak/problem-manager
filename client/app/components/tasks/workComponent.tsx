@@ -11,12 +11,14 @@ import { useState } from 'react';
 import { workStateEnum } from '@server/db/schema';
 import WorkPersonSelect from './workPersonSelect';
 
-function getWorkStateLabel(
+export function getWorkStateLabel(
 	workState: trpcOutputTypes['problem']['work'][0]['state']
 ): string {
 	switch (workState) {
 		case 'waiting':
 			return 'Waiting';
+		case 'todo':
+			return 'To be done';
 		case 'pending':
 			return 'Pending';
 		case 'done':
@@ -24,16 +26,18 @@ function getWorkStateLabel(
 	}
 }
 
-function getWorkStateColor(
+export function getWorkStateColor(
 	workState: trpcOutputTypes['problem']['work'][0]['state']
 ): string {
 	switch (workState) {
 		case 'waiting':
-			return 'bg-neutral-500 text-white';
+			return 'bg-neutral-500 hover:bg-neutral-500/80 text-white';
+		case 'todo':
+			return 'bg-red-500 hover:bg-red-500/80 text-white';
 		case 'pending':
-			return 'bg-yellow-500 text-black';
+			return 'bg-yellow-500 hover:bg-yellow-500/80 text-black';
 		case 'done':
-			return 'bg-green-500 text-black';
+			return 'bg-green-500 hover:bg-green-500/80 text-black';
 	}
 }
 

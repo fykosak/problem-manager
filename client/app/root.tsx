@@ -13,7 +13,8 @@ import stylesheet from './app.css?url';
 import { ThemeProvider } from './hooks/themeProvider';
 import { Toaster } from './components/ui/sonner';
 import { AuthProvider } from 'react-oidc-context';
-import { setConfig } from './config';
+import { config, setConfig } from './config';
+import logoFullWhite from '@client/assets/logoFullWhite.png';
 
 export const links: Route.LinksFunction = () => [
 	{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -29,6 +30,14 @@ export const links: Route.LinksFunction = () => [
 	{ rel: 'stylesheet', href: stylesheet },
 ];
 
+export function meta() {
+	return [
+		{ title: 'Problem manager' },
+		{ property: 'og:title', content: 'Problem manager' },
+		{ property: 'og:image', content: config?.ROOT_URL + logoFullWhite },
+	];
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
 		<ThemeProvider defaultTheme="system">
@@ -38,6 +47,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 					<meta
 						name="viewport"
 						content="width=device-width, initial-scale=1"
+					/>
+					<link href="favicon.ico" rel="icon" />
+					<link
+						href="favicon.ico"
+						rel="icon"
+						media="(prefers-color-scheme: light)"
+					/>
+					<link
+						href="faviconWhite.ico"
+						rel="icon"
+						media="(prefers-color-scheme: dark)"
 					/>
 					<Meta />
 					<Links />

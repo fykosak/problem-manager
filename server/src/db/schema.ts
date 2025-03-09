@@ -272,6 +272,7 @@ export const authorRelations = relations(authorTable, ({ one }) => ({
 
 export const workStateEnum = pgEnum('work_state', [
 	'waiting',
+	'todo',
 	'pending',
 	'done',
 ]);

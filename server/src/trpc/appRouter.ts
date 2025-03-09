@@ -7,6 +7,7 @@ import { personWorkTable } from '@server/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { trpc } from './trpc';
 import { authedProcedure } from './middleware';
+import { personRouter } from './routers/personRouter';
 
 export const appRouter = trpc.router({
 	getProblems: authedProcedure.input(z.number()).query(async () => {
@@ -34,8 +35,9 @@ export const appRouter = trpc.router({
 			},
 		});
 	}),
-	problem: problemRouter,
 	contest: contestRouter,
+	person: personRouter,
+	problem: problemRouter,
 	work: trpc.router({
 		updatePersonWork: authedProcedure
 			.input(
