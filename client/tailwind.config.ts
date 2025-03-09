@@ -83,6 +83,7 @@ export default {
 	},
 	plugins: [
 		animatePlugin,
+		// eslint-disable-next-line
 		plugin(({ addBase, theme }) => {
 			addBase({
 				h1: {

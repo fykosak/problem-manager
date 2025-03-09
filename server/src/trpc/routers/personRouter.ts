@@ -1,7 +1,7 @@
 import { trpc } from '@server/trpc/trpc';
 import { authedProcedure } from '../middleware';
 import { db } from '@server/db';
-import { and, desc, eq, inArray, not } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import {
 	contestTable,
 	contestYearTable,

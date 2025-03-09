@@ -43,7 +43,8 @@ function WorkItem({ work }: { work: trpcOutputTypes['person']['work'][0] }) {
 				)}
 			</CardHeader>
 			<CardContent>
-				{work.problem.metadata.name.cs} - {work.work.group}
+				{(work.problem.metadata.name as Record<string, string>).cs} -{' '}
+				{work.work.group}
 			</CardContent>
 		</Card>
 	);
