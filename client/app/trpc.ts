@@ -7,7 +7,7 @@ import { config } from './config';
 function getUser() {
 	const authority = config?.OIDC_AUTHORITY_URL;
 	const clientId = config?.OIDC_CLIENT_ID;
-	const oidcStorage = sessionStorage.getItem(
+	const oidcStorage = localStorage.getItem(
 		`oidc.user:${authority}:${clientId}`
 	);
 

@@ -135,16 +135,28 @@ export const typeRelations = relations(typeTable, ({ one, many }) => ({
 
 export const problemStateEnum = pgEnum('problem_state', ['active', 'deleted']);
 
-export const problemTable = pgTable('problem', {
-	problemId: serial().primaryKey(),
-	state: problemStateEnum().notNull().default('active'),
-	seriesId: integer().references(() => seriesTable.seriesId),
-	typeId: integer()
-		.notNull()
-		.references(() => typeTable.typeId),
-	metadata: json().notNull().$type<Record<string, unknown>>(),
-	created: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const problemTable = pgTable(
+	'problem',
+	{
+		problemId: serial().primaryKey(),
+		state: problemStateEnum().notNull().default('active'),
+		seriesId: integer().references(() => seriesTable.seriesId),
+		contestId: integer().references(() => contestTable.contestId),
+		typeId: integer()
+			.notNull()
+			.references(() => typeTable.typeId),
+		metadata: json().notNull().$type<Record<string, unknown>>(),
+		created: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [
+		// Problem is assigned to contest as a proposal or to a series as
+		// selected problem, but must be one or the other, not both, not none.
+		check(
+			'problem_contestId_or_seriesId',
+			sql`(${table.seriesId} IS NULL) != (${table.contestId} IS NULL)`
+		),
+	]
+);
 
 export const problemRelations = relations(problemTable, ({ one, many }) => ({
 	problemTopics: many(problemTopicTable),

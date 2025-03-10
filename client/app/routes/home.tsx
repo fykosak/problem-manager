@@ -21,13 +21,12 @@ export async function clientLoader() {
 		pending: await trpc.person.work.query('pending'),
 	};
 	const activeContestYears = await trpc.person.activeContestYears.query();
-	console.log(activeContestYears);
 	return { work, activeContestYears };
 }
 
 function WorkItem({ work }: { work: trpcOutputTypes['person']['work'][0] }) {
 	return (
-		<Card className="max-w-md">
+		<Card>
 			<CardHeader>
 				<CardTitle className="flex flex-row justify-between gap-2">
 					{work.work.label}
@@ -40,6 +39,9 @@ function WorkItem({ work }: { work: trpcOutputTypes['person']['work'][0] }) {
 						{work.contest?.name} {work.contest_year?.year} - série{' '}
 						{work.series?.label}
 					</CardDescription>
+				)}
+				{work.problem.contestId && (
+					<CardDescription>{work.contest?.name}</CardDescription>
 				)}
 			</CardHeader>
 			<CardContent>
@@ -55,7 +57,7 @@ function WorkGroup({ works }: { works: trpcOutputTypes['person']['work'] }) {
 		return <Badge>No work found</Badge>;
 	}
 	return (
-		<div className="flex flex-row flex-wrap gap-2">
+		<div className="flex flex-col md:flex-row flex-wrap gap-2">
 			{works.map((work) => (
 				<WorkItem key={work.person_work.personWorkId} work={work} />
 			))}

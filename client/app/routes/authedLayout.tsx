@@ -55,14 +55,13 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
 		// eslint-disable-next-line
 		if (error.data.code === 'UNAUTHORIZED') {
-			return <LogIn />;
-
 			//return (
 			//	<main className="pt-16 p-4 container mx-auto">
 			//		<h1>UNAUTHORIZED</h1>
 			//		<p>You cannot access this site</p>
 			//	</main>
 			//);
+			return <LogIn />;
 		}
 
 		// eslint-disable-next-line

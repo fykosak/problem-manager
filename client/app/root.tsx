@@ -15,6 +15,7 @@ import { Toaster } from './components/ui/sonner';
 import { AuthProvider } from 'react-oidc-context';
 import { config, setConfig } from './config';
 import logoFullWhite from '@client/assets/logoFullWhite.png';
+import { WebStorageStateStore } from 'oidc-client-ts';
 
 export const links: Route.LinksFunction = () => [
 	{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -104,6 +105,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
 				window.location.pathname
 			);
 		},
+		userStore: new WebStorageStateStore({ store: window.localStorage }),
 	};
 
 	return (
