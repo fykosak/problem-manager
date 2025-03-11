@@ -16,12 +16,24 @@ export class ACL {
 		return role;
 	}
 
-	public addRole(roleName: string): void {
+	public addRole(
+		roleName: string,
+		inheritsFrom: string | string[] = []
+	): void {
 		if (this.roles.has(roleName)) {
 			throw new AclError(`Role ${roleName} already exists`);
 		}
 
-		this.roles.set(roleName, new Role());
+		if (!Array.isArray(inheritsFrom)) {
+			inheritsFrom = [inheritsFrom];
+		}
+
+		for (const inheritsFromRoleName of inheritsFrom) {
+			// try to get inherited role to check if it exists
+			this.getRole(inheritsFromRoleName);
+		}
+
+		this.roles.set(roleName, new Role(inheritsFrom));
 	}
 
 	public allow(
@@ -48,11 +60,30 @@ export class ACL {
 			roleNames = [roleNames];
 		}
 
-		for (const roleName of roleNames) {
+		// BFS through roles
+		// works because Set in guaranteed to have elements in the order of
+		// insertion
+
+		// list of role names waiting to be checked
+		let toVisit = new Set<string>(roleNames);
+		// list of "seen" role names, that were already visited or are waiting
+		// to be visited, these should not be added to the visit list again
+		let seen = new Set<string>(roleNames);
+
+		while (toVisit.size > 0) {
+			const roleName = toVisit.values().next().value;
+			if (!roleName) {
+				// no role remaining
+				return false;
+			}
 			const role = this.getRole(roleName);
 			if (role.isAllowed(resourceName, actionName, assertionData)) {
 				return true;
 			}
+			const nextRoles = role.inheritsFrom.difference(seen);
+			toVisit = toVisit.union(nextRoles);
+			seen = seen.union(nextRoles);
+			toVisit.delete(roleName);
 		}
 
 		return false;

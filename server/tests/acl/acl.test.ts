@@ -77,6 +77,14 @@ test('multiple roles', () => {
 		false
 	);
 	expect(acl.isAllowed('otherRole', 'otherResource')).toBe(false);
+
+	// any role from list
+	expect(acl.isAllowed(['role', 'otherRole'], 'resource', 'action')).toBe(
+		true
+	);
+	expect(
+		acl.isAllowed(['role', 'otherRole'], 'otherResource', 'action')
+	).toBe(true);
 });
 
 test('allow all resources', () => {
@@ -125,4 +133,77 @@ test('assertion', () => {
 	expect(
 		acl.isAllowed('role', 'resource', 'action', { isAllowed: 'asdf' })
 	).toBe(false);
+});
+
+test('role inheritance', () => {
+	const acl = new ACL();
+	acl.addRole('inheritedRole');
+
+	acl.allow('inheritedRole', 'resource', 'action');
+
+	acl.addRole('role', 'inheritedRole');
+	acl.allow('role', 'otherResource', 'action');
+
+	expect(acl.isAllowed('inheritedRole', 'resource', 'action')).toBe(true);
+	expect(acl.isAllowed('inheritedRole', 'otherResource', 'action')).toBe(
+		false
+	);
+
+	expect(acl.isAllowed('role', 'resource', 'action')).toBe(true);
+	expect(acl.isAllowed('role', 'otherResource', 'action')).toBe(true);
+});
+
+test('deeper role inheritance', () => {
+	const acl = new ACL();
+
+	// 5 -> 3 -> 2 -> 1
+	//  \      ^
+	//   > 4  /
+	acl.addRole('1');
+	acl.addRole('2', '1');
+	acl.addRole('3', '2');
+	acl.addRole('4', '2');
+	acl.addRole('5', ['3', '4']);
+
+	acl.allow('1', 'resource1');
+	acl.allow('2', 'resource2');
+	acl.allow('3', 'resource3');
+	acl.allow('4', 'resource4');
+	acl.allow('5', 'resource5');
+
+	expect(acl.isAllowed('1', 'resource1')).toBe(true);
+	expect(acl.isAllowed('1', 'resource2')).toBe(false);
+	expect(acl.isAllowed('1', 'resource3')).toBe(false);
+	expect(acl.isAllowed('1', 'resource4')).toBe(false);
+	expect(acl.isAllowed('1', 'resource5')).toBe(false);
+
+	expect(acl.isAllowed('2', 'resource1')).toBe(true);
+	expect(acl.isAllowed('2', 'resource2')).toBe(true);
+	expect(acl.isAllowed('2', 'resource3')).toBe(false);
+	expect(acl.isAllowed('2', 'resource4')).toBe(false);
+	expect(acl.isAllowed('2', 'resource5')).toBe(false);
+
+	expect(acl.isAllowed('3', 'resource1')).toBe(true);
+	expect(acl.isAllowed('3', 'resource2')).toBe(true);
+	expect(acl.isAllowed('3', 'resource3')).toBe(true);
+	expect(acl.isAllowed('3', 'resource4')).toBe(false);
+	expect(acl.isAllowed('3', 'resource5')).toBe(false);
+
+	expect(acl.isAllowed('4', 'resource1')).toBe(true);
+	expect(acl.isAllowed('4', 'resource2')).toBe(true);
+	expect(acl.isAllowed('4', 'resource3')).toBe(false);
+	expect(acl.isAllowed('4', 'resource4')).toBe(true);
+	expect(acl.isAllowed('4', 'resource5')).toBe(false);
+
+	expect(acl.isAllowed('5', 'resource1')).toBe(true);
+	expect(acl.isAllowed('5', 'resource2')).toBe(true);
+	expect(acl.isAllowed('5', 'resource3')).toBe(true);
+	expect(acl.isAllowed('5', 'resource4')).toBe(true);
+	expect(acl.isAllowed('5', 'resource5')).toBe(true);
+});
+
+test('inherit from not existing role', () => {
+	const acl = new ACL();
+	acl.addRole('inheritedRole');
+	expect(() => acl.addRole('role', 'otherRole')).toThrowError(AclError);
 });

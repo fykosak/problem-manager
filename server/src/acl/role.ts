@@ -8,6 +8,12 @@ export class Role {
 	private permissions = new Map<string, Map<ActionType, AssertionType>>();
 	private allowedAll = false;
 
+	public readonly inheritsFrom: Set<string>;
+
+	constructor(inheritsFrom: string[]) {
+		this.inheritsFrom = new Set(inheritsFrom);
+	}
+
 	public allow(
 		resourceName: string | typeof ACL.All,
 		actionName: string | typeof ACL.All,
