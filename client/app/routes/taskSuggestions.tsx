@@ -6,8 +6,10 @@ import { Route } from './+types/taskSuggestions';
 import { NavLink } from 'react-router';
 import { Plus } from 'lucide-react';
 
-export async function clientLoader() {
-	const problems = await trpc.getProblems.query(1);
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+	const problems = await trpc.contest.problemSuggestions.query({
+		contestSymbol: params.contest,
+	});
 
 	// map to shape
 	const transformedProblems: Task[] = problems.map((problem) => ({
@@ -29,13 +31,11 @@ export async function clientLoader() {
 		state: problem.state,
 		created: new Date(problem.created),
 	}));
+
 	return transformedProblems;
 }
 
 export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
-	if (!loaderData) {
-		return <div>Failed to load problem data</div>;
-	}
 	return (
 		<>
 			<div className="py-5">

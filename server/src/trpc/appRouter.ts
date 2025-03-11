@@ -10,24 +10,6 @@ import { authedProcedure } from './middleware';
 import { personRouter } from './routers/personRouter';
 
 export const appRouter = trpc.router({
-	getProblems: authedProcedure.input(z.number()).query(async () => {
-		return await db.query.problemTable.findMany({
-			with: {
-				problemTopics: {
-					with: {
-						topic: true,
-					},
-				},
-				type: true,
-				authors: {
-					with: {
-						person: true,
-					},
-				},
-			},
-			//where: eq(problemTable, opts.input)
-		});
-	}),
 	getContests: authedProcedure.query(async () => {
 		return await db.query.contestTable.findMany({
 			with: {
