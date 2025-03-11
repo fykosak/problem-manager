@@ -1,30 +1,37 @@
 import { ACL } from './acl';
 
+export type AssertionType = true | ((data: unknown) => boolean);
+export type ActionType = string | typeof ACL.All;
+
 // TODO support actions and assertions
 export class Role {
-	private permissions = new Map<string, Set<string | typeof ACL.All>>();
+	private permissions = new Map<string, Map<ActionType, AssertionType>>();
 	private allowedAll = false;
 
 	public allow(
 		resourceName: string | typeof ACL.All,
-		actionName: string | typeof ACL.All
+		actionName: string | typeof ACL.All,
+		assertion: AssertionType
 	): void {
 		if (resourceName === ACL.All) {
 			this.allowedAll = true;
 			return;
 		}
-		const actionSet = this.permissions.get(resourceName);
-		if (!actionSet) {
-			this.permissions.set(resourceName, new Set([actionName]));
+		const actionMap = this.permissions.get(resourceName);
+		if (!actionMap) {
+			const newActionMap = new Map<ActionType, AssertionType>();
+			newActionMap.set(actionName, assertion);
+			this.permissions.set(resourceName, newActionMap);
 			return;
 		}
 
-		actionSet.add(actionName);
+		actionMap.set(actionName, assertion);
 	}
 
 	public isAllowed(
 		resourceName: string,
-		actionName: string | typeof ACL.All
+		actionName: string | typeof ACL.All,
+		assertionData?: unknown
 	): boolean {
 		if (this.allowedAll) {
 			return true;
@@ -39,6 +46,18 @@ export class Role {
 			return true;
 		}
 
-		return actions.has(actionName);
+		// get action value to determine if it exists and if it's true or an
+		// assertion
+		const action = actions.get(actionName);
+
+		if (action === undefined) {
+			return false;
+		}
+
+		if (action === true) {
+			return true;
+		}
+
+		return action(assertionData);
 	}
 }

@@ -1,5 +1,5 @@
 import { AclError } from './aclError';
-import { Role } from './role';
+import { Role, type AssertionType } from './role';
 
 export class ACL {
 	roles = new Map<string, Role>();
@@ -27,10 +27,11 @@ export class ACL {
 	public allow(
 		roleName: string,
 		resourceName: string | typeof ACL.All = ACL.All,
-		actionName: string | typeof ACL.All = ACL.All
+		actionName: string | typeof ACL.All = ACL.All,
+		assertion: AssertionType = true
 	): void {
 		const role = this.getRole(roleName);
-		role.allow(resourceName, actionName);
+		role.allow(resourceName, actionName, assertion);
 	}
 
 	/**
@@ -40,7 +41,8 @@ export class ACL {
 	public isAllowed(
 		roleNames: string | string[],
 		resourceName: string,
-		actionName: string | typeof ACL.All = ACL.All
+		actionName: string | typeof ACL.All = ACL.All,
+		assertionData?: unknown
 	): boolean {
 		if (!Array.isArray(roleNames)) {
 			roleNames = [roleNames];
@@ -48,7 +50,7 @@ export class ACL {
 
 		for (const roleName of roleNames) {
 			const role = this.getRole(roleName);
-			if (role.isAllowed(resourceName, actionName)) {
+			if (role.isAllowed(resourceName, actionName, assertionData)) {
 				return true;
 			}
 		}

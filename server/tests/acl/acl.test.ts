@@ -1,4 +1,5 @@
 import { ACL } from '@server/acl/acl';
+import { AclError } from '@server/acl/aclError';
 import { expect, test } from 'vitest';
 
 test('basic resource and action', () => {
@@ -11,6 +12,15 @@ test('basic resource and action', () => {
 
 	expect(acl.isAllowed('role', 'resource', 'action')).toBe(true);
 	expect(acl.isAllowed('role', 'resource', 'otherAction')).toBe(true);
+});
+
+test('not allowed action', () => {
+	const acl = new ACL();
+	acl.addRole('role');
+	acl.allow('role', 'resource', 'action');
+
+	expect(acl.isAllowed('role', 'resource', 'action')).toBe(true);
+	expect(acl.isAllowed('role', 'resource', 'otherAction')).toBe(false);
 });
 
 test('not allowed resource', () => {
@@ -31,15 +41,6 @@ test('allow all actions', () => {
 	expect(acl.isAllowed('role', 'resource')).toBe(true);
 
 	expect(acl.isAllowed('role', 'otherResource', 'action')).toBe(false);
-});
-
-test('not allowed action', () => {
-	const acl = new ACL();
-	acl.addRole('role');
-	acl.allow('role', 'resource', 'action');
-
-	expect(acl.isAllowed('role', 'resource', 'action')).toBe(true);
-	expect(acl.isAllowed('role', 'resource', 'otherAction')).toBe(false);
 });
 
 test('is not allowed all actions', () => {
@@ -91,4 +92,37 @@ test('allow all resources', () => {
 	expect(acl.isAllowed('role', 'otherResource', 'action')).toBe(true);
 	expect(acl.isAllowed('role', 'otherResource', 'otherAction')).toBe(true);
 	expect(acl.isAllowed('role', 'otherResource')).toBe(true);
+});
+
+test('assertion', () => {
+	const acl = new ACL();
+	acl.addRole('role');
+
+	acl.allow('role', 'resource', 'action', (user) => {
+		if (!user) {
+			throw new AclError('User undefined');
+		}
+		if (typeof user !== 'object') {
+			throw new AclError('User is not an object');
+		}
+		if (!('isAllowed' in user)) {
+			throw new AclError('User does not have an `isAllowed` property');
+		}
+
+		if (user.isAllowed === true) {
+			return true;
+		}
+
+		return false;
+	});
+
+	expect(
+		acl.isAllowed('role', 'resource', 'action', { isAllowed: true })
+	).toBe(true);
+	expect(
+		acl.isAllowed('role', 'resource', 'action', { isAllowed: false })
+	).toBe(false);
+	expect(
+		acl.isAllowed('role', 'resource', 'action', { isAllowed: 'asdf' })
+	).toBe(false);
 });
