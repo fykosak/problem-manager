@@ -1,6 +1,16 @@
 {
-  "OIDC_CERTS_URL": "",
-  "FKSDB_API_URL": "https://db.fykos.cz",
-  "FKSDB_LOGIN": "",
-  "FKSDB_PASSWORD": ""
+  "oidcCertsUrl": "",
+  "fksdbApiUrl": "https://db.fykos.cz",
+  "fksdbLogin": "",
+  "fksdbPassword": "",
+  "roles": {
+    "baseRole": {
+      "admin": ["role"]
+    },
+    "contestRole": {
+      "fykos": {
+        "organizer": ["role"],
+      }
+    }
+  }
 }

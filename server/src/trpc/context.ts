@@ -15,7 +15,7 @@ export async function createContext({
 			return null;
 		}
 
-		const jwks = createRemoteJWKSet(new URL(config.OIDC_CERTS_URL));
+		const jwks = createRemoteJWKSet(new URL(config.oidcCertsUrl));
 		try {
 			const { payload } = await jwtVerify(accessToken, jwks);
 			return payload;

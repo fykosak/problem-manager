@@ -4,13 +4,13 @@ import { UserAdapter, type User } from './userAdapter';
 export class FKSDBUserAdapter extends UserAdapter {
 	async downloadData(contestId: number) {
 		const response = await fetch(
-			config.FKSDB_API_URL + '/contests/' + contestId + '/organizers',
+			config.fksdbApiUrl + '/contests/' + contestId + '/organizers',
 			{
 				headers: {
 					Authorization:
 						'Basic ' +
 						Buffer.from(
-							config.FKSDB_LOGIN + ':' + config.FKSDB_PASSWORD
+							config.fksdbLogin + ':' + config.fksdbPassword
 						).toString('base64'),
 				},
 			}
