@@ -5,8 +5,11 @@ function filterAssignedRoles(mapping: RoleMapping, tokenRoles: Set<string>) {
 	const appliedRoles = new Set<string>();
 
 	for (const [targetRole, mappedRoles] of mapping.entries()) {
-		if (mappedRoles.intersection(tokenRoles).size > 0) {
-			appliedRoles.add(targetRole);
+		for (const mappedRole of mappedRoles) {
+			if (tokenRoles.has(mappedRole)) {
+				appliedRoles.add(targetRole);
+				break; // skip other mapped roles and continue to next mapping
+			}
 		}
 	}
 

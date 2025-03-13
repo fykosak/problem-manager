@@ -5,7 +5,6 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
-	useLocation,
 } from 'react-router';
 
 import type { Route } from './+types/root';
@@ -84,20 +83,10 @@ export async function clientLoader() {
 export default function App({ loaderData }: Route.ComponentProps) {
 	const config = loaderData;
 
-	const { pathname, hash, search } = useLocation();
-	const rootUrl = config.ROOT_URL;
-	let redirectUri = rootUrl + pathname;
-	if (hash) {
-		redirectUri += hash;
-	}
-	if (search) {
-		redirectUri += search;
-	}
-
 	const oidcConfig = {
 		authority: config.OIDC_AUTHORITY_URL,
 		client_id: config.OIDC_CLIENT_ID,
-		redirect_uri: redirectUri,
+		redirect_uri: config.ROOT_URL + '/login',
 		onSigninCallback: (): void => {
 			window.history.replaceState(
 				{},
