@@ -74,4 +74,18 @@ export const personRouter = trpc.router({
 			.where(inArray(contestYearTable.contestId, contestIds))
 			.orderBy(contestYearTable.contestId, desc(contestYearTable.year));
 	}),
+	roles: authedProcedure.query(({ ctx }) => {
+		// Map and Set cannot be serialized and must converted to arrays and objects
+		const contestRolesMap = new Map<string, string[]>();
+
+		for (const [key, value] of ctx.aclRoles.contestRole.entries()) {
+			contestRolesMap.set(key, [...value.values()]);
+		}
+
+		// serialize
+		return {
+			baseRole: [...ctx.aclRoles.baseRole.values()],
+			contestRole: Object.fromEntries(contestRolesMap),
+		};
+	}),
 });

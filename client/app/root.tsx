@@ -48,14 +48,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 						name="viewport"
 						content="width=device-width, initial-scale=1"
 					/>
-					<link href="favicon.ico" rel="icon" />
+					<link href="/favicon.ico" rel="icon" />
 					<link
-						href="favicon.ico"
+						href="/favicon.ico"
 						rel="icon"
 						media="(prefers-color-scheme: light)"
 					/>
 					<link
-						href="faviconWhite.ico"
+						href="/faviconWhite.ico"
 						rel="icon"
 						media="(prefers-color-scheme: dark)"
 					/>

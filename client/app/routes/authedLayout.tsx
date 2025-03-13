@@ -2,6 +2,8 @@ import { useAuth } from 'react-oidc-context';
 import { Navigate, Outlet } from 'react-router';
 import { Route } from './+types/authedLayout';
 import { TRPCClientError } from '@trpc/client';
+import { trpc } from '@client/trpc';
+import { PersonRolesProvider } from '@client/hooks/personRolesProvider';
 
 function saveLoginRedirectUrl() {
 	localStorage.setItem(
@@ -10,8 +12,13 @@ function saveLoginRedirectUrl() {
 	);
 }
 
-export default function Layout() {
-	console.log('render authedLayout');
+export async function clientLoader() {
+	const roles = await trpc.person.roles.query();
+	console.log(roles);
+	return { roles };
+}
+
+export default function Layout({ loaderData }: Route.ComponentProps) {
 	const auth = useAuth();
 
 	if (auth.isLoading) {
@@ -23,7 +30,11 @@ export default function Layout() {
 		return <Navigate to="/login" />;
 	}
 
-	return <Outlet />;
+	return (
+		<PersonRolesProvider value={loaderData.roles}>
+			<Outlet />
+		</PersonRolesProvider>
+	);
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
