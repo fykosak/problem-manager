@@ -1,11 +1,10 @@
 import { readFileSync } from 'fs';
 import { ConfigError, getRequiredString } from './configUtils';
+import { BaseRole, ContestRole, type RoleMapping } from './acl/roleTypes';
 
 const jsonConfig = JSON.parse(
 	readFileSync('./config.json').toString()
 ) as Record<string, unknown>;
-
-type RoleMapType = Map<string, Set<string>>;
 
 /**
  * Get typed role map from object, for example from
@@ -16,12 +15,12 @@ type RoleMapType = Map<string, Set<string>>;
  * }
  * ```
  */
-function getRoleMap(json: unknown) {
+function getRoleMappping(json: unknown) {
 	if (typeof json !== 'object') {
 		throw new ConfigError('Role map must be an object');
 	}
 
-	const typedRoleMap: RoleMapType = new Map();
+	const typedRoleMap: RoleMapping = new Map();
 
 	for (const role in json) {
 		const mappedRoles = (json as Record<string, unknown>)[role];
@@ -47,12 +46,21 @@ function getContestRoleMap(json: unknown) {
 		throw new ConfigError('Role map must be an object');
 	}
 
-	const contestRoleMap = new Map<string, RoleMapType>();
+	const contestRoleMap = new Map<string, RoleMapping>();
 	for (const contest in json) {
-		contestRoleMap.set(
-			contest,
-			getRoleMap((json as Record<string, unknown>)[contest])
+		const roleMapping = getRoleMappping(
+			(json as Record<string, unknown>)[contest]
 		);
+
+		for (const role of roleMapping.keys()) {
+			// JS does not support enums and it is just a TS feature, so this
+			// won't be pretty
+			if (!(Object.values(ContestRole) as string[]).includes(role)) {
+				throw new ConfigError(`Role ${role} is not a contest role`);
+			}
+		}
+
+		contestRoleMap.set(contest, roleMapping);
 	}
 
 	return contestRoleMap;
@@ -65,8 +73,8 @@ function getACLConfig(json: Record<string, unknown>, property: string) {
 	}
 
 	const roleMap: {
-		baseRole: RoleMapType | null;
-		contestRole: Map<string, RoleMapType> | null;
+		baseRole: RoleMapping | null;
+		contestRole: Map<string, RoleMapping> | null;
 	} = {
 		baseRole: null,
 		contestRole: null,
@@ -74,9 +82,15 @@ function getACLConfig(json: Record<string, unknown>, property: string) {
 
 	for (const roleScope in aclConfig) {
 		if (roleScope === 'baseRole') {
-			roleMap.baseRole = getRoleMap(
+			const roleMapping = getRoleMappping(
 				(aclConfig as Record<string, unknown>)[roleScope]
 			);
+			for (const role of roleMapping.keys()) {
+				if (!(Object.values(BaseRole) as string[]).includes(role)) {
+					throw new ConfigError(`Role ${role} is not a base role`);
+				}
+			}
+			roleMap.baseRole = roleMapping;
 			continue;
 		}
 		if (roleScope === 'contestRole') {
@@ -85,6 +99,7 @@ function getACLConfig(json: Record<string, unknown>, property: string) {
 			);
 			continue;
 		}
+
 		throw new ConfigError(`Unrecognized scope ${roleScope} in acl config`);
 	}
 
@@ -100,7 +115,7 @@ const config = {
 	fksdbApiUrl: getRequiredString(jsonConfig, 'fksdbApiUrl'),
 	fksdbLogin: getRequiredString(jsonConfig, 'fksdbLogin'),
 	fksdbPassword: getRequiredString(jsonConfig, 'fksdbPassword'),
-	roles: getACLConfig(jsonConfig, 'roles'),
+	roleMapping: getACLConfig(jsonConfig, 'roleMapping'),
 };
 
 export default config;

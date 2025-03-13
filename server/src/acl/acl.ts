@@ -71,11 +71,7 @@ export class ACL {
 		let seen = new Set<string>(roleNames);
 
 		while (toVisit.size > 0) {
-			const roleName = toVisit.values().next().value;
-			if (!roleName) {
-				// no role remaining
-				return false;
-			}
+			const roleName = toVisit.values().next().value as string;
 			const role = this.getRole(roleName);
 			if (role.isAllowed(resourceName, actionName, assertionData)) {
 				return true;

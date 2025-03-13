@@ -3,13 +3,13 @@
   "fksdbApiUrl": "https://db.fykos.cz",
   "fksdbLogin": "",
   "fksdbPassword": "",
-  "roles": {
+  "roleMapping": {
     "baseRole": {
       "admin": ["role"]
     },
     "contestRole": {
       "fykos": {
-        "organizer": ["role"],
+        "contest.organizer": ["role"],
       }
     }
   }

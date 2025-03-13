@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { db } from '@server/db';
 import { eq } from 'drizzle-orm';
 import { contestTable, personTable } from '@server/db/schema';
+import { getPersonRoles } from '@server/acl/getPersonRoles';
 
 export const authedProcedure = trpc.procedure.use(async ({ ctx, next }) => {
 	if (!ctx.jwtData) {
@@ -18,7 +19,6 @@ export const authedProcedure = trpc.procedure.use(async ({ ctx, next }) => {
 		});
 	}
 
-	// TODO get user from database
 	const person = await db.query.personTable.findFirst({
 		where: eq(personTable.personId, Number(ctx.jwtData['person_id'])),
 		with: { organizers: true },
@@ -30,9 +30,37 @@ export const authedProcedure = trpc.procedure.use(async ({ ctx, next }) => {
 		});
 	}
 
+	// check roles
+	if (
+		!ctx.jwtData['realm_access'] ||
+		typeof ctx.jwtData['realm_access'] !== 'object'
+	) {
+		throw new TRPCError({
+			code: 'BAD_REQUEST',
+			message: 'Cannot get realm_access from token',
+		});
+	}
+
+	const tokenRoles = (ctx.jwtData['realm_access'] as Record<string, unknown>)[
+		'roles'
+	];
+
+	if (
+		!Array.isArray(tokenRoles) ||
+		!tokenRoles.every((role) => typeof role === 'string')
+	) {
+		throw new TRPCError({
+			code: 'BAD_REQUEST',
+			message: 'Bad type of roles',
+		});
+	}
+
+	const aclRoles = getPersonRoles(new Set(tokenRoles));
+
 	return next({
 		ctx: {
 			person: person,
+			aclRoles: aclRoles,
 		},
 	});
 });
