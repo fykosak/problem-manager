@@ -14,7 +14,6 @@ function saveLoginRedirectUrl() {
 
 export async function clientLoader() {
 	const roles = await trpc.person.roles.query();
-	console.log(roles);
 	return { roles };
 }
 

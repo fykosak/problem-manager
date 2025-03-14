@@ -16,7 +16,6 @@ import { Badge } from '@client/components/ui/badge';
 import { NavLink } from 'react-router';
 
 export async function clientLoader() {
-	console.log('home client loader');
 	const work = {
 		waiting: await trpc.person.work.query('waiting'),
 		todo: await trpc.person.work.query('todo'),

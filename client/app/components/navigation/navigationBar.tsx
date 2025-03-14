@@ -33,7 +33,7 @@ export default function NavigationBar({
 
 	return (
 		<div className="w-full bg-sidebar">
-			<div className="2xl:container 2xl:mx-auto px-4 sm:px-6 lg:px-8 m-auto h-full">
+			<div className="container mx-auto px-4 sm:px-6 lg:px-8 m-auto h-full">
 				<nav className="flex items-center justify-between flex-wrap lg:space-x-2 h-full">
 					<NavLink to="/">
 						<Logo className="h-[4rem]" />

@@ -2,16 +2,18 @@ import { trpc } from '@server/trpc/trpc';
 
 import { db } from '@server/db';
 
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import {
 	contestTable,
 	contestYearTable,
 	organizerTable,
 	problemTable,
+	seriesTable,
 	topicTable,
 	typeTable,
 } from '@server/db/schema';
 import { authedProcedure, contestProcedure } from '../middleware';
+import { z } from 'zod';
 
 export const contestRouter = trpc.router({
 	// TODO filter by organizer contests
@@ -76,4 +78,36 @@ export const contestRouter = trpc.router({
 			where: eq(problemTable.contestId, ctx.contest.contestId),
 		});
 	}),
+	series: contestProcedure
+		.input(
+			z.object({
+				contestYear: z.number(),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			const contestYears = await db.query.contestYearTable.findMany({
+				where: and(
+					eq(contestYearTable.year, input.contestYear),
+					eq(contestYearTable.contestId, ctx.contest.contestId)
+				),
+			});
+			return await db.query.seriesTable.findMany({
+				with: {
+					problems: {
+						with: {
+							type: true,
+							work: {
+								columns: {
+									state: true,
+								},
+							},
+						},
+					},
+				},
+				where: inArray(
+					seriesTable.contestYearId,
+					contestYears.map((contestYear) => contestYear.contestYearId)
+				),
+			});
+		}),
 });

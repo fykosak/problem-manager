@@ -33,11 +33,11 @@ export function getWorkStateColor(
 		case 'waiting':
 			return 'bg-neutral-500 hover:bg-neutral-500/80 text-white';
 		case 'todo':
-			return 'bg-red-500 hover:bg-red-500/80 text-white';
+			return 'bg-red-500 hover:bg-red-600 text-white';
 		case 'pending':
-			return 'bg-yellow-500 hover:bg-yellow-500/80 text-black';
+			return 'bg-yellow-500 hover:bg-yellow-600 text-black';
 		case 'done':
-			return 'bg-green-500 hover:bg-green-500/80 text-black';
+			return 'bg-green-500 hover:bg-green-600 text-black';
 	}
 }
 

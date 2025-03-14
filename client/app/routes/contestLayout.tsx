@@ -3,7 +3,7 @@ import NavigationSuspense from '@client/components/navigation/navigationSuspense
 
 export default function Layout() {
 	return (
-		<div className="xl:container xl:mx-auto px-4 sm:px-6 lg:px-8">
+		<div className="container mx-auto px-4 sm:px-6 lg:px-8">
 			<NavigationSuspense>
 				<Outlet />
 			</NavigationSuspense>

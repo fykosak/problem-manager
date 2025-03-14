@@ -44,12 +44,16 @@ export const contestYearTable = pgTable(
 	(table) => [check('year_check', sql`${table.year} > 0`)]
 );
 
-export const contestYearRelations = relations(contestYearTable, ({ one }) => ({
-	contest: one(contestTable, {
-		fields: [contestYearTable.contestId],
-		references: [contestTable.contestId],
-	}),
-}));
+export const contestYearRelations = relations(
+	contestYearTable,
+	({ one, many }) => ({
+		contest: one(contestTable, {
+			fields: [contestYearTable.contestId],
+			references: [contestTable.contestId],
+		}),
+		series: many(seriesTable),
+	})
+);
 
 export const seriesTable = pgTable(
 	'series',
@@ -62,6 +66,14 @@ export const seriesTable = pgTable(
 	},
 	(table) => [unique().on(table.contestYearId, table.label)]
 );
+
+export const seriesRelations = relations(seriesTable, ({ one, many }) => ({
+	problems: many(problemTable),
+	contestYear: one(contestYearTable, {
+		fields: [seriesTable.contestYearId],
+		references: [contestYearTable.contestYearId],
+	}),
+}));
 
 export const topicTable = pgTable(
 	'topic',

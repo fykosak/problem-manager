@@ -12,8 +12,7 @@ import { ArrowDown } from 'lucide-react';
 import { cn } from '@client/lib/utils';
 
 const links = [
-	{ name: 'Home', link: '' },
-	{ name: 'Úlohy', link: 'tasks' },
+	{ name: 'Úlohy', link: '' },
 	{ name: 'Návrhy na úlohy', link: 'task-suggestions' },
 ];
 
