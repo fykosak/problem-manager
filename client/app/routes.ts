@@ -12,6 +12,7 @@ export default [
 		route(':contest/:year', 'routes/layout.tsx', [
 			layout('routes/contestLayout.tsx', [
 				index('routes/tasks.tsx'),
+				route('task-ordering', 'routes/taskOrdering.tsx'),
 				route('task-suggestions', 'routes/taskSuggestions.tsx'),
 				route('create', 'routes/contestTaskSuggetion.tsx'),
 			]),

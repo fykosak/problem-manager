@@ -78,6 +78,7 @@ export const contestRouter = trpc.router({
 			where: eq(problemTable.contestId, ctx.contest.contestId),
 		});
 	}),
+	// TODO to separate router
 	series: contestProcedure
 		.input(
 			z.object({
@@ -109,5 +110,25 @@ export const contestRouter = trpc.router({
 					contestYears.map((contestYear) => contestYear.contestYearId)
 				),
 			});
+		}),
+	// TODO to separate router
+	// TODO check permissions
+	// TODO validate data for contest year
+	saveSeriesOrdering: authedProcedure
+		.input(
+			z.object({
+				series: z.record(z.coerce.number(), z.array(z.number())),
+			})
+		)
+		// TODO order task, not just save it's series
+		.mutation(async ({ input }) => {
+			for (const seriesId in input.series) {
+				for (const problemId of input.series[seriesId]) {
+					await db
+						.update(problemTable)
+						.set({ seriesId: Number(seriesId) })
+						.where(eq(problemTable.problemId, problemId));
+				}
+			}
 		}),
 });

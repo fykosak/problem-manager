@@ -4,13 +4,19 @@ import {
 	verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { Task } from './task';
+import { trpcOutputTypes } from '@client/trpc';
 
 export function Series({
 	id,
 	items,
+	problems,
 }: {
 	id: UniqueIdentifier;
 	items: UniqueIdentifier[];
+	problems: Map<
+		number,
+		trpcOutputTypes['contest']['series'][0]['problems'][0]
+	>;
 }) {
 	const { setNodeRef } = useDroppable({
 		id: id,
@@ -23,7 +29,7 @@ export function Series({
 				ref={setNodeRef}
 			>
 				{items.map((id) => (
-					<Task key={id} id={id} />
+					<Task key={id} id={id} problem={problems.get(id)} />
 				))}
 			</div>
 		</SortableContext>

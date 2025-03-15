@@ -1,8 +1,17 @@
+import { trpcOutputTypes } from '@client/trpc';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { Card, CardHeader, CardTitle } from '../ui/card';
+import { Badge } from '../ui/badge';
 
-export function Task({ id }: { id: UniqueIdentifier }) {
+export function Task({
+	id,
+	problem,
+}: {
+	id: UniqueIdentifier;
+	problem: trpcOutputTypes['contest']['series'][0]['problems'][0];
+}) {
 	const { attributes, listeners, setNodeRef, transform, transition } =
 		useSortable({ id: id });
 
@@ -12,14 +21,13 @@ export function Task({ id }: { id: UniqueIdentifier }) {
 	};
 
 	return (
-		<div
-			ref={setNodeRef}
-			style={style}
-			{...attributes}
-			{...listeners}
-			className="h-9 border bg-primary"
-		>
-			Task {id}
-		</div>
+		<Card ref={setNodeRef} style={style} {...attributes} {...listeners}>
+			<CardHeader>
+				<CardTitle className="flex flex-row justify-between items-center gap-2">
+					{problem.metadata.name.cs}
+					<Badge className="bg-green-500">{problem.type.label}</Badge>
+				</CardTitle>
+			</CardHeader>
+		</Card>
 	);
 }

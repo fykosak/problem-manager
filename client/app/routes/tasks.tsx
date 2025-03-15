@@ -1,4 +1,3 @@
-import { TaskDashboard } from '@client/components/tasks/taskDashboard';
 import { Button } from '@client/components/ui/button';
 import { useUserRoles } from '@client/hooks/usePersonRoles';
 import { acl } from '@server/acl/aclFactory';
@@ -12,6 +11,7 @@ import {
 } from '@client/components/ui/card';
 import { Badge } from '@client/components/ui/badge';
 import { ProgressWork } from '@client/components/ui/progressWork';
+import { Link } from 'react-router';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const series = await trpc.contest.series.query({
@@ -21,7 +21,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	return { series };
 }
 
-function Problem({
+export function Problem({
 	problem,
 }: {
 	problem: trpcOutputTypes['contest']['series'][0]['problems'][0];
@@ -36,7 +36,9 @@ function Problem({
 		<Card className="hover:bg-accent">
 			<CardHeader>
 				<CardTitle className="flex flex-row justify-between items-center gap-2">
-					{problem.metadata.name.cs}
+					<Link to={'task/' + problem.problemId}>
+						{problem.metadata.name.cs}
+					</Link>
 					<Badge className="bg-green-500">{problem.type.label}</Badge>
 				</CardTitle>
 			</CardHeader>
@@ -53,7 +55,7 @@ function Series({
 	series: trpcOutputTypes['contest']['series'][0];
 }) {
 	return (
-		<div>
+		<div className="md:w-80">
 			<h2>série {series.label}</h2>
 			<div className="flex flex-col gap-2">
 				{series.problems.map((problem) => (
@@ -72,9 +74,13 @@ export default function Tasks({ params, loaderData }: Route.ComponentProps) {
 				roles.contestRole[params.contest],
 				'series',
 				'edit'
-			) && <Button>Edit</Button>}
+			) && (
+				<Link to="task-ordering">
+					<Button>Edit</Button>
+				</Link>
+			)}
 			{/*<TaskDashboard />*/}
-			<div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+			<div className="flex flex-col md:flex-row flex-wrap justify-around gap-5">
 				{loaderData.series.map((series) => (
 					<Series key={series.seriesId} series={series} />
 				))}

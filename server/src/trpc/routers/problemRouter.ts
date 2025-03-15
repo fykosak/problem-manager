@@ -173,6 +173,7 @@ export const problemRouter = trpc.router({
 					.insert(problemTable)
 					.values({
 						typeId: input.type,
+						contestId: ctx.contest.contestId,
 						metadata: metadata,
 					})
 					.returning()
