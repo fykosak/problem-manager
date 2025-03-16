@@ -4,6 +4,7 @@ import { Badge } from '@client/components/ui/badge';
 import {
 	Card,
 	CardContent,
+	CardDescription,
 	CardHeader,
 	CardTitle,
 } from '@client/components/ui/card';
@@ -22,7 +23,7 @@ export function Problem({
 	}
 
 	return (
-		<Card className="hover:bg-accent">
+		<Card>
 			<CardHeader>
 				<CardTitle className="flex flex-row justify-between items-center gap-2">
 					<Link to={'task/' + problem.problemId}>
@@ -35,6 +36,7 @@ export function Problem({
 					</Link>
 					<Badge className="bg-green-500">{problem.type.label}</Badge>
 				</CardTitle>
+				<CardDescription>úloha {problem.seriesOrder}</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<ProgressWork workStats={workStats} />

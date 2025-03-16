@@ -5,6 +5,12 @@ import {
 } from '@dnd-kit/sortable';
 import { useMemo } from 'react';
 
+import {
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+} from '@client/components/ui/card';
 import { trpcOutputTypes } from '@client/trpc';
 
 import { Problem } from './problem';
@@ -12,9 +18,12 @@ import { Problem } from './problem';
 export function Series({
 	id,
 	items,
+	series,
 }: {
 	id: UniqueIdentifier;
+	// items need to be as a separate prop for rerendering to work correctly
 	items: trpcOutputTypes['contest']['series'][0]['problems'];
+	series: trpcOutputTypes['contest']['series'][0];
 }) {
 	const { setNodeRef } = useDroppable({
 		id: id,
@@ -31,12 +40,12 @@ export function Series({
 			items={items.map((problem) => problem.problemId)}
 			strategy={verticalListSortingStrategy}
 		>
-			<div
-				className="border border-2 bg-secondary w-1/4"
-				ref={setNodeRef}
-			>
-				{problemComponents}
-			</div>
+			<Card ref={setNodeRef} className="w-1/6">
+				<CardHeader>
+					<CardTitle>série {series.label}</CardTitle>
+				</CardHeader>
+				<CardContent className="p-2">{problemComponents}</CardContent>
+			</Card>
 		</SortableContext>
 	);
 }

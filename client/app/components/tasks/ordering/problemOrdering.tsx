@@ -308,6 +308,7 @@ export function ProblemOrdering({
 							key={series.seriesId}
 							id={'series-' + series.seriesId}
 							items={series.problems}
+							series={series}
 						/>
 					))}
 				</div>

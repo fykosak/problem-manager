@@ -2,7 +2,13 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 import { Badge } from '@client/components/ui/badge';
-import { Card, CardHeader, CardTitle } from '@client/components/ui/card';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@client/components/ui/card';
 import { trpcOutputTypes } from '@client/trpc';
 
 export function Problem({
@@ -32,15 +38,19 @@ export function Problem({
 			}
 		>
 			<CardHeader>
-				<CardTitle className="flex flex-row justify-between items-center gap-2">
+				<CardTitle>
 					{'name' in problem.metadata
 						? // @ts-expect-error not defined metadata type
 							'cs' in problem.metadata.name
 							? (problem.metadata.name.cs as string) // TODO
 							: ''
 						: ''}
-					<Badge className="bg-green-500">{problem.type.label}</Badge>
 				</CardTitle>
+				<CardDescription>
+					<Badge className="bg-green-500 hover:bg-green-600">
+						{problem.type.label}
+					</Badge>
+				</CardDescription>
 			</CardHeader>
 		</Card>
 	);
