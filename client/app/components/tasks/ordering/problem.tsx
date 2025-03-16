@@ -1,8 +1,9 @@
-import { trpcOutputTypes } from '@client/trpc';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Card, CardHeader, CardTitle } from '@client/components/ui/card';
+
 import { Badge } from '@client/components/ui/badge';
+import { Card, CardHeader, CardTitle } from '@client/components/ui/card';
+import { trpcOutputTypes } from '@client/trpc';
 
 export function Problem({
 	problem,

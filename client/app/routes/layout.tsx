@@ -1,7 +1,9 @@
 import { Outlet } from 'react-router';
-import { Route } from './+types/layout';
-import { trpc } from '@client/trpc';
+
 import ContestNavigationBar from '@client/components/navigation/contestNavigationBar';
+import { trpc } from '@client/trpc';
+
+import { Route } from './+types/layout';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const contests = await trpc.getContests.query();

@@ -1,7 +1,7 @@
-import { trpc } from '@server/trpc/trpc';
-import { authedProcedure } from '../middleware';
-import { db } from '@server/db';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { z } from 'zod';
+
+import { db } from '@server/db';
 import {
 	contestTable,
 	contestYearTable,
@@ -11,7 +11,9 @@ import {
 	workStateEnum,
 	workTable,
 } from '@server/db/schema';
-import { z } from 'zod';
+import { trpc } from '@server/trpc/trpc';
+
+import { authedProcedure } from '../middleware';
 
 export const personRouter = trpc.router({
 	work: authedProcedure

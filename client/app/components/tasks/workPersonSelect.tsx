@@ -1,6 +1,11 @@
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { Button } from '../ui/button';
 import { Check, Cog } from 'lucide-react';
+import { useState } from 'react';
+
+import { cn } from '@client/lib/utils';
+import { trpc, trpcOutputTypes } from '@client/trpc';
+
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 import {
 	Command,
 	CommandEmpty,
@@ -9,10 +14,7 @@ import {
 	CommandItem,
 	CommandList,
 } from '../ui/command';
-import { cn } from '@client/lib/utils';
-import { useState } from 'react';
-import { trpc, trpcOutputTypes } from '@client/trpc';
-import { Badge } from '../ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 export default function WorkPersonSelect({
 	work,

@@ -1,7 +1,8 @@
-import { Button } from '@client/components/ui/button';
-import Logo from '@client/components/ui/logo';
 import { useAuth } from 'react-oidc-context';
 import { Navigate } from 'react-router';
+
+import { Button } from '@client/components/ui/button';
+import Logo from '@client/components/ui/logo';
 
 export default function Login() {
 	const auth = useAuth();

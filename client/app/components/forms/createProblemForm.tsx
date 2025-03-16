@@ -1,6 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
 import { z } from 'zod';
+
+import { langEnum } from '@server/db/schema';
+
+import { trpc, type trpcOutputTypes } from '@client/trpc';
+
+import { Button } from '../ui/button';
+import { Checkbox } from '../ui/checkbox';
 import {
 	Form,
 	FormControl,
@@ -9,22 +19,15 @@ import {
 	FormLabel,
 	FormMessage,
 } from '../ui/form';
-import { trpc, type trpcOutputTypes } from '@client/trpc';
-import { toast } from 'sonner';
 import { Input } from '../ui/input';
-import { Button } from '../ui/button';
-import { Checkbox } from '../ui/checkbox';
 import {
 	Select,
+	SelectContent,
+	SelectItem,
 	SelectTrigger,
 	SelectValue,
-	SelectItem,
-	SelectContent,
 } from '../ui/select';
-import { useEffect } from 'react';
 import { Textarea } from '../ui/textarea';
-import { langEnum } from '@server/db/schema';
-import { useNavigate } from 'react-router';
 
 const formSchema = z.object({
 	contestSymbol: z.string(),

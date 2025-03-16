@@ -1,6 +1,4 @@
-import { trpc } from '@client/trpc';
-import { Button } from '../ui/button';
-import PdfViewer from './pdfViewer';
+import { Loader, Minus, Plus } from 'lucide-react';
 import {
 	KeyboardEvent,
 	forwardRef,
@@ -10,10 +8,13 @@ import {
 	useRef,
 	useState,
 } from 'react';
-import { Loader, Minus, Plus } from 'lucide-react';
-
-import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+
+import { trpc } from '@client/trpc';
+
+import { Button } from '../ui/button';
+import PdfViewer from './pdfViewer';
 
 const TaskPdf = forwardRef(({ problemId }: { problemId: number }, outerRef) => {
 	const innerRef = useRef<HTMLDivElement>(null);

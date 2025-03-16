@@ -1,12 +1,13 @@
-import { parser } from './syntax.grammar';
 import {
 	LRLanguage,
-	indentNodeProp,
-	foldNodeProp,
-	foldInside,
 	delimitedIndent,
+	foldInside,
+	foldNodeProp,
+	indentNodeProp,
 } from '@codemirror/language';
 import { styleTags, tags as t } from '@lezer/highlight';
+
+import { parser } from './syntax.grammar';
 
 export const latexLanguage = LRLanguage.define({
 	name: 'latex',

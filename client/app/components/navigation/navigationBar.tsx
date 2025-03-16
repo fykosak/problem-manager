@@ -1,5 +1,8 @@
-import { useState } from 'react';
 import { Menu, Moon, Sun } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from 'react-oidc-context';
+import { NavLink } from 'react-router';
+
 import { Button } from '@client/components/ui/button';
 import {
 	DropdownMenu,
@@ -8,10 +11,9 @@ import {
 	DropdownMenuTrigger,
 } from '@client/components/ui/dropdown-menu';
 import { useTheme } from '@client/hooks/themeProvider';
-import { useAuth } from 'react-oidc-context';
-import NavLinkItem from './navLinkItem';
+
 import Logo from '../ui/logo';
-import { NavLink } from 'react-router';
+import NavLinkItem from './navLinkItem';
 
 export default function NavigationBar({
 	links,

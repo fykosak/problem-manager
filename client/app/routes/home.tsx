@@ -1,6 +1,11 @@
+import { NavLink } from 'react-router';
+
 import NavigationBar from '@client/components/navigation/navigationBar';
-import { trpc, trpcOutputTypes } from '@client/trpc';
-import { Route } from './+types/home';
+import {
+	getWorkStateColor,
+	getWorkStateLabel,
+} from '@client/components/tasks/workComponent';
+import { Badge } from '@client/components/ui/badge';
 import {
 	Card,
 	CardContent,
@@ -8,12 +13,9 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@client/components/ui/card';
-import {
-	getWorkStateColor,
-	getWorkStateLabel,
-} from '@client/components/tasks/workComponent';
-import { Badge } from '@client/components/ui/badge';
-import { NavLink } from 'react-router';
+import { trpc, trpcOutputTypes } from '@client/trpc';
+
+import { Route } from './+types/home';
 
 export async function clientLoader() {
 	const work = {

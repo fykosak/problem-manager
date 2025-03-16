@@ -1,15 +1,17 @@
-import useCurrentRoute from '@client/hooks/useCurrentRoute';
-import NavigationBar from './navigationBar';
+import { ArrowDown } from 'lucide-react';
 import { generatePath } from 'react-router';
-import DropdownLinkItem from './dropdownLinkItem';
+
+import useCurrentRoute from '@client/hooks/useCurrentRoute';
+import { cn } from '@client/lib/utils';
+
+import { buttonVariants } from '../ui/button';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { buttonVariants } from '../ui/button';
-import { ArrowDown } from 'lucide-react';
-import { cn } from '@client/lib/utils';
+import DropdownLinkItem from './dropdownLinkItem';
+import NavigationBar from './navigationBar';
 
 const links = [
 	{ name: 'Úlohy', link: '' },

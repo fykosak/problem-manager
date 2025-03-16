@@ -1,13 +1,14 @@
+import { Link } from 'react-router';
+
+import { Badge } from '@client/components/ui/badge';
 import {
 	Card,
 	CardContent,
 	CardHeader,
 	CardTitle,
 } from '@client/components/ui/card';
-import { Badge } from '@client/components/ui/badge';
 import { ProgressWork } from '@client/components/ui/progressWork';
 import { trpcOutputTypes } from '@client/trpc';
-import { Link } from 'react-router';
 
 export function Problem({
 	problem,

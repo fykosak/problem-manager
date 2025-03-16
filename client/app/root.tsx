@@ -1,20 +1,21 @@
+import { WebStorageStateStore } from 'oidc-client-ts';
+import { AuthProvider } from 'react-oidc-context';
 import {
-	isRouteErrorResponse,
 	Links,
 	Meta,
 	Outlet,
 	Scripts,
 	ScrollRestoration,
+	isRouteErrorResponse,
 } from 'react-router';
+
+import logoFullWhite from '@client/assets/logoFullWhite.png';
 
 import type { Route } from './+types/root';
 import stylesheet from './app.css?url';
-import { ThemeProvider } from './hooks/themeProvider';
 import { Toaster } from './components/ui/sonner';
-import { AuthProvider } from 'react-oidc-context';
 import { config, setConfig } from './config';
-import logoFullWhite from '@client/assets/logoFullWhite.png';
-import { WebStorageStateStore } from 'oidc-client-ts';
+import { ThemeProvider } from './hooks/themeProvider';
 
 export const links: Route.LinksFunction = () => [
 	{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },

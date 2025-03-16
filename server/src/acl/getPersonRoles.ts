@@ -1,4 +1,5 @@
 import config from '@server/config';
+
 import type { PersonRoles, RoleMapping } from './roleTypes';
 
 function filterAssignedRoles(mapping: RoleMapping, tokenRoles: Set<string>) {

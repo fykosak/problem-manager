@@ -1,5 +1,6 @@
-import { trpcOutputTypes } from '@client/trpc';
 import { createContext } from 'react';
+
+import { trpcOutputTypes } from '@client/trpc';
 
 export const PersonRolesContext = createContext<
 	trpcOutputTypes['person']['roles'] | null

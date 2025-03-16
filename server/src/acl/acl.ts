@@ -1,5 +1,5 @@
 import { AclError } from './aclError';
-import { Role, type AssertionType } from './role';
+import { type AssertionType, Role } from './role';
 
 export class ACL {
 	roles = new Map<string, Role>();

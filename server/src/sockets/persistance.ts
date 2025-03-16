@@ -1,9 +1,10 @@
-import * as Y from 'yjs';
-import type { WSSharedDoc, persistenceType } from './yjs';
-import { StorageProvider } from './storageProvider';
-import { db } from '../db';
 import { desc, eq } from 'drizzle-orm';
+import * as Y from 'yjs';
+
+import { db } from '../db';
 import { textVersionTable } from '../db/schema';
+import { StorageProvider } from './storageProvider';
+import type { WSSharedDoc, persistenceType } from './yjs';
 
 const SNAPSHOT_INACTIVITIY_THRESHOLD = 30 * 1000; // 30 seconds
 const SNAPSHOT_PERIODICITY_THRESHOLD = 5 * 60 * 1000; // 5 minutes

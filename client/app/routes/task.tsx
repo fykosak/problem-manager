@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router';
+
 import NavigationSuspense from '@client/components/navigation/navigationSuspense';
 import {
 	Sidebar,

@@ -3,9 +3,11 @@ import {
 	SortableContext,
 	verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Problem } from './problem';
-import { trpcOutputTypes } from '@client/trpc';
 import { useMemo } from 'react';
+
+import { trpcOutputTypes } from '@client/trpc';
+
+import { Problem } from './problem';
 
 export function Series({
 	id,

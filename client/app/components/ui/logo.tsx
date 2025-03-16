@@ -1,8 +1,9 @@
+import { cva } from 'class-variance-authority';
+
 import LogoBlack from '@client/assets/logoFullBlack.svg';
 import LogoWhite from '@client/assets/logoFullWhite.svg';
 import { useTheme } from '@client/hooks/themeProvider';
 import { cn } from '@client/lib/utils';
-import { cva } from 'class-variance-authority';
 
 const logoVariants = cva('');
 

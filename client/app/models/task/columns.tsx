@@ -1,5 +1,6 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { NavLink } from 'react-router';
+
 import {
 	DataTableColumnSorter,
 	DataTableColumnUniqueFilter,

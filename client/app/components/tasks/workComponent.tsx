@@ -1,5 +1,7 @@
-import { trpc, trpcOutputTypes } from '@client/trpc';
-import { Card, CardContent, CardHeader } from '../ui/card';
+import { useState } from 'react';
+
+import { workStateEnum } from '@server/db/schema';
+
 import {
 	Select,
 	SelectContent,
@@ -7,8 +9,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@client/components/ui/select';
-import { useState } from 'react';
-import { workStateEnum } from '@server/db/schema';
+import { trpc, trpcOutputTypes } from '@client/trpc';
+
+import { Card, CardContent, CardHeader } from '../ui/card';
 import WorkPersonSelect from './workPersonSelect';
 
 export function getWorkStateLabel(

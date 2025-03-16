@@ -1,6 +1,7 @@
+import { expect, test } from 'vitest';
+
 import { ACL } from '@server/acl/acl';
 import { AclError } from '@server/acl/aclError';
-import { expect, test } from 'vitest';
 
 test('basic resource and action', () => {
 	const acl = new ACL();

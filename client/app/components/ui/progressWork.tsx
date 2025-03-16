@@ -1,7 +1,9 @@
 import * as ProgressPrimitive from '@radix-ui/react-progress';
 
-import { cn } from '@client/lib/utils';
 import { workStateEnum } from '@server/db/schema';
+
+import { cn } from '@client/lib/utils';
+
 import { getWorkStateColor, getWorkStateLabel } from '../tasks/workComponent';
 import {
 	Tooltip,

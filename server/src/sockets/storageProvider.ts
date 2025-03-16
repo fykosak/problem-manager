@@ -1,5 +1,6 @@
-import * as Y from 'yjs';
 import { eq } from 'drizzle-orm';
+import * as Y from 'yjs';
+
 import { db } from '../db';
 import { textTable } from '../db/schema';
 import type { WSSharedDoc } from './yjs';

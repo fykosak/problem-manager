@@ -1,12 +1,9 @@
-import { trpc } from '../trpc';
 import { TRPCError } from '@trpc/server';
-
-import { z } from 'zod';
-import { db } from '@server/db';
-
-import * as Y from 'yjs';
 import { and, eq, inArray } from 'drizzle-orm';
-import { Runner } from '@server/runner/runner';
+import * as Y from 'yjs';
+import { z } from 'zod';
+
+import { db } from '@server/db';
 import {
 	authorTable,
 	langEnum,
@@ -17,7 +14,10 @@ import {
 	workStateEnum,
 	workTable,
 } from '@server/db/schema';
+import { Runner } from '@server/runner/runner';
+
 import { authedProcedure, contestProcedure } from '../middleware';
+import { trpc } from '../trpc';
 
 export const problemRouter = trpc.router({
 	metadata: authedProcedure.input(z.number()).query(async (opts) => {

@@ -1,12 +1,12 @@
+import { lintGutter, linter } from '@codemirror/lint';
+import { material } from '@uiw/codemirror-theme-material';
+import CodeMirror, { EditorView } from '@uiw/react-codemirror/src/index.js';
 import { ForwardedRef, forwardRef, useEffect, useRef, useState } from 'react';
-import * as Y from 'yjs';
 import { yCollab } from 'y-codemirror.next';
 import { WebsocketProvider } from 'y-websocket';
+import * as Y from 'yjs';
 
-import CodeMirror, { EditorView } from '@uiw/react-codemirror/src/index.js';
-import { material } from '@uiw/codemirror-theme-material';
 import { latex, latexLinter } from '@client/libs/lang-latex/dist/index.js';
-import { linter, lintGutter } from '@codemirror/lint';
 
 const Editor = forwardRef(
 	({ textId }: { textId: number }, ref: ForwardedRef<HTMLDivElement>) => {

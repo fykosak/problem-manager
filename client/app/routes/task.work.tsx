@@ -1,7 +1,9 @@
-import { trpc } from '@client/trpc';
-import { Route } from './+types/task.work';
-import WorkComponent from '@client/components/tasks/workComponent';
 import { ReactElement } from 'react';
+
+import WorkComponent from '@client/components/tasks/workComponent';
+import { trpc } from '@client/trpc';
+
+import { Route } from './+types/task.work';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const work = await trpc.problem.work.query(Number(params.taskId));

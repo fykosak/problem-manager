@@ -1,8 +1,9 @@
+import { and, eq } from 'drizzle-orm';
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { db } from '../db';
 import { textTable } from '../db/schema';
-import { and, eq } from 'drizzle-orm';
 import { StorageProvider } from '../sockets/storageProvider';
 
 const storage = new StorageProvider();

@@ -1,5 +1,6 @@
 import { RouteConfigEntry } from '@react-router/dev/routes';
 import { matchRoutes, useLocation } from 'react-router';
+
 import routes from '@client/routes';
 
 export default function useCurrentRoute() {

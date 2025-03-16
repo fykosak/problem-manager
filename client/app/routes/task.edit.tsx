@@ -1,6 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
+
 import Editor from '@client/components/editor/editor';
-import { Route } from './+types/task.edit';
-import { trpc } from '@client/trpc';
 import TaskPdf from '@client/components/editor/taskPdf';
 import {
 	ResizableHandle,
@@ -13,7 +13,9 @@ import {
 	TabsList,
 	TabsTrigger,
 } from '@client/components/ui/tabs';
-import { useEffect, useRef, useState } from 'react';
+import { trpc } from '@client/trpc';
+
+import { Route } from './+types/task.edit';
 
 const MOBILE_WIDTH_THRESHOLD = 768;
 

@@ -1,6 +1,7 @@
 import { CompletionContext, CompletionResult } from '@codemirror/autocomplete';
-import { latexLanguage } from './language';
 import { syntaxTree } from '@codemirror/language';
+
+import { latexLanguage } from './language';
 
 const greekSymbols = [
 	['alpha', 'α'],

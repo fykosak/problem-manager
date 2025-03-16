@@ -3,22 +3,17 @@
  * Copied here, because importing it from the package caused double Yjs load, which
  * caused a segmentation fault in bun.
  */
-
 // @ts-nocheck
-
-import * as Y from 'yjs';
-import * as syncProtocol from 'y-protocols/sync';
-import * as awarenessProtocol from 'y-protocols/awareness';
-
-import * as encoding from 'lib0/encoding';
 import * as decoding from 'lib0/decoding';
+import * as encoding from 'lib0/encoding';
 import * as map from 'lib0/map';
-
 // @ts-ignore
 import * as debounce from 'lodash.debounce';
-
+import * as awarenessProtocol from 'y-protocols/awareness';
+import * as syncProtocol from 'y-protocols/sync';
 // @ts-ignore
 import { callbackHandler, isCallbackSet } from 'y-websocket/bin/callback';
+import * as Y from 'yjs';
 
 const CALLBACK_DEBOUNCE_WAIT = parseInt(
 	process.env.CALLBACK_DEBOUNCE_WAIT || '2000'

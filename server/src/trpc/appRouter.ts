@@ -1,13 +1,14 @@
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@server/db';
-import { problemRouter } from './routers/problemRouter';
-import { contestRouter } from './routers/contestRouter';
 import { personWorkTable } from '@server/db/schema';
-import { and, eq } from 'drizzle-orm';
-import { trpc } from './trpc';
+
 import { authedProcedure } from './middleware';
+import { contestRouter } from './routers/contestRouter';
 import { personRouter } from './routers/personRouter';
+import { problemRouter } from './routers/problemRouter';
+import { trpc } from './trpc';
 
 export const appRouter = trpc.router({
 	getContests: authedProcedure.query(async () => {

@@ -1,10 +1,12 @@
 import { TRPCError } from '@trpc/server';
-import { trpc } from './trpc';
-import { z } from 'zod';
-import { db } from '@server/db';
 import { eq } from 'drizzle-orm';
-import { contestTable, personTable } from '@server/db/schema';
+import { z } from 'zod';
+
 import { getPersonRoles } from '@server/acl/getPersonRoles';
+import { db } from '@server/db';
+import { contestTable, personTable } from '@server/db/schema';
+
+import { trpc } from './trpc';
 
 export const authedProcedure = trpc.procedure.use(async ({ ctx, next }) => {
 	if (!ctx.jwtData) {

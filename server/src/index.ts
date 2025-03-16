@@ -3,10 +3,11 @@ import cors from 'cors';
 import express from 'express';
 import * as http from 'http';
 import WebSocket from 'ws';
-import { setPersistence, setupWSConnection } from './sockets/yjs';
+
 import { persistance } from './sockets/persistance';
-import { createContext } from './trpc/context';
+import { setPersistence, setupWSConnection } from './sockets/yjs';
 import { appRouter } from './trpc/appRouter';
+import { createContext } from './trpc/context';
 
 const app = express();
 app.use(cors());

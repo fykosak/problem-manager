@@ -1,8 +1,7 @@
-import { trpc } from '@server/trpc/trpc';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
+import { z } from 'zod';
 
 import { db } from '@server/db';
-
-import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import {
 	contestTable,
 	contestYearTable,
@@ -12,8 +11,9 @@ import {
 	topicTable,
 	typeTable,
 } from '@server/db/schema';
+import { trpc } from '@server/trpc/trpc';
+
 import { authedProcedure, contestProcedure } from '../middleware';
-import { z } from 'zod';
 
 export const contestRouter = trpc.router({
 	// TODO filter by organizer contests

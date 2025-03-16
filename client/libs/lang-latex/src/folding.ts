@@ -1,5 +1,6 @@
-import { EditorState } from '@codemirror/state';
 import { foldService, syntaxTree } from '@codemirror/language';
+import { EditorState } from '@codemirror/state';
+
 import { moveToEnvironmentEnd } from './helpers';
 
 /**

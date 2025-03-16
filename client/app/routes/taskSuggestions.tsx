@@ -1,10 +1,12 @@
+import { Plus } from 'lucide-react';
+import { NavLink } from 'react-router';
+
 import { Button } from '@client/components/ui/button';
 import { DataTable } from '@client/components/ui/dataTable';
 import { Task, columns } from '@client/models/task/columns';
 import { trpc } from '@client/trpc';
+
 import { Route } from './+types/taskSuggestions';
-import { NavLink } from 'react-router';
-import { Plus } from 'lucide-react';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const problems = await trpc.contest.problemSuggestions.query({

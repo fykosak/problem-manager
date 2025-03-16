@@ -1,7 +1,8 @@
 import { eq } from 'drizzle-orm';
+import * as Y from 'yjs';
+
 import { db } from '.';
 import * as schema from './schema';
-import * as Y from 'yjs';
 
 async function seed() {
 	console.log('Init contest');

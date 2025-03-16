@@ -1,6 +1,6 @@
 import type { Config } from 'tailwindcss';
-import colors from 'tailwindcss/colors';
 import animatePlugin from 'tailwindcss-animate';
+import colors from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';
 
 export default {

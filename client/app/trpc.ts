@@ -1,7 +1,9 @@
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import { User } from 'oidc-client-ts';
+
 import type { AppRouter } from '@server/trpc/appRouter';
+
 import { config } from './config';
 
 function getUser() {

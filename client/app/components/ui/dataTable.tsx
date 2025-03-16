@@ -11,7 +11,15 @@ import {
 	getSortedRowModel,
 	useReactTable,
 } from '@tanstack/react-table';
+import { ArrowDownUp, Filter } from 'lucide-react';
+import * as React from 'react';
 
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+} from '@client/components/ui/select';
 import {
 	Table,
 	TableBody,
@@ -20,16 +28,9 @@ import {
 	TableHeader,
 	TableRow,
 } from '@client/components/ui/table';
-import { DataTablePagination } from './dataTablePagination';
-import * as React from 'react';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-} from '@client/components/ui/select';
-import { ArrowDownUp, Filter } from 'lucide-react';
+
 import { Button } from './button';
+import { DataTablePagination } from './dataTablePagination';
 
 // Button to select a filter option to uniquely filter in a given column
 export function DataTableColumnUniqueFilter<TData, TValue>({

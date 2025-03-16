@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
-import { ConfigError, getRequiredString } from './configUtils';
+
 import { BaseRole, ContestRole, type RoleMapping } from './acl/roleTypes';
+import { ConfigError, getRequiredString } from './configUtils';
 
 const jsonConfig = JSON.parse(
 	readFileSync('./config.json').toString()

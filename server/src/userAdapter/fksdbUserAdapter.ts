@@ -1,5 +1,6 @@
 import config from '@server/config';
-import { UserAdapter, type User } from './userAdapter';
+
+import { type User, UserAdapter } from './userAdapter';
 
 export class FKSDBUserAdapter extends UserAdapter {
 	async downloadData(contestId: number) {

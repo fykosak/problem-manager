@@ -1,7 +1,9 @@
+import { type InferSelectModel, and, eq } from 'drizzle-orm';
+
 import { db } from '@server/db';
-import { FKSDBUserAdapter } from './fksdbUserAdapter';
-import { and, eq, type InferSelectModel } from 'drizzle-orm';
 import { contestTable, organizerTable, personTable } from '@server/db/schema';
+
+import { FKSDBUserAdapter } from './fksdbUserAdapter';
 import type { User } from './userAdapter';
 
 const adapter = new FKSDBUserAdapter();
