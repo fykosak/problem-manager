@@ -1,6 +1,6 @@
-import { TaskDashboard } from '@client/components/tasks/taskDashboard';
 import { trpc } from '@client/trpc';
 import { Route } from './+types/taskOrdering';
+import { ProblemOrdering } from '@client/components/tasks/ordering/problemOrdering';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const series = await trpc.contest.series.query({
@@ -11,5 +11,5 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export default function TaskOrdering({ loaderData }: Route.ComponentProps) {
-	return <TaskDashboard series={loaderData.series} />;
+	return <ProblemOrdering series={loaderData.series} />;
 }

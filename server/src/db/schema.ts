@@ -153,6 +153,7 @@ export const problemTable = pgTable(
 		problemId: serial().primaryKey(),
 		state: problemStateEnum().notNull().default('active'),
 		seriesId: integer().references(() => seriesTable.seriesId),
+		seriesOrder: integer(),
 		contestId: integer().references(() => contestTable.contestId),
 		typeId: integer()
 			.notNull()
@@ -166,6 +167,10 @@ export const problemTable = pgTable(
 		check(
 			'problem_contestId_or_seriesId',
 			sql`(${table.seriesId} IS NULL) != (${table.contestId} IS NULL)`
+		),
+		check(
+			'problem_contestId_and_order',
+			sql`(${table.seriesId} IS NULL) = (${table.seriesOrder} IS NULL)`
 		),
 	]
 );

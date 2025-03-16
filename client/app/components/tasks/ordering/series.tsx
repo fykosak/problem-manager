@@ -3,34 +3,37 @@ import {
 	SortableContext,
 	verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Task } from './task';
+import { Problem } from './problem';
 import { trpcOutputTypes } from '@client/trpc';
+import { useMemo } from 'react';
 
 export function Series({
 	id,
 	items,
-	problems,
 }: {
 	id: UniqueIdentifier;
-	items: UniqueIdentifier[];
-	problems: Map<
-		number,
-		trpcOutputTypes['contest']['series'][0]['problems'][0]
-	>;
+	items: trpcOutputTypes['contest']['series'][0]['problems'];
 }) {
 	const { setNodeRef } = useDroppable({
 		id: id,
 	});
 
+	const problemComponents = useMemo(() => {
+		return items.map((problem) => (
+			<Problem key={problem.problemId} problem={problem} />
+		));
+	}, [items]);
+
 	return (
-		<SortableContext items={items} strategy={verticalListSortingStrategy}>
+		<SortableContext
+			items={items.map((problem) => problem.problemId)}
+			strategy={verticalListSortingStrategy}
+		>
 			<div
 				className="border border-2 bg-secondary w-1/4"
 				ref={setNodeRef}
 			>
-				{items.map((id) => (
-					<Task key={id} id={id} problem={problems.get(id)} />
-				))}
+				{problemComponents}
 			</div>
 		</SortableContext>
 	);

@@ -2,7 +2,7 @@ import { trpc } from '@server/trpc/trpc';
 
 import { db } from '@server/db';
 
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import {
 	contestTable,
 	contestYearTable,
@@ -103,6 +103,7 @@ export const contestRouter = trpc.router({
 								},
 							},
 						},
+						orderBy: [asc(problemTable.seriesOrder)],
 					},
 				},
 				where: inArray(
@@ -120,13 +121,17 @@ export const contestRouter = trpc.router({
 				series: z.record(z.coerce.number(), z.array(z.number())),
 			})
 		)
-		// TODO order task, not just save it's series
 		.mutation(async ({ input }) => {
 			for (const seriesId in input.series) {
-				for (const problemId of input.series[seriesId]) {
+				for (const [index, problemId] of input.series[
+					seriesId
+				].entries()) {
 					await db
 						.update(problemTable)
-						.set({ seriesId: Number(seriesId) })
+						.set({
+							seriesId: Number(seriesId),
+							seriesOrder: index + 1, // order the problems
+						})
 						.where(eq(problemTable.problemId, problemId));
 				}
 			}
