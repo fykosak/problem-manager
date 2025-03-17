@@ -26,7 +26,7 @@ export function TextTypeSelector({
 		if (selectedText) {
 			setSelectedTextId(selectedText.textId);
 		}
-	}, [selectedTextType]);
+	}, [selectedTextType, selectedLang]);
 
 	return (
 		<div className="flex flex-row gap-2">

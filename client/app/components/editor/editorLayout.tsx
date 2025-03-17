@@ -15,7 +15,8 @@ import {
 } from '@client/components/ui/tabs';
 import { type trpcOutputTypes } from '@client/trpc';
 
-import { TextTypeSelector } from './textTypeSelector';
+import { ElementContainer } from './elementContainer';
+import { Layout, getLayoutLabel } from './layoutEnum';
 
 const MOBILE_WIDTH_THRESHOLD = 768;
 
@@ -55,14 +56,25 @@ export function EditorLayout({
 	}, []);
 
 	//const editorComponentRef = useRef<HTMLDivElement>(null);
-	const pdfComponentRef = useRef<HTMLDivElement>(null);
 	const editorContainerRef = useRef<HTMLDivElement>(null);
 	const pdfContainerRef = useRef<HTMLDivElement>(null);
 
+	const containerRefs = useRef(new Map<string, HTMLDivElement>());
+
+	const pdfComponentRef = useRef<HTMLDivElement>(null);
 	const taskEditorRefs = useRef(new Map<number, HTMLDivElement>());
 
-	const [selectedEditorTextId, setSelectedEditorTextId] = useState<number>();
-	const [, setSelectedPdfTextId] = useState<number>(); // TODO use in pdf
+	const [selectedTextId, setSelectedTextId] = useState<{
+		pdf: number | undefined;
+		text1: number | undefined;
+		text2: number | undefined;
+	}>({
+		pdf: undefined,
+		text1: undefined,
+		text2: undefined,
+	});
+
+	const [desktopLayout, setDesktopLayout] = useState<Layout>(Layout.TEXT_PDF);
 
 	useEffect(() => {
 		if (!componentLoaded) {
@@ -71,8 +83,8 @@ export function EditorLayout({
 		}
 
 		function appendChildRef(
-			container: Element | null,
-			child: Element | null
+			container: Element | null | undefined,
+			child: Element | null | undefined
 		) {
 			if (!container || !child) {
 				return;
@@ -81,16 +93,15 @@ export function EditorLayout({
 			container.replaceChildren(child);
 		}
 
-		if (!isMobile) {
-			// mount both
-			appendChildRef(
-				editorContainerRef.current,
-				selectedEditorTextId
-					? (taskEditorRefs.current.get(selectedEditorTextId) ?? null)
-					: null
-			);
-			appendChildRef(pdfContainerRef.current, pdfComponentRef.current);
-		} else {
+		function getEditorRef(textId: number | undefined) {
+			if (!textId) {
+				return undefined;
+			}
+			return taskEditorRefs.current.get(textId);
+		}
+
+		// mobile layout
+		if (isMobile) {
 			if (activeTab === 'editor') {
 				appendChildRef(
 					editorContainerRef.current,
@@ -103,50 +114,197 @@ export function EditorLayout({
 				);
 			}
 		}
-	}, [activeTab, isMobile, componentLoaded, selectedEditorTextId]);
 
-	return (
-		<>
-			{isMobile ? (
-				<Tabs
-					className="w-full h-full flex flex-col"
-					onValueChange={setActiveTab}
-					defaultValue="editor"
-				>
-					<TabsList className="w-full">
-						<TabsTrigger className="w-1/2" value="editor">
-							Editor
-						</TabsTrigger>
-						<TabsTrigger className="w-1/2" value="pdf">
-							PDF
-						</TabsTrigger>
-					</TabsList>
-					<TabsContent value="editor" className="grow">
-						<div ref={editorContainerRef} className="h-full" />
-					</TabsContent>
-					<TabsContent value="pdf" className="grow">
-						<div ref={pdfContainerRef} className="h-full" />
-					</TabsContent>
-				</Tabs>
-			) : (
-				<ResizablePanelGroup direction="horizontal">
+		// desktop layout
+
+		if (desktopLayout === Layout.TEXT_PDF) {
+			appendChildRef(
+				containerRefs.current.get('text1'),
+				getEditorRef(selectedTextId.text1)
+			);
+			appendChildRef(
+				containerRefs.current.get('pdf'),
+				pdfComponentRef.current
+			);
+		}
+		if (desktopLayout === Layout.TEXT_TEXT) {
+			appendChildRef(
+				containerRefs.current.get('text1'),
+				getEditorRef(selectedTextId.text1)
+			);
+			appendChildRef(
+				containerRefs.current.get('text2'),
+				getEditorRef(selectedTextId.text2)
+			);
+		}
+		if (desktopLayout === Layout.TEXT_TEXT_PDF) {
+			appendChildRef(
+				containerRefs.current.get('text1'),
+				getEditorRef(selectedTextId.text1)
+			);
+			appendChildRef(
+				containerRefs.current.get('text2'),
+				getEditorRef(selectedTextId.text2)
+			);
+			appendChildRef(
+				containerRefs.current.get('pdf'),
+				pdfComponentRef.current
+			);
+		}
+	}, [activeTab, isMobile, componentLoaded, selectedTextId, desktopLayout]);
+
+	function setContainerRef(container: string, node: HTMLDivElement | null) {
+		const refMap = containerRefs.current;
+		if (node) {
+			refMap.set(container, node);
+		} else {
+			refMap.delete(container);
+		}
+	}
+
+	function setSelectedTextIdByContainer(container: string, textId: number) {
+		setSelectedTextId({ ...selectedTextId, [container]: textId });
+	}
+
+	const layoutMobile = (
+		<Tabs
+			className="w-full h-full flex flex-col"
+			onValueChange={setActiveTab}
+			defaultValue="editor"
+		>
+			<TabsList className="w-full">
+				<TabsTrigger className="w-1/2" value="editor">
+					Editor
+				</TabsTrigger>
+				<TabsTrigger className="w-1/2" value="pdf">
+					PDF
+				</TabsTrigger>
+			</TabsList>
+			<TabsContent value="editor" className="grow">
+				<div
+					ref={(node) => setContainerRef('text1', node)}
+					className="h-full"
+				/>
+			</TabsContent>
+			<TabsContent value="pdf" className="grow">
+				<div
+					ref={(node) => setContainerRef('pdf', node)}
+					className="h-full"
+				/>
+			</TabsContent>
+		</Tabs>
+	);
+
+	const layoutTextPDF = (
+		<ResizablePanelGroup direction="horizontal">
+			<ResizablePanel>
+				<ElementContainer
+					containerName="text1"
+					textData={textData.textsByType}
+					containerRefs={containerRefs}
+					setSelectedTextId={setSelectedTextIdByContainer}
+				/>
+			</ResizablePanel>
+			<ResizableHandle withHandle />
+			<ResizablePanel>
+				<ElementContainer
+					containerName="pdf"
+					textData={textData.textsByType}
+					containerRefs={containerRefs}
+					setSelectedTextId={setSelectedTextIdByContainer}
+				/>
+			</ResizablePanel>
+		</ResizablePanelGroup>
+	);
+
+	const layoutTextText = (
+		<ResizablePanelGroup direction="horizontal">
+			<ResizablePanel>
+				<ElementContainer
+					containerName="text1"
+					textData={textData.textsByType}
+					containerRefs={containerRefs}
+					setSelectedTextId={setSelectedTextIdByContainer}
+				/>
+			</ResizablePanel>
+			<ResizableHandle withHandle />
+			<ResizablePanel>
+				<ElementContainer
+					containerName="text2"
+					textData={textData.textsByType}
+					containerRefs={containerRefs}
+					setSelectedTextId={setSelectedTextIdByContainer}
+				/>
+			</ResizablePanel>
+		</ResizablePanelGroup>
+	);
+
+	const layoutTextTextPDF = (
+		<ResizablePanelGroup direction="horizontal">
+			<ResizablePanel>
+				<ResizablePanelGroup direction="vertical">
 					<ResizablePanel>
-						<TextTypeSelector
-							textsByType={textData.textsByType}
-							setSelectedTextId={setSelectedEditorTextId}
+						<ElementContainer
+							containerName="text1"
+							textData={textData.textsByType}
+							containerRefs={containerRefs}
+							setSelectedTextId={setSelectedTextIdByContainer}
 						/>
-						<div ref={editorContainerRef} className="h-full" />
 					</ResizablePanel>
 					<ResizableHandle withHandle />
 					<ResizablePanel>
-						<TextTypeSelector
-							textsByType={textData.textsByType}
-							setSelectedTextId={setSelectedPdfTextId}
+						<ElementContainer
+							containerName="text2"
+							textData={textData.textsByType}
+							containerRefs={containerRefs}
+							setSelectedTextId={setSelectedTextIdByContainer}
 						/>
-						<div ref={pdfContainerRef} className="h-full" />
 					</ResizablePanel>
 				</ResizablePanelGroup>
-			)}
+			</ResizablePanel>
+			<ResizableHandle withHandle />
+			<ResizablePanel>
+				<ElementContainer
+					containerName="pdf"
+					textData={textData.textsByType}
+					containerRefs={containerRefs}
+					setSelectedTextId={setSelectedTextIdByContainer}
+				/>
+			</ResizablePanel>
+		</ResizablePanelGroup>
+	);
+
+	function getLayout() {
+		if (isMobile) {
+			return layoutMobile;
+		}
+
+		switch (desktopLayout) {
+			case Layout.TEXT_PDF:
+				return layoutTextPDF;
+			case Layout.TEXT_TEXT:
+				return layoutTextText;
+			case Layout.TEXT_TEXT_PDF:
+				return layoutTextTextPDF;
+		}
+	}
+
+	return (
+		<>
+			<Tabs
+				onValueChange={(value) => setDesktopLayout(value as Layout)}
+				defaultValue={desktopLayout}
+			>
+				<TabsList>
+					{Object.values(Layout).map((layout) => (
+						<TabsTrigger value={layout}>
+							{getLayoutLabel(layout)}
+						</TabsTrigger>
+					))}
+				</TabsList>
+			</Tabs>
+
+			{getLayout()}
 
 			<div style={{ display: 'none' }}>
 				{Array.from(textData.textsById.values()).map((text) => (
