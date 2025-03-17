@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 import * as Y from 'yjs';
 import { z } from 'zod';
 
@@ -10,6 +10,7 @@ import {
 	problemTable,
 	problemTopicTable,
 	textTable,
+	textTypeEnum,
 	topicTable,
 	workStateEnum,
 	workTable,
@@ -32,7 +33,7 @@ export const problemRouter = trpc.router({
 			},
 		});
 
-		if (taskData === undefined) {
+		if (!taskData) {
 			throw new TRPCError({
 				code: 'NOT_FOUND',
 				message: 'Problem not found',
@@ -45,20 +46,33 @@ export const problemRouter = trpc.router({
 			type: taskData.type.typeId,
 		};
 	}),
-	texts: authedProcedure.input(z.number()).query(async (opts) => {
-		const texts = await db.query.textTable.findMany({
-			where: eq(textTable.problemId, opts.input),
-		});
-
-		if (texts.length === 0) {
-			throw new TRPCError({
-				code: 'NOT_FOUND',
-				message: 'No text found for problem',
+	texts: authedProcedure
+		.input(
+			z.object({
+				taskId: z.number(),
+				textType: z.enum(textTypeEnum.enumValues).nullish(),
+			})
+		)
+		.query(async ({ input }) => {
+			const texts = await db.query.textTable.findMany({
+				where: and(
+					eq(textTable.problemId, input.taskId),
+					input.textType
+						? eq(textTable.type, input.textType)
+						: undefined
+				),
+				orderBy: asc(textTable.lang),
 			});
-		}
 
-		return texts;
-	}),
+			if (texts.length === 0) {
+				throw new TRPCError({
+					code: 'NOT_FOUND',
+					message: 'No text found for problem',
+				});
+			}
+
+			return texts;
+		}),
 	work: authedProcedure.input(z.number()).query(async (opts) => {
 		return await db.query.workTable.findMany({
 			with: {

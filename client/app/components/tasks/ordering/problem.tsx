@@ -4,7 +4,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { Badge } from '@client/components/ui/badge';
 import {
 	Card,
-	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,

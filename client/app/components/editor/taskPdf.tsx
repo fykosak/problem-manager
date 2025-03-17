@@ -16,6 +16,7 @@ import { trpc } from '@client/trpc';
 import { Button } from '../ui/button';
 import PdfViewer from './pdfViewer';
 
+// TODO by text id
 const TaskPdf = forwardRef(({ problemId }: { problemId: number }, outerRef) => {
 	const innerRef = useRef<HTMLDivElement>(null);
 	useImperativeHandle(outerRef, () => innerRef.current!, []);
