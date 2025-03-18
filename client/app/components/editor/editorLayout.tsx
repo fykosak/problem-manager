@@ -13,16 +13,17 @@ import {
 	TabsList,
 	TabsTrigger,
 } from '@client/components/ui/tabs';
+import { useEditorLayout } from '@client/hooks/editorLayoutProvider';
 import { type trpcOutputTypes } from '@client/trpc';
 
-import { ElementContainer } from './elementContainer';
+import { EditorComponentContainer } from './editorElementContainer';
 import { Layout, getLayoutLabel } from './layoutEnum';
+import { TextTypeSelector } from './textTypeSelector';
 
 const MOBILE_WIDTH_THRESHOLD = 768;
 
 export function EditorLayout({
 	problemId,
-	textData,
 }: {
 	problemId: number;
 	textData: {
@@ -55,24 +56,12 @@ export function EditorLayout({
 		setComponentLoaded(true);
 	}, []);
 
-	//const editorComponentRef = useRef<HTMLDivElement>(null);
-	const editorContainerRef = useRef<HTMLDivElement>(null);
 	const pdfContainerRef = useRef<HTMLDivElement>(null);
-
-	const containerRefs = useRef(new Map<string, HTMLDivElement>());
-
 	const pdfComponentRef = useRef<HTMLDivElement>(null);
+
 	const taskEditorRefs = useRef(new Map<number, HTMLDivElement>());
 
-	const [selectedTextId, setSelectedTextId] = useState<{
-		pdf: number | undefined;
-		text1: number | undefined;
-		text2: number | undefined;
-	}>({
-		pdf: undefined,
-		text1: undefined,
-		text2: undefined,
-	});
+	const { textData, selectedTextIds, containerRefs } = useEditorLayout();
 
 	const [desktopLayout, setDesktopLayout] = useState<Layout>(Layout.TEXT_PDF);
 
@@ -90,6 +79,9 @@ export function EditorLayout({
 				return;
 			}
 
+			if (container.firstChild === child) {
+				return;
+			}
 			container.replaceChildren(child);
 		}
 
@@ -104,8 +96,8 @@ export function EditorLayout({
 		if (isMobile) {
 			if (activeTab === 'editor') {
 				appendChildRef(
-					editorContainerRef.current,
-					taskEditorRefs.current.values().next().value ?? null
+					containerRefs.get('text1'),
+					getEditorRef(selectedTextIds.get('text1'))
 				);
 			} else {
 				appendChildRef(
@@ -119,52 +111,33 @@ export function EditorLayout({
 
 		if (desktopLayout === Layout.TEXT_PDF) {
 			appendChildRef(
-				containerRefs.current.get('text1'),
-				getEditorRef(selectedTextId.text1)
+				containerRefs.get('text1'),
+				getEditorRef(selectedTextIds.get('text1'))
 			);
-			appendChildRef(
-				containerRefs.current.get('pdf'),
-				pdfComponentRef.current
-			);
+			appendChildRef(containerRefs.get('pdf'), pdfComponentRef.current);
 		}
 		if (desktopLayout === Layout.TEXT_TEXT) {
 			appendChildRef(
-				containerRefs.current.get('text1'),
-				getEditorRef(selectedTextId.text1)
+				containerRefs.get('text1'),
+				getEditorRef(selectedTextIds.get('text1'))
 			);
 			appendChildRef(
-				containerRefs.current.get('text2'),
-				getEditorRef(selectedTextId.text2)
+				containerRefs.get('text2'),
+				getEditorRef(selectedTextIds.get('text2'))
 			);
 		}
 		if (desktopLayout === Layout.TEXT_TEXT_PDF) {
 			appendChildRef(
-				containerRefs.current.get('text1'),
-				getEditorRef(selectedTextId.text1)
+				containerRefs.get('text1'),
+				getEditorRef(selectedTextIds.get('text1'))
 			);
 			appendChildRef(
-				containerRefs.current.get('text2'),
-				getEditorRef(selectedTextId.text2)
+				containerRefs.get('text2'),
+				getEditorRef(selectedTextIds.get('text2'))
 			);
-			appendChildRef(
-				containerRefs.current.get('pdf'),
-				pdfComponentRef.current
-			);
+			appendChildRef(containerRefs.get('pdf'), pdfComponentRef.current);
 		}
-	}, [activeTab, isMobile, componentLoaded, selectedTextId, desktopLayout]);
-
-	function setContainerRef(container: string, node: HTMLDivElement | null) {
-		const refMap = containerRefs.current;
-		if (node) {
-			refMap.set(container, node);
-		} else {
-			refMap.delete(container);
-		}
-	}
-
-	function setSelectedTextIdByContainer(container: string, textId: number) {
-		setSelectedTextId({ ...selectedTextId, [container]: textId });
-	}
+	}, [activeTab, isMobile, componentLoaded, selectedTextIds, desktopLayout]);
 
 	const layoutMobile = (
 		<Tabs
@@ -181,16 +154,10 @@ export function EditorLayout({
 				</TabsTrigger>
 			</TabsList>
 			<TabsContent value="editor" className="grow">
-				<div
-					ref={(node) => setContainerRef('text1', node)}
-					className="h-full"
-				/>
+				<EditorComponentContainer containerName="text1" />
 			</TabsContent>
 			<TabsContent value="pdf" className="grow">
-				<div
-					ref={(node) => setContainerRef('pdf', node)}
-					className="h-full"
-				/>
+				<EditorComponentContainer containerName="pdf" />
 			</TabsContent>
 		</Tabs>
 	);
@@ -198,21 +165,13 @@ export function EditorLayout({
 	const layoutTextPDF = (
 		<ResizablePanelGroup direction="horizontal">
 			<ResizablePanel>
-				<ElementContainer
-					containerName="text1"
-					textData={textData.textsByType}
-					containerRefs={containerRefs}
-					setSelectedTextId={setSelectedTextIdByContainer}
-				/>
+				<TextTypeSelector containerName="text1" />
+				<EditorComponentContainer containerName="text1" />
 			</ResizablePanel>
 			<ResizableHandle withHandle />
 			<ResizablePanel>
-				<ElementContainer
-					containerName="pdf"
-					textData={textData.textsByType}
-					containerRefs={containerRefs}
-					setSelectedTextId={setSelectedTextIdByContainer}
-				/>
+				<TextTypeSelector containerName="pdf" />
+				<EditorComponentContainer containerName="pdf" />
 			</ResizablePanel>
 		</ResizablePanelGroup>
 	);
@@ -220,21 +179,13 @@ export function EditorLayout({
 	const layoutTextText = (
 		<ResizablePanelGroup direction="horizontal">
 			<ResizablePanel>
-				<ElementContainer
-					containerName="text1"
-					textData={textData.textsByType}
-					containerRefs={containerRefs}
-					setSelectedTextId={setSelectedTextIdByContainer}
-				/>
+				<TextTypeSelector containerName="text1" />
+				<EditorComponentContainer containerName="text1" />
 			</ResizablePanel>
 			<ResizableHandle withHandle />
 			<ResizablePanel>
-				<ElementContainer
-					containerName="text2"
-					textData={textData.textsByType}
-					containerRefs={containerRefs}
-					setSelectedTextId={setSelectedTextIdByContainer}
-				/>
+				<TextTypeSelector containerName="text2" />
+				<EditorComponentContainer containerName="text2" />
 			</ResizablePanel>
 		</ResizablePanelGroup>
 	);
@@ -244,32 +195,20 @@ export function EditorLayout({
 			<ResizablePanel>
 				<ResizablePanelGroup direction="vertical">
 					<ResizablePanel>
-						<ElementContainer
-							containerName="text1"
-							textData={textData.textsByType}
-							containerRefs={containerRefs}
-							setSelectedTextId={setSelectedTextIdByContainer}
-						/>
+						<TextTypeSelector containerName="text1" />
+						<EditorComponentContainer containerName="text1" />
 					</ResizablePanel>
 					<ResizableHandle withHandle />
 					<ResizablePanel>
-						<ElementContainer
-							containerName="text2"
-							textData={textData.textsByType}
-							containerRefs={containerRefs}
-							setSelectedTextId={setSelectedTextIdByContainer}
-						/>
+						<TextTypeSelector containerName="text2" />
+						<EditorComponentContainer containerName="text2" />
 					</ResizablePanel>
 				</ResizablePanelGroup>
 			</ResizablePanel>
 			<ResizableHandle withHandle />
 			<ResizablePanel>
-				<ElementContainer
-					containerName="pdf"
-					textData={textData.textsByType}
-					containerRefs={containerRefs}
-					setSelectedTextId={setSelectedTextIdByContainer}
-				/>
+				<TextTypeSelector containerName="pdf" />
+				<EditorComponentContainer containerName="pdf" />
 			</ResizablePanel>
 		</ResizablePanelGroup>
 	);

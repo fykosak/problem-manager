@@ -1,4 +1,5 @@
 import { EditorLayout } from '@client/components/editor/editorLayout';
+import { EditorLayoutProvider } from '@client/hooks/editorLayoutProvider';
 import { trpc, type trpcOutputTypes } from '@client/trpc';
 
 import { Route } from './+types/task.edit';
@@ -24,6 +25,11 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 export default function TaskEdit({ loaderData, params }: Route.ComponentProps) {
 	return (
-		<EditorLayout problemId={Number(params.taskId)} textData={loaderData} />
+		<EditorLayoutProvider textData={loaderData}>
+			<EditorLayout
+				problemId={Number(params.taskId)}
+				textData={loaderData}
+			/>
+		</EditorLayoutProvider>
 	);
 }

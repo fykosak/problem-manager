@@ -1,30 +1,26 @@
 import { useEffect, useState } from 'react';
 
 import { Tabs, TabsList, TabsTrigger } from '@client/components/ui/tabs';
-import { type trpcOutputTypes } from '@client/trpc';
+import { useEditorLayout } from '@client/hooks/editorLayoutProvider';
 
-export function TextTypeSelector({
-	textsByType,
-	setSelectedTextId,
-}: {
-	textsByType: Map<string, trpcOutputTypes['problem']['texts']>;
-	setSelectedTextId: (textId: number) => void;
-}) {
+export function TextTypeSelector({ containerName }: { containerName: string }) {
+	const { textData, setSelectedTextId } = useEditorLayout();
+
 	const [selectedTextType, setSelectedTextType] = useState<string>(
-		textsByType.keys().next().value ?? 'task'
+		textData.textsByType.keys().next().value ?? 'task'
 	);
 	const [selectedLang, setSelectedLang] = useState<string | undefined>(
 		selectedTextType
-			? textsByType.get(selectedTextType)?.at(0)?.lang
+			? textData.textsByType.get(selectedTextType)?.at(0)?.lang
 			: undefined
 	);
 
 	useEffect(() => {
-		const selectedText = textsByType
+		const selectedText = textData.textsByType
 			.get(selectedTextType)
 			?.find((text) => text.lang === selectedLang);
 		if (selectedText) {
-			setSelectedTextId(selectedText.textId);
+			setSelectedTextId(containerName, selectedText.textId);
 		}
 	}, [selectedTextType, selectedLang]);
 
@@ -35,7 +31,7 @@ export function TextTypeSelector({
 				defaultValue={selectedTextType}
 			>
 				<TabsList>
-					{Array.from(textsByType.keys()).map((type) => (
+					{Array.from(textData.textsByType.keys()).map((type) => (
 						<TabsTrigger key={type} value={type}>
 							{type}
 						</TabsTrigger>
@@ -44,7 +40,7 @@ export function TextTypeSelector({
 			</Tabs>
 			<Tabs onValueChange={setSelectedLang} defaultValue={selectedLang}>
 				<TabsList>
-					{textsByType.get(selectedTextType)?.map((text) => (
+					{textData.textsByType.get(selectedTextType)?.map((text) => (
 						<TabsTrigger key={text.lang} value={text.lang}>
 							{text.lang}
 						</TabsTrigger>
