@@ -56,14 +56,31 @@ export function EditorLayout({
 		setComponentLoaded(true);
 	}, []);
 
-	const pdfContainerRef = useRef<HTMLDivElement>(null);
 	const pdfComponentRef = useRef<HTMLDivElement>(null);
 
 	const taskEditorRefs = useRef(new Map<number, HTMLDivElement>());
 
-	const { textData, selectedTextIds, containerRefs } = useEditorLayout();
+	const { textData, selectedTextIds, containerRefs, setSelectedTextId } =
+		useEditorLayout();
 
 	const [desktopLayout, setDesktopLayout] = useState<Layout>(Layout.TEXT_PDF);
+
+	function setDesktopLayoutSanitized(newLayout: Layout) {
+		// sanitaze text2 to not cause colissions
+		if (
+			desktopLayout === Layout.TEXT_PDF &&
+			(newLayout === Layout.TEXT_TEXT_PDF ||
+				newLayout === Layout.TEXT_TEXT)
+		) {
+			const text1TextId = selectedTextIds.get('text1');
+			const text2TextId = selectedTextIds.get('text2');
+			if (text1TextId === text2TextId) {
+				setSelectedTextId('text2', null);
+			}
+		}
+
+		setDesktopLayout(newLayout);
+	}
 
 	useEffect(() => {
 		if (!componentLoaded) {
@@ -79,62 +96,49 @@ export function EditorLayout({
 				return;
 			}
 
+			// do not remount if it already is mounted
 			if (container.firstChild === child) {
 				return;
 			}
 			container.replaceChildren(child);
 		}
 
-		function getEditorRef(textId: number | undefined) {
+		function appendEditorToContainer(containerName: string) {
+			const containerRef = containerRefs.get(containerName);
+
+			const textId = selectedTextIds.get(containerName);
 			if (!textId) {
-				return undefined;
+				return; // TODO clean container
 			}
-			return taskEditorRefs.current.get(textId);
+
+			const editorRef = taskEditorRefs.current.get(textId);
+			appendChildRef(containerRef, editorRef);
 		}
 
 		// mobile layout
 		if (isMobile) {
 			if (activeTab === 'editor') {
-				appendChildRef(
-					containerRefs.get('text1'),
-					getEditorRef(selectedTextIds.get('text1'))
-				);
+				appendEditorToContainer('text1');
 			} else {
 				appendChildRef(
-					pdfContainerRef.current,
+					containerRefs.get('pdf'),
 					pdfComponentRef.current
 				);
 			}
 		}
 
 		// desktop layout
-
 		if (desktopLayout === Layout.TEXT_PDF) {
-			appendChildRef(
-				containerRefs.get('text1'),
-				getEditorRef(selectedTextIds.get('text1'))
-			);
+			appendEditorToContainer('text1');
 			appendChildRef(containerRefs.get('pdf'), pdfComponentRef.current);
 		}
 		if (desktopLayout === Layout.TEXT_TEXT) {
-			appendChildRef(
-				containerRefs.get('text1'),
-				getEditorRef(selectedTextIds.get('text1'))
-			);
-			appendChildRef(
-				containerRefs.get('text2'),
-				getEditorRef(selectedTextIds.get('text2'))
-			);
+			appendEditorToContainer('text1');
+			appendEditorToContainer('text2');
 		}
 		if (desktopLayout === Layout.TEXT_TEXT_PDF) {
-			appendChildRef(
-				containerRefs.get('text1'),
-				getEditorRef(selectedTextIds.get('text1'))
-			);
-			appendChildRef(
-				containerRefs.get('text2'),
-				getEditorRef(selectedTextIds.get('text2'))
-			);
+			appendEditorToContainer('text1');
+			appendEditorToContainer('text2');
 			appendChildRef(containerRefs.get('pdf'), pdfComponentRef.current);
 		}
 	}, [activeTab, isMobile, componentLoaded, selectedTextIds, desktopLayout]);
@@ -154,9 +158,11 @@ export function EditorLayout({
 				</TabsTrigger>
 			</TabsList>
 			<TabsContent value="editor" className="grow">
+				<TextTypeSelector key="text1" containerName="text1" />
 				<EditorComponentContainer containerName="text1" />
 			</TabsContent>
 			<TabsContent value="pdf" className="grow">
+				<TextTypeSelector key="pdf" containerName="pdf" />
 				<EditorComponentContainer containerName="pdf" />
 			</TabsContent>
 		</Tabs>
@@ -165,12 +171,12 @@ export function EditorLayout({
 	const layoutTextPDF = (
 		<ResizablePanelGroup direction="horizontal">
 			<ResizablePanel>
-				<TextTypeSelector containerName="text1" />
+				<TextTypeSelector key="text1" containerName="text1" />
 				<EditorComponentContainer containerName="text1" />
 			</ResizablePanel>
 			<ResizableHandle withHandle />
 			<ResizablePanel>
-				<TextTypeSelector containerName="pdf" />
+				<TextTypeSelector key="pdf" containerName="pdf" />
 				<EditorComponentContainer containerName="pdf" />
 			</ResizablePanel>
 		</ResizablePanelGroup>
@@ -179,12 +185,20 @@ export function EditorLayout({
 	const layoutTextText = (
 		<ResizablePanelGroup direction="horizontal">
 			<ResizablePanel>
-				<TextTypeSelector containerName="text1" />
+				<TextTypeSelector
+					key="text1"
+					containerName="text1"
+					excludedContainers={['text2']}
+				/>
 				<EditorComponentContainer containerName="text1" />
 			</ResizablePanel>
 			<ResizableHandle withHandle />
 			<ResizablePanel>
-				<TextTypeSelector containerName="text2" />
+				<TextTypeSelector
+					key="text2"
+					containerName="text2"
+					excludedContainers={['text1']}
+				/>
 				<EditorComponentContainer containerName="text2" />
 			</ResizablePanel>
 		</ResizablePanelGroup>
@@ -195,19 +209,27 @@ export function EditorLayout({
 			<ResizablePanel>
 				<ResizablePanelGroup direction="vertical">
 					<ResizablePanel>
-						<TextTypeSelector containerName="text1" />
+						<TextTypeSelector
+							key="text1"
+							containerName="text1"
+							excludedContainers={['text2']}
+						/>
 						<EditorComponentContainer containerName="text1" />
 					</ResizablePanel>
 					<ResizableHandle withHandle />
 					<ResizablePanel>
-						<TextTypeSelector containerName="text2" />
+						<TextTypeSelector
+							key="text2"
+							containerName="text2"
+							excludedContainers={['text1']}
+						/>
 						<EditorComponentContainer containerName="text2" />
 					</ResizablePanel>
 				</ResizablePanelGroup>
 			</ResizablePanel>
 			<ResizableHandle withHandle />
 			<ResizablePanel>
-				<TextTypeSelector containerName="pdf" />
+				<TextTypeSelector key="pdf" containerName="pdf" />
 				<EditorComponentContainer containerName="pdf" />
 			</ResizablePanel>
 		</ResizablePanelGroup>
@@ -231,7 +253,9 @@ export function EditorLayout({
 	return (
 		<>
 			<Tabs
-				onValueChange={(value) => setDesktopLayout(value as Layout)}
+				onValueChange={(value) =>
+					setDesktopLayoutSanitized(value as Layout)
+				}
 				defaultValue={desktopLayout}
 			>
 				<TabsList>

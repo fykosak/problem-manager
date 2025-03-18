@@ -112,7 +112,6 @@ export function ProblemOrdering({
 			// to the id of the draggable item that was moved to the new container, otherwise
 			// the previous `overId` will be returned which can cause items to incorrectly shift positions
 			if (recentlyMovedToNewContainer.current) {
-				console.log('recentlyMovedToNewContainer');
 				lastOverId.current = activeItemId;
 			}
 

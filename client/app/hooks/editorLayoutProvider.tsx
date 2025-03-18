@@ -10,7 +10,7 @@ type TextData = {
 const EditorLayoutContext = createContext<{
 	textData: TextData;
 	selectedTextIds: Map<string, number>;
-	setSelectedTextId: (container: string, textId: number) => void;
+	setSelectedTextId: (container: string, textId: number | null) => void;
 	containerRefs: Map<string, HTMLDivElement>;
 	setContainerRef: (container: string, node: HTMLDivElement | null) => void;
 } | null>(null);
@@ -26,9 +26,13 @@ export function EditorLayoutProvider({
 		new Map<string, number>()
 	);
 
-	function setSelectedTextId(container: string, textId: number) {
+	function setSelectedTextId(container: string, textId: number | null) {
 		const newMap = new Map(selectedTextIds);
-		newMap.set(container, textId);
+		if (!textId) {
+			newMap.delete(container);
+		} else {
+			newMap.set(container, textId);
+		}
 		setSelectedTextIds(newMap);
 	}
 
