@@ -1,5 +1,6 @@
 {
   "ROOT_URL": "",
+  "API_URL": "",
   "OIDC_AUTHORITY_URL": "",
   "OIDC_CLIENT_ID": "problem-manager"
 }

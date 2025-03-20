@@ -1,9 +1,11 @@
 import * as trpcExpress from '@trpc/server/adapters/express';
 import cors from 'cors';
 import express from 'express';
+import fileUpload from 'express-fileupload';
 import * as http from 'http';
 import WebSocket from 'ws';
 
+import { apiRouter } from './api/apiRouter';
 import { persistance } from './sockets/persistance';
 import { setPersistence, setupWSConnection } from './sockets/yjs';
 import { appRouter } from './trpc/appRouter';
@@ -12,6 +14,20 @@ import { createContext } from './trpc/context';
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(
+	fileUpload({
+		abortOnLimit: true,
+		limits: {
+			fileSize: 5 * 1024 * 1024, // 5MB
+		},
+		responseOnLimit: 'Files cannot be large than 5 MB',
+		parseNested: true,
+		createParentPath: true,
+	})
+);
+
+app.use(apiRouter);
+
 app.use(
 	'/trpc',
 	trpcExpress.createExpressMiddleware({

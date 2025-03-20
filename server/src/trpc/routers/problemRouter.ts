@@ -15,6 +15,7 @@ import {
 	workStateEnum,
 	workTable,
 } from '@server/db/schema';
+import { ProblemStorage } from '@server/runner/problemStorage';
 import { Runner } from '@server/runner/runner';
 
 import { authedProcedure, contestProcedure } from '../middleware';
@@ -46,6 +47,7 @@ export const problemRouter = trpc.router({
 			type: taskData.type.typeId,
 		};
 	}),
+
 	texts: authedProcedure
 		.input(
 			z.object({
@@ -73,6 +75,7 @@ export const problemRouter = trpc.router({
 
 			return texts;
 		}),
+
 	work: authedProcedure.input(z.number()).query(async (opts) => {
 		return await db.query.workTable.findMany({
 			with: {
@@ -82,6 +85,7 @@ export const problemRouter = trpc.router({
 			orderBy: workTable.workId,
 		});
 	}),
+
 	updateWorkState: authedProcedure
 		.input(
 			z.object({
@@ -99,6 +103,7 @@ export const problemRouter = trpc.router({
 				.returning();
 			return work;
 		}),
+
 	updateMetadata: authedProcedure
 		.input(
 			z.object({
@@ -128,6 +133,7 @@ export const problemRouter = trpc.router({
 				}))
 			);
 		}),
+
 	build: authedProcedure.input(z.number()).mutation(async (opts) => {
 		console.log('build ' + opts.input);
 		const runner = new Runner();
@@ -140,6 +146,7 @@ export const problemRouter = trpc.router({
 		console.log(returnValue);
 		return returnValue; // eslint-disable-line
 	}),
+
 	create: contestProcedure
 		.input(
 			z.object({
@@ -218,5 +225,37 @@ export const problemRouter = trpc.router({
 			});
 
 			return problem;
+		}),
+
+	// files
+
+	files: authedProcedure.input(z.number()).query(async ({ input }) => {
+		const problemStorage = new ProblemStorage(input);
+		return await problemStorage.getFiles();
+	}),
+
+	deleteFile: authedProcedure
+		.input(
+			z.object({
+				problemId: z.number(),
+				filename: z.string(),
+			})
+		)
+		.mutation(async ({ input }) => {
+			const problemStorage = new ProblemStorage(input.problemId);
+			await problemStorage.deleteFile(input.filename);
+		}),
+
+	renameFile: authedProcedure
+		.input(
+			z.object({
+				problemId: z.number(),
+				oldName: z.string(),
+				newName: z.string(),
+			})
+		)
+		.mutation(async ({ input }) => {
+			const problemStorage = new ProblemStorage(input.problemId);
+			await problemStorage.renameFile(input.oldName, input.newName);
 		}),
 });

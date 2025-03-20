@@ -36,7 +36,7 @@ export default function Task() {
 										<NavLink to={'work'}>Korektury</NavLink>
 									</SidebarMenuButton>
 									<SidebarMenuButton asChild>
-										<NavLink to={'files'}>Obrázky</NavLink>
+										<NavLink to={'files'}>Soubory</NavLink>
 									</SidebarMenuButton>
 								</SidebarMenuItem>
 							</SidebarMenu>

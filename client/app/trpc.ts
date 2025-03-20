@@ -23,7 +23,7 @@ function getUser() {
 export const trpc = createTRPCProxyClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: 'http://localhost:8081/trpc',
+			url: config?.API_URL + '/trpc',
 			headers: () => {
 				const user = getUser();
 				return {
