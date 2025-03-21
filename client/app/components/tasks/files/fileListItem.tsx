@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertDialogDescription } from '@radix-ui/react-alert-dialog';
 import { TRPCClientError } from '@trpc/client';
-import { Loader, Pen, Trash } from 'lucide-react';
+import { Pen, Trash } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRevalidator } from 'react-router';
@@ -21,6 +21,7 @@ import {
 import { Button, buttonVariants } from '@client/components/ui/button';
 import { Form, FormField, FormItem } from '@client/components/ui/form';
 import { Input } from '@client/components/ui/input';
+import { Loader } from '@client/components/ui/loader';
 import {
 	Tooltip,
 	TooltipContent,

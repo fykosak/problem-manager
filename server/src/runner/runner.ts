@@ -5,10 +5,19 @@ import path from 'node:path';
 import { db } from '../db';
 import { textTable } from '../db/schema';
 import { StorageProvider } from '../sockets/storageProvider';
+import { ProblemStorage } from './problemStorage';
 
 const storage = new StorageProvider();
 
 export class Runner {
+	private readonly problemId: number;
+	private readonly storage: ProblemStorage;
+
+	constructor(problemId: number) {
+		this.problemId = problemId;
+		this.storage = new ProblemStorage(problemId);
+	}
+
 	private getRunner() {
 		return 'http://builder:8080';
 	}
@@ -25,7 +34,7 @@ export class Runner {
 
 	public async run(problemId: number) {
 		const directoryName = problemId.toString();
-		const absolutePath = '/data/' + directoryName; // TODO to config
+		const absolutePath = this.storage.getStoragePath();
 
 		// check folder exists
 		if (!fs.existsSync(absolutePath)) {
@@ -89,6 +98,23 @@ export class Runner {
 			return {
 				error: String(error),
 			};
+		}
+	}
+
+	public async exportFile(inputFile: string) {
+		console.log('export file');
+		const response = await fetch(this.getRunner() + '/export', {
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			method: 'POST',
+			body: JSON.stringify({
+				filepath: inputFile,
+				targetDirectory: this.storage.getExportedFilesPath(),
+			}),
+		});
+		if (!response.ok) {
+			console.log(await response.json());
 		}
 	}
 }

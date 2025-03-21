@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { LoaderCircle } from 'lucide-react';
 import { useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRevalidator } from 'react-router';
@@ -14,6 +15,7 @@ import {
 	FormMessage,
 } from '@client/components/ui/form';
 import { Input } from '@client/components/ui/input';
+import { Loader } from '@client/components/ui/loader';
 import { config } from '@client/config';
 
 const formSchema = z.object({
@@ -97,6 +99,7 @@ export function FileUploadForm({ problemId }: { problemId: number }) {
 				/>
 
 				<Button type="submit" disabled={form.formState.isSubmitting}>
+					{form.formState.isSubmitting && <Loader />}
 					Nahrát soubor
 				</Button>
 			</form>

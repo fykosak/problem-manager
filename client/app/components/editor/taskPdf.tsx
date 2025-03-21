@@ -1,4 +1,4 @@
-import { Loader, Minus, Plus } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import {
 	KeyboardEvent,
 	forwardRef,
@@ -14,6 +14,7 @@ import 'react-pdf/dist/esm/Page/TextLayer.css';
 import { trpc } from '@client/trpc';
 
 import { Button } from '../ui/button';
+import { Loader } from '../ui/loader';
 import PdfViewer from './pdfViewer';
 
 // TODO by text id

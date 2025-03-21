@@ -32,6 +32,10 @@ export class ProblemStorage {
 		return path.join(this.getStoragePath(), 'files');
 	}
 
+	getExportedFilesPath() {
+		return path.join(this.getStoragePath(), 'files-exported');
+	}
+
 	getPathForFile(filename: string) {
 		return path.join(this.getFilesPath(), filename);
 	}

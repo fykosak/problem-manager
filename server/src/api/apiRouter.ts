@@ -4,6 +4,7 @@ import express from 'express';
 import { db } from '@server/db';
 import { problemTable } from '@server/db/schema';
 import { ProblemStorage } from '@server/runner/problemStorage';
+import { Runner } from '@server/runner/runner';
 
 export const apiRouter = express.Router();
 
@@ -40,9 +41,13 @@ apiRouter.post('/files/upload', async (req, res) => {
 
 	// TODO check for user permissions
 
+	const runner = new Runner(problemId);
 	const problemStorage = new ProblemStorage(problemId);
+
 	for (const file of files) {
+		const filepath = problemStorage.getPathForFile(file.name);
 		await file.mv(problemStorage.getPathForFile(file.name));
+		await runner.exportFile(filepath);
 	}
 
 	res.sendStatus(200);
