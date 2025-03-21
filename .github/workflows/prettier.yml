@@ -34,3 +34,21 @@ jobs:
       - name: Check formatting
         working-directory: ./server
         run: npx prettier . --check --config ../.prettierrc
+
+
+  builder:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+          cache: 'npm'
+          cache-dependency-path: ./builder/package-lock.json
+      - name: Install dependencies
+        working-directory: ./builder
+        run: npm install
+      - name: Check formatting
+        working-directory: ./builder
+        run: npx prettier . --check --config ../.prettierrc

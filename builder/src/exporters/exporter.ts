@@ -83,10 +83,10 @@ export default abstract class Exporter {
 		});
 	}
 
-	abstract innerExport(): void;
+	abstract innerExport(): Promise<void>;
 
-	public export() {
-		this.ensureDirectory(this.targetDirectory);
-		this.innerExport();
+	public async export() {
+		await this.ensureDirectory(this.targetDirectory);
+		await this.innerExport();
 	}
 }

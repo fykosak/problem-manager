@@ -1,10 +1,20 @@
 {
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --build --noEmit",
+    "prettier": "prettier . --check",
+    "prettier:fix": "prettier . --write"
+  },
   "dependencies": {
     "express": "^4.21.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.22.0",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/express": "^5.0.0",
-    "tsx": "^4.19.2"
+    "eslint": "^9.22.0",
+    "jiti": "^2.4.2",
+    "tsx": "^4.19.2",
+    "typescript-eslint": "^8.27.0"
   }
 }
