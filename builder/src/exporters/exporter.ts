@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -36,6 +37,12 @@ export default abstract class Exporter {
 		}
 	}
 
+	protected getTmpDirectory() {
+		const hash = crypto.createHash('sha1');
+		hash.update(this.targetDirectory);
+		return path.join('/tmp/' + hash.digest('hex'));
+	}
+
 	/**
 	 * Get full path of the exported file with the given extension
 	 */
@@ -48,7 +55,11 @@ export default abstract class Exporter {
 	 * Create symlink to the original file (with the same filename) inside the target directory
 	 */
 	protected async createSymlink() {
-		const targetFile = this.getTargetFile(path.extname(this.inputFile));
+		let extension = path.extname(this.inputFile);
+		if (extension.startsWith('.')) {
+			extension = extension.slice(1);
+		}
+		const targetFile = this.getTargetFile(extension);
 		try {
 			await fs.symlink(
 				path.relative(path.dirname(targetFile), this.inputFile),
@@ -71,10 +82,26 @@ export default abstract class Exporter {
 	 * Execute bash command with arguments.
 	 * Wrapper around node:child_process.spawn to make in it a promise.
 	 */
-	protected execute(command: string, args: string[] = []) {
+	protected execute(
+		command: string,
+		args: string[] = [],
+		cwd: string | undefined = undefined
+	) {
+		console.log(args);
 		return new Promise((resolve, reject) => {
-			const process = spawn(command, args);
+			const process = spawn(command, args, { cwd: cwd });
 			process.on('exit', (code) => {
+				console.log(process.stdout.setEncoding('utf-8').read());
+				console.log(process.stderr.setEncoding('utf-8').read());
+				console.log('exit code: ' + code);
+				if (code && code > 0) {
+					reject(
+						new ExporterError(
+							'command execution return with non-zero code'
+						)
+					);
+					return;
+				}
 				resolve(code);
 			});
 			process.on('error', (error) => {
