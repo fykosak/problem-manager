@@ -89,10 +89,15 @@ export default abstract class Exporter {
 	) {
 		console.log(args);
 		return new Promise((resolve, reject) => {
-			const process = spawn(command, args, { cwd: cwd });
-			process.on('exit', (code) => {
-				console.log(process.stdout.setEncoding('utf-8').read());
-				console.log(process.stderr.setEncoding('utf-8').read());
+			const commandProcess = spawn(command, args, { cwd: cwd });
+			commandProcess.on('exit', (code) => {
+				//console.log(process.stdout.setEncoding('utf-8').read());
+				process.stdout.write(
+					(commandProcess.stdout.setEncoding('utf-8').read() as
+						| string
+						| null) ?? ''
+				);
+				console.log(commandProcess.stderr.setEncoding('utf-8').read());
 				console.log('exit code: ' + code);
 				if (code && code > 0) {
 					reject(
@@ -104,7 +109,7 @@ export default abstract class Exporter {
 				}
 				resolve(code);
 			});
-			process.on('error', (error) => {
+			commandProcess.on('error', (error) => {
 				reject(new ExporterError(error.message));
 			});
 		});

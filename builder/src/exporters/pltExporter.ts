@@ -19,7 +19,7 @@ export default class PltExporter extends Exporter {
 			[
 				'-e',
 				`set format '$"%g"$';` +
-					'set terminal epslatex monochrome size 12.7cm,7.7cm;' +
+					'set terminal epslatex color size 12.7cm,7.7cm;' +
 					`set output '${parsedFileName.name}.tex'`,
 				tmpInputFile,
 			],
@@ -34,5 +34,35 @@ export default class PltExporter extends Exporter {
 			path.join(tmpDirectory, parsedFileName.name + '.eps'),
 			this.getTargetFile('eps')
 		);
+
+		// generate PDF
+		await this.execute(
+			'pdflatex',
+			[
+				'-jobname',
+				parsedFileName.name,
+				'-interaction',
+				'nonstopmode',
+				'-halt-on-error',
+				'-file-line-error',
+				'\\documentclass{standalone}' +
+					'\\usepackage{graphicx}' +
+					'\\usepackage{xcolor}' +
+					'\\usepackage{fkssugar}' +
+					'\\begin{document}' +
+					`\\input{${parsedFileName.name}.tex}` +
+					'\\end{document}',
+			],
+			tmpDirectory
+		);
+
+		// export svg
+		await this.execute('inkscape', [
+			'--export-plain-svg',
+			'--pdf-poppler',
+			path.join(tmpDirectory, parsedFileName.name + '.pdf'),
+			'-o',
+			this.getTargetFile('svg'),
+		]);
 	}
 }

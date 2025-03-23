@@ -10,11 +10,9 @@ import { ProblemStorage } from './problemStorage';
 const storage = new StorageProvider();
 
 export class Runner {
-	private readonly problemId: number;
 	private readonly storage: ProblemStorage;
 
 	constructor(problemId: number) {
-		this.problemId = problemId;
 		this.storage = new ProblemStorage(problemId);
 	}
 
@@ -67,8 +65,10 @@ export class Runner {
 
 		// main file contests
 		const mainFileContents =
+			'\\def\\UseOption{print}' +
 			'\\documentclass[czech]{fksempty}\n' +
 			'\\usepackage[utf8]{inputenc}\n' +
+			'\\makeatletter\\@myinputpath{{files-exported/}}\\makeatother\n' +
 			'\\begin{document}\n' +
 			'\\input{task.cs}\n' +
 			'\\end{document}';
