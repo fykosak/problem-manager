@@ -134,19 +134,27 @@ export const problemRouter = trpc.router({
 			);
 		}),
 
-	build: authedProcedure.input(z.number()).mutation(async (opts) => {
-		console.log('build ' + opts.input);
-		const runner = new Runner(Number(opts.input));
-		let returnValue = await runner.run(opts.input); // eslint-disable-line
-		// eslint-disable-next-line
-		returnValue = {
-			...returnValue,
-			file: runner.getPdfContests(opts.input),
-		};
-		//console.log(returnValue);
-		process.stdout.write(JSON.stringify(returnValue));
-		return returnValue; // eslint-disable-line
-	}),
+	build: authedProcedure
+		.input(
+			z.object({
+				problemId: z.number(),
+				type: z.enum(textTypeEnum.enumValues),
+				lang: z.enum(langEnum.enumValues),
+			})
+		)
+		.mutation(async ({ input }) => {
+			console.log('build ' + input.problemId);
+			const runner = new Runner(input.problemId);
+			let returnValue = await runner.run(input.type, input.lang); // eslint-disable-line
+			// eslint-disable-next-line
+			returnValue = {
+				...returnValue,
+				file: runner.getPdfContents(input.type, input.lang),
+			};
+			//console.log(returnValue);
+			process.stdout.write(JSON.stringify(returnValue) + '\n');
+			return returnValue; // eslint-disable-line
+		}),
 
 	create: contestProcedure
 		.input(

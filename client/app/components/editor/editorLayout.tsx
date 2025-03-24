@@ -56,9 +56,8 @@ export function EditorLayout({
 		setComponentLoaded(true);
 	}, []);
 
-	const pdfComponentRef = useRef<HTMLDivElement>(null);
-
 	const taskEditorRefs = useRef(new Map<number, HTMLDivElement>());
+	const pdfComponentRefs = useRef(new Map<number, HTMLDivElement>());
 
 	const { textData, selectedTextIds, containerRefs, setSelectedTextId } =
 		useEditorLayout();
@@ -66,7 +65,7 @@ export function EditorLayout({
 	const [desktopLayout, setDesktopLayout] = useState<Layout>(Layout.TEXT_PDF);
 
 	function setDesktopLayoutSanitized(newLayout: Layout) {
-		// sanitaze text2 to not cause colissions
+		// sanitize text2 to not cause collisions
 		if (
 			desktopLayout === Layout.TEXT_PDF &&
 			(newLayout === Layout.TEXT_TEXT_PDF ||
@@ -103,7 +102,10 @@ export function EditorLayout({
 			container.replaceChildren(child);
 		}
 
-		function appendEditorToContainer(containerName: string) {
+		function appendComponentToContainer(
+			containerName: string,
+			componentRefs: Map<number, HTMLDivElement>
+		) {
 			const containerRef = containerRefs.get(containerName);
 
 			const textId = selectedTextIds.get(containerName);
@@ -111,35 +113,34 @@ export function EditorLayout({
 				return; // TODO clean container
 			}
 
-			const editorRef = taskEditorRefs.current.get(textId);
-			appendChildRef(containerRef, editorRef);
+			const componentRef = componentRefs.get(textId);
+			appendChildRef(containerRef, componentRef);
 		}
 
 		// mobile layout
 		if (isMobile) {
 			if (activeTab === 'editor') {
-				appendEditorToContainer('text1');
+				appendComponentToContainer('text1', taskEditorRefs.current);
 			} else {
-				appendChildRef(
-					containerRefs.get('pdf'),
-					pdfComponentRef.current
-				);
+				appendComponentToContainer('pdf', pdfComponentRefs.current);
 			}
 		}
 
 		// desktop layout
 		if (desktopLayout === Layout.TEXT_PDF) {
-			appendEditorToContainer('text1');
-			appendChildRef(containerRefs.get('pdf'), pdfComponentRef.current);
+			appendComponentToContainer('text1', taskEditorRefs.current);
+			//appendChildRef(containerRefs.get('pdf'), pdfComponentRef.current);
+			appendComponentToContainer('pdf', pdfComponentRefs.current);
 		}
 		if (desktopLayout === Layout.TEXT_TEXT) {
-			appendEditorToContainer('text1');
-			appendEditorToContainer('text2');
+			appendComponentToContainer('text1', taskEditorRefs.current);
+			appendComponentToContainer('text2', taskEditorRefs.current);
 		}
 		if (desktopLayout === Layout.TEXT_TEXT_PDF) {
-			appendEditorToContainer('text1');
-			appendEditorToContainer('text2');
-			appendChildRef(containerRefs.get('pdf'), pdfComponentRef.current);
+			appendComponentToContainer('text1', taskEditorRefs.current);
+			appendComponentToContainer('text2', taskEditorRefs.current);
+			//appendChildRef(containerRefs.get('pdf'), pdfComponentRef.current);
+			appendComponentToContainer('pdf', pdfComponentRefs.current);
 		}
 	}, [activeTab, isMobile, componentLoaded, selectedTextIds, desktopLayout]);
 
@@ -271,20 +272,35 @@ export function EditorLayout({
 
 			<div style={{ display: 'none' }}>
 				{Array.from(textData.textsById.values()).map((text) => (
-					<Editor
-						textId={text.textId}
-						key={text.textId}
-						ref={(node) => {
-							const refMap = taskEditorRefs.current;
-							if (node) {
-								refMap.set(text.textId, node);
-							} else {
-								refMap.delete(text.textId);
-							}
-						}}
-					/>
+					<>
+						<Editor
+							textId={text.textId}
+							key={'editor-' + text.textId}
+							ref={(node) => {
+								const refMap = taskEditorRefs.current;
+								if (node) {
+									refMap.set(text.textId, node);
+								} else {
+									refMap.delete(text.textId);
+								}
+							}}
+						/>
+						<TaskPdf
+							problemId={problemId}
+							textType={text.type}
+							textLang={text.lang}
+							key={'pdf-' + text.textId}
+							ref={(node) => {
+								const refMap = pdfComponentRefs.current;
+								if (node) {
+									refMap.set(text.textId, node);
+								} else {
+									refMap.delete(text.textId);
+								}
+							}}
+						/>
+					</>
 				))}
-				{<TaskPdf problemId={problemId} ref={pdfComponentRef} />}
 			</div>
 		</>
 	);

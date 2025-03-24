@@ -93,9 +93,9 @@ export default abstract class Exporter {
 			commandProcess.on('exit', (code) => {
 				//console.log(process.stdout.setEncoding('utf-8').read());
 				process.stdout.write(
-					(commandProcess.stdout.setEncoding('utf-8').read() as
+					((commandProcess.stdout.setEncoding('utf-8').read() as
 						| string
-						| null) ?? ''
+						| null) ?? '') + '\n'
 				);
 				console.log(commandProcess.stderr.setEncoding('utf-8').read());
 				console.log('exit code: ' + code);

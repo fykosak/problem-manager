@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { db } from '../db';
-import { textTable } from '../db/schema';
+import { langEnum, textTable, textTypeEnum } from '../db/schema';
 import { StorageProvider } from '../sockets/storageProvider';
 import { ProblemStorage } from './problemStorage';
 
@@ -11,8 +11,10 @@ const storage = new StorageProvider();
 
 export class Runner {
 	private readonly storage: ProblemStorage;
+	private readonly problemId: number;
 
 	constructor(problemId: number) {
+		this.problemId = problemId;
 		this.storage = new ProblemStorage(problemId);
 	}
 
@@ -20,18 +22,24 @@ export class Runner {
 		return 'http://builder:8080';
 	}
 
-	public getPdfContests(problemId: number): string {
+	public getPdfContents(
+		textType: (typeof textTypeEnum.enumValues)[number],
+		textLang: (typeof langEnum.enumValues)[number]
+	): string {
 		const absolutePath = path.join(
 			'/data',
-			problemId.toString(),
+			this.problemId.toString(),
 			'build',
-			'problem.cs.pdf'
+			`input.${textType}.${textLang}.pdf`
 		); // TODO to config
 		return fs.readFileSync(absolutePath, { encoding: 'base64' });
 	}
 
-	public async run(problemId: number) {
-		const directoryName = problemId.toString();
+	public async run(
+		textType: (typeof textTypeEnum.enumValues)[number],
+		textLang: (typeof langEnum.enumValues)[number]
+	) {
+		const directoryName = this.problemId.toString();
 		const absolutePath = this.storage.getStoragePath();
 
 		// check folder exists
@@ -47,9 +55,9 @@ export class Runner {
 		// export task
 		const text = await db.query.textTable.findFirst({
 			where: and(
-				eq(textTable.problemId, problemId),
-				eq(textTable.type, 'task'),
-				eq(textTable.lang, 'cs')
+				eq(textTable.problemId, this.problemId),
+				eq(textTable.type, textType),
+				eq(textTable.lang, textLang)
 			),
 		});
 
@@ -59,7 +67,7 @@ export class Runner {
 
 		const persistedYdoc = await storage.getYDoc(text.textId);
 		fs.writeFileSync(
-			path.join(absolutePath, 'task.cs.tex'),
+			path.join(absolutePath, `${textType}.${textLang}.tex`),
 			persistedYdoc.getText().toJSON()
 		);
 
@@ -70,10 +78,10 @@ export class Runner {
 			'\\usepackage[utf8]{inputenc}\n' +
 			'\\makeatletter\\@myinputpath{{files-exported/}}\\makeatother\n' +
 			'\\begin{document}\n' +
-			'\\input{task.cs}\n' +
+			`\\input{${textType}.${textLang}}\n` +
 			'\\end{document}';
 		fs.writeFileSync(
-			path.join(absolutePath, 'problem.cs.tex'),
+			path.join(absolutePath, `input.${textType}.${textLang}.tex`),
 			mainFileContents
 		);
 
@@ -86,7 +94,7 @@ export class Runner {
 			body: JSON.stringify({
 				type: 'tex',
 				path: directoryName,
-				file: 'problem.cs.tex',
+				file: `input.${textType}.${textLang}.tex`,
 			}),
 		});
 

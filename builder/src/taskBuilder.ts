@@ -29,7 +29,6 @@ export class TaskBuilder {
 					'build',
 					'-interaction',
 					'nonstopmode',
-					'-halt-on-error',
 					'-file-line-error',
 					file,
 				],
