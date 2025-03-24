@@ -1,5 +1,6 @@
 import { Check, Cog } from 'lucide-react';
 import { useState } from 'react';
+import { useParams } from 'react-router';
 
 import { cn } from '@client/lib/utils';
 import { trpc, trpcOutputTypes } from '@client/trpc';
@@ -27,6 +28,9 @@ export default function WorkPersonSelect({
 		new Set<number>(Array.from(work.people, (person) => person.personId))
 	);
 
+	const params = useParams();
+	const contestYear = Number(params.year);
+
 	async function updateWorkPerson(personId: number, assigned: boolean) {
 		await trpc.work.updatePersonWork.query({
 			workId: work.workId,
@@ -35,10 +39,49 @@ export default function WorkPersonSelect({
 		});
 	}
 
+	organizers.sort((a, b) => {
+		const aSelected = selectedValues.has(a.personId);
+		const bSelected = selectedValues.has(b.personId);
+		if (aSelected !== bSelected) {
+			if (aSelected) {
+				return -1;
+			}
+			return 1;
+		}
+
+		const firstNameA = a.person.firstName.toUpperCase(); // ignore upper and lowercase
+		const firstNameB = b.person.firstName.toUpperCase(); // ignore upper and lowercase
+		if (firstNameA < firstNameB) {
+			return -1;
+		}
+		if (firstNameA > firstNameB) {
+			return 1;
+		}
+
+		const lastNameA = a.person.lastName.toUpperCase(); // ignore upper and lowercase
+		const lastNameB = b.person.lastName.toUpperCase(); // ignore upper and lowercase
+		if (lastNameA < lastNameB) {
+			return -1;
+		}
+		if (lastNameA > lastNameB) {
+			return 1;
+		}
+
+		return a.personId - b.personId;
+	});
+
 	const personOptions = [];
 	for (const organizer of organizers) {
 		const person = organizer.person;
 		const isSelected = selectedValues.has(person.personId);
+		if (
+			contestYear &&
+			(organizer.since > contestYear ||
+				(organizer.until !== null && organizer.until < contestYear)) &&
+			!isSelected
+		) {
+			continue;
+		}
 		personOptions.push(
 			<CommandItem
 				key={person.personId}

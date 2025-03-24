@@ -64,6 +64,7 @@ const TaskPdf = forwardRef(
 				setFile(`data:application/pdf;base64,${data['file']}`);
 				// eslint-disable-next-line
 				setLog(`${data['output']}`);
+				// eslint-disable-next-line
 				setBuildSuccessful(data['exitCode'] === 0);
 			} finally {
 				setIsRunning(false);

@@ -50,13 +50,8 @@ export function EditorLayout({ problemId }: { problemId: number }) {
 	const taskEditorRefs = useRef(new Map<number, HTMLDivElement>());
 	const pdfComponentRefs = useRef(new Map<number, HTMLDivElement>());
 
-	const {
-		textData,
-		selectedTextIds,
-		containerRefs,
-		desktopLayout,
-		setDesktopLayout,
-	} = useEditorLayout();
+	const { textData, selectedTextIds, containerRefs, desktopLayout } =
+		useEditorLayout();
 
 	useEffect(() => {
 		if (!componentLoaded) {
