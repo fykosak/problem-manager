@@ -52,17 +52,15 @@ export function BuildLog({ log }: { log: string }) {
 	const parsedLog = new LatexParser(log).parse();
 
 	return (
-		<div className="flex flex-col grow h-px ">
-			<div className="overflow-y-scroll">
-				{parsedLog.all.map((line) => (
-					<BuildLogError
-						level={line.level}
-						file={line.file}
-						line={line.line}
-						message={line.message}
-					/>
-				))}
-			</div>
+		<div className="grow h-px overflow-y-scroll">
+			{parsedLog.all.map((line) => (
+				<BuildLogError
+					level={line.level}
+					file={line.file}
+					line={line.line}
+					message={line.message}
+				/>
+			))}
 		</div>
 	);
 }

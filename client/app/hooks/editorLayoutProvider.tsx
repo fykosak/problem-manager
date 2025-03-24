@@ -1,5 +1,6 @@
 import { createContext, useContext, useRef, useState } from 'react';
 
+import { Layout } from '@client/components/editor/layoutEnum';
 import { trpcOutputTypes } from '@client/trpc';
 
 type TextData = {
@@ -13,6 +14,8 @@ const EditorLayoutContext = createContext<{
 	setSelectedTextId: (container: string, textId: number | null) => void;
 	containerRefs: Map<string, HTMLDivElement>;
 	setContainerRef: (container: string, node: HTMLDivElement | null) => void;
+	desktopLayout: Layout;
+	setDesktopLayout: (layout: Layout) => void;
 } | null>(null);
 
 export function EditorLayoutProvider({
@@ -25,6 +28,8 @@ export function EditorLayoutProvider({
 	const [selectedTextIds, setSelectedTextIds] = useState(
 		new Map<string, number>()
 	);
+
+	const [desktopLayout, setDesktopLayout] = useState<Layout>(Layout.TEXT_PDF);
 
 	function setSelectedTextId(container: string, textId: number | null) {
 		const newMap = new Map(selectedTextIds);
@@ -47,6 +52,23 @@ export function EditorLayoutProvider({
 		}
 	}
 
+	function setDesktopLayoutSanitized(newLayout: Layout) {
+		// sanitize text2 to not cause collisions
+		if (
+			desktopLayout === Layout.TEXT_PDF &&
+			(newLayout === Layout.TEXT_TEXT_PDF ||
+				newLayout === Layout.TEXT_TEXT)
+		) {
+			const text1TextId = selectedTextIds.get('text1');
+			const text2TextId = selectedTextIds.get('text2');
+			if (text1TextId === text2TextId) {
+				setSelectedTextId('text2', null);
+			}
+		}
+
+		setDesktopLayout(newLayout);
+	}
+
 	return (
 		<EditorLayoutContext.Provider
 			value={{
@@ -55,6 +77,8 @@ export function EditorLayoutProvider({
 				textData,
 				containerRefs: containerRefs.current,
 				setContainerRef,
+				desktopLayout,
+				setDesktopLayout: setDesktopLayoutSanitized,
 			}}
 		>
 			{children}

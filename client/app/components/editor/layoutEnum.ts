@@ -22,7 +22,7 @@ export function getLayoutLabel(layout: Layout): string {
 		case Layout.TEXT_PDF:
 			return 'Text and PDF';
 		case Layout.TEXT_TEXT_PDF:
-			return '2 texts vertically and PDF';
+			return '2 texts and PDF';
 		case Layout.TEXT_TEXT:
 			return '2 texts side by side';
 	}

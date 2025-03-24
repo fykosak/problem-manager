@@ -1,4 +1,10 @@
-import { FileCode, Minus, Plus } from 'lucide-react';
+import {
+	CircleCheckIcon,
+	CircleXIcon,
+	FileCode,
+	Minus,
+	Plus,
+} from 'lucide-react';
 import {
 	ForwardedRef,
 	KeyboardEvent,
@@ -41,6 +47,9 @@ const TaskPdf = forwardRef(
 		const [file, setFile] = useState<string | null>(null);
 		const [log, setLog] = useState<string>('');
 		const [showLog, setShowLog] = useState(false);
+		const [buildSuccessful, setBuildSuccessful] = useState<boolean | null>(
+			null
+		);
 
 		const buildPdf = useCallback(async () => {
 			setIsRunning(true);
@@ -55,6 +64,7 @@ const TaskPdf = forwardRef(
 				setFile(`data:application/pdf;base64,${data['file']}`);
 				// eslint-disable-next-line
 				setLog(`${data['output']}`);
+				setBuildSuccessful(data['exitCode'] === 0);
 			} finally {
 				setIsRunning(false);
 			}
@@ -125,12 +135,27 @@ const TaskPdf = forwardRef(
 					{/* eslint-disable-next-line */}
 					<Button variant="secondary" onClick={buildPdf}>
 						{!isRunning ? (
-							'Zkompilovat'
+							<>
+								{buildSuccessful === true && (
+									<CircleCheckIcon className="text-green-500" />
+								)}
+								{buildSuccessful === false && (
+									<CircleXIcon className="text-red-500" />
+								)}{' '}
+								Zkompilovat
+							</>
 						) : (
 							<>
 								<Loader /> Kompilování
 							</>
 						)}
+					</Button>
+					<Button
+						size="icon"
+						variant={showLog ? 'default' : 'secondary'}
+						onClick={() => setShowLog(!showLog)}
+					>
+						<FileCode />
 					</Button>
 					<Button
 						size="icon"
@@ -145,13 +170,6 @@ const TaskPdf = forwardRef(
 						onClick={() => scaleDown()}
 					>
 						<Minus />
-					</Button>
-					<Button
-						size="icon"
-						variant={showLog ? 'default' : 'secondary'}
-						onClick={() => setShowLog(!showLog)}
-					>
-						<FileCode />
 					</Button>
 				</div>
 				{/* h-px is for the container to be able to grow the viewer, otherwise
