@@ -22,8 +22,8 @@ export function Series({
 }: {
 	id: UniqueIdentifier;
 	// items need to be as a separate prop for rerendering to work correctly
-	items: trpcOutputTypes['contest']['series'][0]['problems'];
-	series: trpcOutputTypes['contest']['series'][0];
+	items: trpcOutputTypes['series']['list'][0]['problems'];
+	series: trpcOutputTypes['series']['list'][0];
 }) {
 	const { setNodeRef } = useDroppable({
 		id: id,

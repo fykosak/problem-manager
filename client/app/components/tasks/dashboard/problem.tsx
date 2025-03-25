@@ -14,7 +14,7 @@ import { trpcOutputTypes } from '@client/trpc';
 export function Problem({
 	problem,
 }: {
-	problem: trpcOutputTypes['contest']['series'][0]['problems'][0];
+	problem: trpcOutputTypes['series']['list'][0]['problems'][0];
 }) {
 	const workStats = new Map<string, number>();
 	for (const work of problem.work) {

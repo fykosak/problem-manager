@@ -14,7 +14,7 @@ export function Problem({
 	problem,
 	isOverlay,
 }: {
-	problem: trpcOutputTypes['contest']['series'][0]['problems'][0];
+	problem: trpcOutputTypes['series']['list'][0]['problems'][0];
 	isOverlay?: boolean;
 }) {
 	const { attributes, listeners, setNodeRef, transform, isDragging } =

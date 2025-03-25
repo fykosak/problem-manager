@@ -2,6 +2,7 @@ import {
 	type RouteConfig,
 	index,
 	layout,
+	prefix,
 	route,
 } from '@react-router/dev/routes';
 
@@ -15,6 +16,10 @@ export default [
 				route('task-ordering', 'routes/taskOrdering.tsx'),
 				route('task-suggestions', 'routes/taskSuggestions.tsx'),
 				route('create', 'routes/contestTaskSuggetion.tsx'),
+				...prefix('series', [
+					route('create', 'routes/contest.series.create.tsx'),
+					route(':seriesId/edit', 'routes/contest.series.edit.tsx'),
+				]),
 			]),
 			route('task/:taskId', 'routes/task.tsx', [
 				index('routes/task.edit.tsx'),

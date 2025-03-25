@@ -5,7 +5,7 @@ import { Series } from './series';
 export function ProblemDashboard({
 	series,
 }: {
-	series: trpcOutputTypes['contest']['series'];
+	series: trpcOutputTypes['series']['list'];
 }) {
 	return (
 		<div className="flex flex-col md:flex-row flex-wrap justify-around gap-5">

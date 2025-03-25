@@ -1,5 +1,6 @@
 import { AclError } from './aclError';
 import { type AssertionType, Role } from './role';
+import type { PersonRoles } from './roleTypes';
 
 export class ACL {
 	roles = new Map<string, Role>();
@@ -83,5 +84,55 @@ export class ACL {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Check if any role from person's base role list is allowed the given resource.
+	 */
+	public isAllowedBase(
+		personRoles: PersonRoles,
+		resourceName: string,
+		actionName: string | typeof ACL.All = ACL.All,
+		assertionData?: unknown
+	) {
+		return this.isAllowed(
+			Array.from(personRoles.baseRole.values()),
+			resourceName,
+			actionName,
+			assertionData
+		);
+	}
+
+	/**
+	 * Check if person has a permission for a contest.
+	 * If not, check also for base roles.
+	 */
+	public isAllowedContest(
+		personRoles: PersonRoles,
+		contestSymbol: string,
+		resourceName: string,
+		actionName: string | typeof ACL.All = ACL.All,
+		assertionData?: unknown
+	) {
+		const contestRoles = personRoles.contestRole.get(contestSymbol);
+		if (contestRoles) {
+			if (
+				this.isAllowed(
+					Array.from(contestRoles.values()),
+					resourceName,
+					actionName,
+					assertionData
+				)
+			) {
+				return true;
+			}
+		}
+
+		return this.isAllowedBase(
+			personRoles,
+			resourceName,
+			actionName,
+			assertionData
+		);
 	}
 }

@@ -17,6 +17,7 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 import { Button } from '@client/components/ui/button';
@@ -30,26 +31,16 @@ import { Series } from './series';
 export function ProblemOrdering({
 	series,
 }: {
-	series: trpcOutputTypes['contest']['series'];
+	series: trpcOutputTypes['series']['list'];
 }) {
-	//const [items, setItems] = useState<Groups>(
-	//	series.reduce(
-	//		(record, series) => ({
-	//			...record,
-	//			[series.seriesId]: getSeriesProblemIds(series),
-	//		}),
-	//		{}
-	//	)
-	//);
-
 	const [items, setItems] =
-		useState<trpcOutputTypes['contest']['series']>(series);
+		useState<trpcOutputTypes['series']['list']>(series);
 
 	const [activeItemId, setActiveItemId] = useState<UniqueIdentifier | null>(
 		null
 	);
 	const [activeProblem, setActiveProblem] = useState<
-		trpcOutputTypes['contest']['series'][0]['problems'][0] | null
+		trpcOutputTypes['series']['list'][0]['problems'][0] | null
 	>(null);
 	const lastOverId = useRef<UniqueIdentifier | null>(null);
 	const recentlyMovedToNewContainer = useRef(false);
@@ -127,6 +118,7 @@ export function ProblemOrdering({
 		});
 	}, [items]);
 
+	const navigate = useNavigate();
 	async function save() {
 		const postData: Record<number, number[]> = {};
 		try {
@@ -135,10 +127,11 @@ export function ProblemOrdering({
 					(problem) => problem.problemId
 				);
 			}
-			await trpc.contest.saveSeriesOrdering.mutate({
+			await trpc.series.ordering.mutate({
 				series: postData,
 			});
 			toast.success('Ordering saved');
+			await navigate('..');
 		} catch {
 			toast.error('Error occured');
 		}
@@ -301,7 +294,7 @@ export function ProblemOrdering({
 				onDragOver={handleDragOver}
 				onDragEnd={handleDragEnd}
 			>
-				<div className="flex gap-2">
+				<div className="flex gap-2 my-5">
 					{items.map((series) => (
 						<Series
 							key={series.seriesId}

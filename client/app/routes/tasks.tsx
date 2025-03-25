@@ -10,7 +10,7 @@ import { trpc } from '@client/trpc';
 import { Route } from './+types/tasks';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-	const series = await trpc.contest.series.query({
+	const series = await trpc.series.list.query({
 		contestSymbol: params.contest,
 		contestYear: Number(params.year),
 	});
@@ -18,18 +18,31 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export default function Tasks({ params, loaderData }: Route.ComponentProps) {
-	const roles = useUserRoles();
+	const personRoles = useUserRoles();
 	return (
 		<>
-			{acl.isAllowed(
-				roles.contestRole[params.contest],
-				'series',
-				'edit'
-			) && (
-				<Link to="task-ordering">
-					<Button>Edit</Button>
-				</Link>
-			)}
+			<div className="space-x-2 my-2">
+				{acl.isAllowedContest(
+					personRoles,
+					params.contest,
+					'series',
+					'edit'
+				) && (
+					<Link to="task-ordering">
+						<Button>Order tasks</Button>
+					</Link>
+				)}
+				{acl.isAllowedContest(
+					personRoles,
+					params.contest,
+					'series',
+					'create'
+				) && (
+					<Link to="series/create">
+						<Button>Add series</Button>
+					</Link>
+				)}
+			</div>
 			<ProblemDashboard series={loaderData.series} />
 		</>
 	);

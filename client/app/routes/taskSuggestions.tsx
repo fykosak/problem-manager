@@ -40,7 +40,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
 	return (
 		<>
-			<div className="py-5">
+			<div className="my-5">
 				<Button asChild>
 					<NavLink to={'../create'}>
 						<Plus /> Navrhnout úlohu

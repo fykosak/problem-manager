@@ -4,7 +4,7 @@ import { trpc } from '@client/trpc';
 import { Route } from './+types/taskOrdering';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-	const series = await trpc.contest.series.query({
+	const series = await trpc.series.list.query({
 		contestSymbol: params.contest,
 		contestYear: Number(params.year),
 	});

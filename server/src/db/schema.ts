@@ -63,6 +63,8 @@ export const seriesTable = pgTable(
 			.notNull()
 			.references(() => contestYearTable.contestYearId),
 		label: varchar({ length: 255 }).notNull(),
+		release: timestamp({ withTimezone: true }),
+		deadline: timestamp({ withTimezone: true }),
 	},
 	(table) => [unique().on(table.contestYearId, table.label)]
 );

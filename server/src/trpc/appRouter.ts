@@ -8,6 +8,7 @@ import { authedProcedure } from './middleware';
 import { contestRouter } from './routers/contestRouter';
 import { personRouter } from './routers/personRouter';
 import { problemRouter } from './routers/problemRouter';
+import { seriesRouter } from './routers/seriesRouter';
 import { trpc } from './trpc';
 
 export const appRouter = trpc.router({
@@ -21,6 +22,7 @@ export const appRouter = trpc.router({
 	contest: contestRouter,
 	person: personRouter,
 	problem: problemRouter,
+	series: seriesRouter,
 	work: trpc.router({
 		updatePersonWork: authedProcedure
 			.input(
