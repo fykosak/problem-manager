@@ -191,6 +191,10 @@ export const problemRelations = relations(problemTable, ({ one, many }) => ({
 	}),
 	topics: many(problemTopicTable),
 	texts: many(textTable),
+	contest: one(contestTable, {
+		fields: [problemTable.contestId],
+		references: [contestTable.contestId],
+	}),
 }));
 
 export const langEnum = pgEnum('lang', ['cs', 'en']);

@@ -59,12 +59,35 @@ export function CreateProblemForm({
 	});
 
 	const navigate = useNavigate();
-	async function onSubmit(values: z.infer<typeof formSchema>) {
-		const problem = await trpc.problem.create.mutate({
-			...values,
-		});
-		toast.success('Task created');
-		await navigate('../task/' + problem.problemId);
+	async function submitAndRedirect(values: z.infer<typeof formSchema>) {
+		try {
+			const problem = await trpc.problem.create.mutate({
+				...values,
+			});
+			toast.success('Task created');
+			await navigate('../task/' + problem.problemId);
+		} catch (exception) {
+			form.setError('root', {
+				message: (exception as Error).message ?? 'Error',
+				type: 'server',
+			});
+		}
+	}
+
+	async function submitAndContinue(values: z.infer<typeof formSchema>) {
+		try {
+			await trpc.problem.create.mutate({
+				...values,
+			});
+			toast.success('Task created');
+			form.reset();
+		} catch (exception) {
+			form.setError('root', {
+				message: (exception as Error).message ?? 'Error',
+				type: 'server',
+			});
+			toast.error('Failed to create task');
+		}
 	}
 
 	const { formState, resetField, watch } = form;
@@ -121,20 +144,7 @@ export function CreateProblemForm({
 	return (
 		<Form {...form}>
 			<div>{errors.root?.message}</div>
-			<form
-				// eslint-disable-next-line
-				onSubmit={form.handleSubmit(async (values) => {
-					try {
-						await onSubmit(values);
-					} catch (exception) {
-						form.setError('root', {
-							message: (exception as Error).message ?? 'Error',
-							type: 'server',
-						});
-					}
-				})}
-				className="space-y-8"
-			>
+			<form className="space-y-8">
 				<FormField
 					control={form.control}
 					name="contestSymbol"
@@ -282,11 +292,24 @@ export function CreateProblemForm({
 						</FormItem>
 					)}
 				/>
+			</form>
 
-				<Button type="submit" disabled={formState.isSubmitting}>
+			<div className="space-x-2 my-2">
+				<Button
+					// eslint-disable-next-line
+					onClick={form.handleSubmit(submitAndContinue)}
+					disabled={form.formState.isSubmitting}
+				>
+					Uložit a navrhnout další
+				</Button>
+				<Button
+					// eslint-disable-next-line
+					onClick={form.handleSubmit(submitAndRedirect)}
+					disabled={formState.isSubmitting}
+				>
 					Uložit a pokračovat v editaci
 				</Button>
-			</form>
+			</div>
 		</Form>
 	);
 }

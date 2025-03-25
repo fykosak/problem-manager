@@ -20,7 +20,7 @@ export function Series({
 		<div className="md:w-80">
 			<div className="my-2">
 				<div className="flex flex-row gap-2 items-center">
-					<h2>série {series.label}</h2>
+					<h2 className="py-2">série {series.label}</h2>
 					{acl.isAllowedContest(
 						personRoles,
 						series.contestYear.contest.symbol,

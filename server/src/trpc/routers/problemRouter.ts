@@ -1,14 +1,16 @@
 import { TRPCError } from '@trpc/server';
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import * as Y from 'yjs';
 import { z } from 'zod';
 
+import { acl } from '@server/acl/aclFactory';
 import { db } from '@server/db';
 import {
 	authorTable,
 	langEnum,
 	problemTable,
 	problemTopicTable,
+	seriesTable,
 	textTable,
 	textTypeEnum,
 	topicTable,
@@ -266,5 +268,75 @@ export const problemRouter = trpc.router({
 		.mutation(async ({ input }) => {
 			const problemStorage = new ProblemStorage(input.problemId);
 			await problemStorage.renameFile(input.oldName, input.newName);
+		}),
+
+	// series
+	assignSeries: authedProcedure
+		.input(
+			z.object({
+				problemId: z.number(),
+				seriesId: z.number(),
+			})
+		)
+		.mutation(async ({ ctx, input }) => {
+			const problem = await db.query.problemTable.findFirst({
+				where: eq(problemTable.problemId, input.problemId),
+				with: {
+					contest: true,
+				},
+			});
+
+			if (!problem) {
+				throw new TRPCError({
+					message: 'Problem does not exist',
+					code: 'BAD_REQUEST',
+				});
+			}
+
+			if (
+				!problem.contest ||
+				!acl.isAllowedContest(
+					ctx.aclRoles,
+					problem.contest.symbol,
+					'problem',
+					'assignSeries'
+				)
+			) {
+				throw new TRPCError({
+					message: 'Cannot assign this problem',
+					code: 'FORBIDDEN',
+				});
+			}
+
+			const series = await db.query.seriesTable.findFirst({
+				where: eq(seriesTable.seriesId, input.seriesId),
+				with: {
+					contestYear: true,
+				},
+			});
+
+			if (!series || problem.contestId !== series.contestYear.contestId) {
+				throw new TRPCError({
+					message: 'Cannot assign problem to this series',
+					code: 'BAD_REQUEST',
+				});
+			}
+
+			const lastProblemInSeries = await db.query.problemTable.findFirst({
+				where: eq(problemTable.seriesId, series.seriesId),
+				orderBy: desc(problemTable.seriesOrder),
+			});
+
+			await db
+				.update(problemTable)
+				.set({
+					contestId: null,
+					seriesId: series.seriesId,
+					seriesOrder:
+						lastProblemInSeries && lastProblemInSeries.seriesOrder
+							? lastProblemInSeries.seriesOrder + 1
+							: 1,
+				})
+				.where(eq(problemTable.problemId, problem.problemId));
 		}),
 });

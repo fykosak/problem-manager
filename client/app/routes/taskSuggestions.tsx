@@ -3,7 +3,7 @@ import { NavLink } from 'react-router';
 
 import { Button } from '@client/components/ui/button';
 import { DataTable } from '@client/components/ui/dataTable';
-import { Task, columns } from '@client/models/task/columns';
+import { Task, getColumns } from '@client/models/task/columns';
 import { trpc } from '@client/trpc';
 
 import { Route } from './+types/taskSuggestions';
@@ -34,7 +34,12 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 		created: new Date(problem.created),
 	}));
 
-	return transformedProblems;
+	const series = await trpc.series.list.query({
+		contestSymbol: params.contest,
+		contestYear: Number(params.year),
+	});
+
+	return { problems: transformedProblems, series };
 }
 
 export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
@@ -47,7 +52,10 @@ export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
 					</NavLink>
 				</Button>
 			</div>
-			<DataTable columns={columns} data={loaderData} />
+			<DataTable
+				columns={getColumns(loaderData.series)}
+				data={loaderData.problems}
+			/>
 		</>
 	);
 }
