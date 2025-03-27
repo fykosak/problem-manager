@@ -100,17 +100,35 @@ export const personRouter = trpc.router({
 		list: authedProcedure.query(async ({ ctx }) => {
 			return await db.query.apiKeyTable.findMany({
 				where: eq(apiKeyTable.personId, ctx.person.personId),
+				orderBy: desc(apiKeyTable.created),
 			});
 		}),
 
-		create: authedProcedure.mutation(async ({ ctx }) => {
-			// 48 bytes corresponds to 64 chars in base64
-			const key = crypto.randomBytes(48).toString('base64');
-			await db.insert(apiKeyTable).values({
-				personId: ctx.person.personId,
-				key: key,
-			});
-		}),
+		create: authedProcedure
+			.input(
+				z.object({
+					validUntil: z.coerce.date().nullable(),
+				})
+			)
+			.mutation(async ({ ctx, input }) => {
+				do {
+					// 48 bytes corresponds to 64 chars in base64
+					const key = crypto.randomBytes(48).toString('base64');
+
+					// check if generated key already exists to prevent duplicates
+					const existingKey = await db.query.apiKeyTable.findFirst({
+						where: eq(apiKeyTable.key, key),
+					});
+					if (!existingKey) {
+						await db.insert(apiKeyTable).values({
+							personId: ctx.person.personId,
+							key: key,
+							validUntil: input.validUntil,
+						});
+						break;
+					}
+				} while (true); // eslint-disable-line
+			}),
 
 		invalidate: authedProcedure
 			.input(
