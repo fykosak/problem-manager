@@ -26,7 +26,7 @@ app.use(
 	})
 );
 
-app.use(apiRouter);
+app.use('/rest', apiRouter);
 
 app.use(
 	'/trpc',
