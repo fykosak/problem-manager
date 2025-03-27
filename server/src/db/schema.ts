@@ -253,6 +253,7 @@ export const personTable = pgTable('person', {
 export const personRelations = relations(personTable, ({ many }) => ({
 	authors: many(authorTable),
 	organizers: many(organizerTable),
+	apiKeys: many(apiKeyTable),
 }));
 
 export const organizerTable = pgTable('organizer', {
@@ -352,5 +353,22 @@ export const personWorkRelations = relations(personWorkTable, ({ one }) => ({
 	work: one(workTable, {
 		fields: [personWorkTable.workId],
 		references: [workTable.workId],
+	}),
+}));
+
+export const apiKeyTable = pgTable('api_key', {
+	apiKeyId: serial().primaryKey(),
+	personId: integer()
+		.notNull()
+		.references(() => personTable.personId),
+	key: text().unique().notNull(),
+	created: timestamp({ withTimezone: true }).notNull().defaultNow(),
+	validUntil: timestamp({ withTimezone: true }),
+});
+
+export const apiKeyRelations = relations(apiKeyTable, ({ one }) => ({
+	person: one(personTable, {
+		fields: [apiKeyTable.personId],
+		references: [personTable.personId],
 	}),
 }));

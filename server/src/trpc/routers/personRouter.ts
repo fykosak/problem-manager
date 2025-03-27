@@ -1,8 +1,11 @@
+import { TRPCError } from '@trpc/server';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import crypto from 'node:crypto';
 import { z } from 'zod';
 
 import { db } from '@server/db';
 import {
+	apiKeyTable,
 	contestTable,
 	contestYearTable,
 	personWorkTable,
@@ -91,5 +94,55 @@ export const personRouter = trpc.router({
 			baseRole: [...ctx.aclRoles.baseRole.values()],
 			contestRole: Object.fromEntries(contestRolesMap),
 		};
+	}),
+
+	apiKey: trpc.router({
+		list: authedProcedure.query(async ({ ctx }) => {
+			return await db.query.apiKeyTable.findMany({
+				where: eq(apiKeyTable.personId, ctx.person.personId),
+			});
+		}),
+
+		create: authedProcedure.mutation(async ({ ctx }) => {
+			// 48 bytes corresponds to 64 chars in base64
+			const key = crypto.randomBytes(48).toString('base64');
+			await db.insert(apiKeyTable).values({
+				personId: ctx.person.personId,
+				key: key,
+			});
+		}),
+
+		invalidate: authedProcedure
+			.input(
+				z.object({
+					apiKeyId: z.number(),
+				})
+			)
+			.mutation(async ({ ctx, input }) => {
+				const apiKey = await db.query.apiKeyTable.findFirst({
+					where: eq(apiKeyTable.apiKeyId, input.apiKeyId),
+				});
+
+				if (!apiKey || apiKey.personId !== ctx.person.personId) {
+					throw new TRPCError({
+						message: 'Cannot invalidate the API key',
+						code: 'FORBIDDEN',
+					});
+				}
+
+				if (apiKey.validUntil && apiKey.validUntil < new Date()) {
+					throw new TRPCError({
+						message: 'API key already invalid',
+						code: 'BAD_REQUEST',
+					});
+				}
+
+				await db
+					.update(apiKeyTable)
+					.set({
+						validUntil: new Date(),
+					})
+					.where(eq(apiKeyTable.apiKeyId, input.apiKeyId));
+			}),
 	}),
 });

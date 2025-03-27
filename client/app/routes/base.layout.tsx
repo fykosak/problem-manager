@@ -25,7 +25,7 @@ export default function BaseLayout({ loaderData }: Route.ComponentProps) {
 	return (
 		<>
 			<NavigationBar links={navLinks} />
-			<main className="container mx-auto">
+			<main className="container mx-auto my-2">
 				<Outlet />
 			</main>
 		</>
