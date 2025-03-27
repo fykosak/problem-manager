@@ -15,7 +15,7 @@ import {
 } from '@client/components/ui/form';
 import { Input } from '@client/components/ui/input';
 import { Loader } from '@client/components/ui/loader';
-import { config } from '@client/config';
+import { trpc } from '@client/trpc';
 
 const formSchema = z.object({
 	files: z.instanceof(globalThis.FileList, { message: 'No file selected' }),
@@ -23,6 +23,19 @@ const formSchema = z.object({
 	//	message: 'File must be smaller than 5MB.',
 	//}),
 });
+
+function fileToBase64(file: File): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.readAsDataURL(file);
+		reader.onload = () => {
+			// extract base64 data from url encoded string
+			const dataPart = (reader.result as string).split(',', 2)[1];
+			resolve(dataPart);
+		};
+		reader.onerror = () => reject(reader.error as Error);
+	});
+}
 
 export function FileUploadForm({ problemId }: { problemId: number }) {
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -34,18 +47,19 @@ export function FileUploadForm({ problemId }: { problemId: number }) {
 	const revalidator = useRevalidator();
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
-		const formData = new FormData();
-		for (const [index, file] of Array.from(values.files).entries()) {
-			formData.append(`files[${index}]`, file);
+		const files = [];
+		for (const file of values.files) {
+			files.push({
+				name: file.name,
+				data: await fileToBase64(file),
+			});
 		}
-		formData.append('problemId', problemId.toString());
-		const respose = await fetch(config?.API_URL + '/files/upload', {
-			method: 'post',
-			body: formData,
+
+		await trpc.problem.files.upload.mutate({
+			problemId: problemId,
+			files: files,
 		});
-		if (!respose.ok) {
-			throw new Error(await respose.text());
-		}
+
 		form.reset();
 		await revalidator.revalidate();
 		if (fileInputRef.current) {

@@ -240,35 +240,73 @@ export const problemRouter = trpc.router({
 
 	// files
 
-	files: authedProcedure.input(z.number()).query(async ({ input }) => {
-		const problemStorage = new ProblemStorage(input);
-		return await problemStorage.getFiles();
+	files: trpc.router({
+		list: authedProcedure.input(z.number()).query(async ({ input }) => {
+			const problemStorage = new ProblemStorage(input);
+			return await problemStorage.getFiles();
+		}),
+
+		upload: authedProcedure
+			.input(
+				z.object({
+					problemId: z.number(),
+					files: z
+						.object({
+							name: z.string().nonempty(),
+							data: z.string().nonempty(),
+						})
+						.array(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const problem = await db.query.problemTable.findFirst({
+					where: eq(problemTable.problemId, input.problemId),
+				});
+				if (!problem) {
+					throw new TRPCError({
+						message: 'Problem does not exist',
+						code: 'BAD_REQUEST',
+					});
+				}
+
+				// TODO check for user permissions
+
+				const runner = new Runner(input.problemId);
+				const problemStorage = new ProblemStorage(input.problemId);
+
+				for (const file of input.files) {
+					console.log(file.data);
+					await problemStorage.saveFile(file.name, file.data);
+					const filepath = problemStorage.getPathForFile(file.name);
+					await runner.exportFile(filepath);
+				}
+			}),
+
+		delete: authedProcedure
+			.input(
+				z.object({
+					problemId: z.number(),
+					filename: z.string(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const problemStorage = new ProblemStorage(input.problemId);
+				await problemStorage.deleteFile(input.filename);
+			}),
+
+		rename: authedProcedure
+			.input(
+				z.object({
+					problemId: z.number(),
+					oldName: z.string(),
+					newName: z.string(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const problemStorage = new ProblemStorage(input.problemId);
+				await problemStorage.renameFile(input.oldName, input.newName);
+			}),
 	}),
-
-	deleteFile: authedProcedure
-		.input(
-			z.object({
-				problemId: z.number(),
-				filename: z.string(),
-			})
-		)
-		.mutation(async ({ input }) => {
-			const problemStorage = new ProblemStorage(input.problemId);
-			await problemStorage.deleteFile(input.filename);
-		}),
-
-	renameFile: authedProcedure
-		.input(
-			z.object({
-				problemId: z.number(),
-				oldName: z.string(),
-				newName: z.string(),
-			})
-		)
-		.mutation(async ({ input }) => {
-			const problemStorage = new ProblemStorage(input.problemId);
-			await problemStorage.renameFile(input.oldName, input.newName);
-		}),
 
 	// series
 	assignSeries: authedProcedure

@@ -42,7 +42,7 @@ function DeleteFileButton({
 	async function deleteFile(filename: string) {
 		console.log('delete');
 		try {
-			await trpc.problem.deleteFile.mutate({ problemId, filename });
+			await trpc.problem.files.delete.mutate({ problemId, filename });
 			await revalidator.revalidate();
 			toast.success(`File ${filename} deleted`);
 		} catch (error) {
@@ -134,7 +134,7 @@ export function FileListItem({
 			return;
 		}
 		try {
-			await trpc.problem.renameFile.mutate({
+			await trpc.problem.files.rename.mutate({
 				problemId: problemId,
 				oldName: filename,
 				newName: values.filename,

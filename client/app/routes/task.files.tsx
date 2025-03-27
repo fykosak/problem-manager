@@ -6,7 +6,7 @@ import { Route } from './+types/task.files';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const problemId = Number(params.taskId);
-	const files = await trpc.problem.files.query(problemId);
+	const files = await trpc.problem.files.list.query(problemId);
 	return { files };
 }
 

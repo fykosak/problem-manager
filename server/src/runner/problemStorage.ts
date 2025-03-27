@@ -41,12 +41,37 @@ export class ProblemStorage {
 	}
 
 	async getFiles() {
-		const files = await fs.readdir(this.getFilesPath(), {
-			withFileTypes: true,
-		});
-		return files
-			.filter((file) => !file.isDirectory())
-			.map((file) => file.name);
+		try {
+			const files = await fs.readdir(this.getFilesPath(), {
+				withFileTypes: true,
+			});
+			return files
+				.filter((file) => !file.isDirectory())
+				.map((file) => file.name);
+		} catch (error) {
+			if (
+				error instanceof Error &&
+				'code' in error &&
+				error.code === 'ENOENT'
+			) {
+				return [];
+			} else {
+				throw error;
+			}
+		}
+	}
+
+	/**
+	 * @param data File data encoded in `base64`
+	 */
+	async saveFile(filename: string, data: string) {
+		const filepath = this.getPathForFile(filename);
+		try {
+			await fs.access(this.getFilesPath());
+		} catch {
+			await fs.mkdir(this.getFilesPath(), { recursive: true });
+		}
+		await fs.writeFile(filepath, data, 'base64');
 	}
 
 	async deleteFile(filename: string) {
