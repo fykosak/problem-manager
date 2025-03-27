@@ -14,7 +14,7 @@ import logoFullWhite from '@client/assets/logoFullWhite.png';
 import type { Route } from './+types/root';
 import stylesheet from './app.css?url';
 import { Toaster } from './components/ui/sonner';
-import { config, setConfig } from './config';
+import { config } from './config';
 import { ThemeProvider } from './hooks/themeProvider';
 
 export const links: Route.LinksFunction = () => [
@@ -74,16 +74,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 	);
 }
 
-export async function clientLoader() {
-	const response = await fetch('/config.json');
-	const json = (await response.json()) as Record<string, unknown>;
-	const config = setConfig(json);
-	return config;
-}
-
-export default function App({ loaderData }: Route.ComponentProps) {
-	const config = loaderData;
-
+export default function App() {
 	const oidcConfig = {
 		authority: config.OIDC_AUTHORITY_URL,
 		client_id: config.OIDC_CLIENT_ID,
