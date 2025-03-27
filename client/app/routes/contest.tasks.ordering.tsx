@@ -1,7 +1,7 @@
 import { ProblemOrdering } from '@client/components/tasks/ordering/problemOrdering';
 import { trpc } from '@client/trpc';
 
-import { Route } from './+types/taskOrdering';
+import { Route } from './+types/contest.tasks.ordering';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const series = await trpc.series.list.query({

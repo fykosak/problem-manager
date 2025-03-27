@@ -6,7 +6,7 @@ import { DataTable } from '@client/components/ui/dataTable';
 import { Task, getColumns } from '@client/models/task/columns';
 import { trpc } from '@client/trpc';
 
-import { Route } from './+types/taskSuggestions';
+import { Route } from './+types/contest.tasks.suggestions';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const problems = await trpc.contest.problemSuggestions.query({
@@ -47,7 +47,7 @@ export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
 		<>
 			<div className="my-5">
 				<Button asChild>
-					<NavLink to={'../create'}>
+					<NavLink to={'../tasks/create'}>
 						<Plus /> Navrhnout úlohu
 					</NavLink>
 				</Button>

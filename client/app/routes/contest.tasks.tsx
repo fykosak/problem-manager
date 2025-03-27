@@ -7,7 +7,7 @@ import { Button } from '@client/components/ui/button';
 import { useUserRoles } from '@client/hooks/usePersonRoles';
 import { trpc } from '@client/trpc';
 
-import { Route } from './+types/tasks';
+import { Route } from './+types/contest.tasks';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const series = await trpc.series.list.query({
@@ -28,7 +28,7 @@ export default function Tasks({ params, loaderData }: Route.ComponentProps) {
 					'series',
 					'edit'
 				) && (
-					<Link to="task-ordering">
+					<Link to="tasks/ordering">
 						<Button>Order tasks</Button>
 					</Link>
 				)}

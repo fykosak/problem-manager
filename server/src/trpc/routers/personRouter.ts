@@ -55,6 +55,7 @@ export const personRouter = trpc.router({
 					)
 				);
 		}),
+
 	/**
 	 * Return list of contest years, that are active and person is
 	 * organizing them.
@@ -76,8 +77,9 @@ export const personRouter = trpc.router({
 			.where(inArray(contestYearTable.contestId, contestIds))
 			.orderBy(contestYearTable.contestId, desc(contestYearTable.year));
 	}),
+
 	roles: authedProcedure.query(({ ctx }) => {
-		// Map and Set cannot be serialized and must converted to arrays and objects
+		// Map and Set cannot be serialized and must be converted to arrays and objects
 		const contestRolesMap = new Map<string, string[]>();
 
 		for (const [key, value] of ctx.aclRoles.contestRole.entries()) {

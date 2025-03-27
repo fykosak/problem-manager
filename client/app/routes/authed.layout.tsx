@@ -5,7 +5,7 @@ import { Navigate, Outlet } from 'react-router';
 import { PersonRolesProvider } from '@client/hooks/personRolesProvider';
 import { trpc } from '@client/trpc';
 
-import { Route } from './+types/authedLayout';
+import { Route } from './+types/authed.layout';
 
 function saveLoginRedirectUrl() {
 	localStorage.setItem(

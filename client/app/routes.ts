@@ -8,20 +8,28 @@ import {
 
 export default [
 	route('/login', 'routes/login.tsx'),
-	layout('routes/authedLayout.tsx', [
-		route('/', 'routes/home.tsx'),
-		route(':contest/:year', 'routes/layout.tsx', [
-			layout('routes/contestLayout.tsx', [
-				index('routes/tasks.tsx'),
-				route('task-ordering', 'routes/taskOrdering.tsx'),
-				route('task-suggestions', 'routes/taskSuggestions.tsx'),
-				route('create', 'routes/contestTaskSuggetion.tsx'),
+	layout('routes/authed.layout.tsx', [
+		layout('routes/base.layout.tsx', [
+			route('/', 'routes/index.tsx'),
+			route('/user/api-keys', 'routes/user.apiKeys.tsx'),
+		]),
+		route(':contest/:year', 'routes/contest.layout.tsx', [
+			layout('routes/contest.main.layout.tsx', [
+				index('routes/contest.tasks.tsx'),
+				...prefix('tasks', [
+					route('ordering', 'routes/contest.tasks.ordering.tsx'),
+					route(
+						'suggestions',
+						'routes/contest.tasks.suggestions.tsx'
+					),
+					route('create', 'routes/contest.tasks.create.tsx'),
+				]),
 				...prefix('series', [
 					route('create', 'routes/contest.series.create.tsx'),
 					route(':seriesId/edit', 'routes/contest.series.edit.tsx'),
 				]),
 			]),
-			route('task/:taskId', 'routes/task.tsx', [
+			route('task/:taskId', 'routes/task.layout.tsx', [
 				index('routes/task.edit.tsx'),
 				route('work', 'routes/task.work.tsx'),
 				route('metadata', 'routes/task.metadata.tsx'),

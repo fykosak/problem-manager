@@ -15,7 +15,7 @@ import NavigationBar from './navigationBar';
 
 const links = [
 	{ name: 'Úlohy', link: '' },
-	{ name: 'Návrhy na úlohy', link: 'task-suggestions' },
+	{ name: 'Návrhy na úlohy', link: 'tasks/suggestions' },
 ];
 
 export default function ContestNavigationBar({

@@ -1,6 +1,5 @@
 import { NavLink } from 'react-router';
 
-import NavigationBar from '@client/components/navigation/navigationBar';
 import {
 	getWorkStateColor,
 	getWorkStateLabel,
@@ -15,7 +14,7 @@ import {
 } from '@client/components/ui/card';
 import { trpc, trpcOutputTypes } from '@client/trpc';
 
-import { Route } from './+types/home';
+import { Route } from './+types/index';
 
 export async function clientLoader() {
 	const work = {
@@ -23,10 +22,8 @@ export async function clientLoader() {
 		todo: await trpc.person.work.query('todo'),
 		pending: await trpc.person.work.query('pending'),
 	};
-	const activeOrganizerContestYears =
-		await trpc.person.activeContestYears.query();
 	const currentContestYears = await trpc.contest.currentContests.query();
-	return { work, activeOrganizerContestYears, currentContestYears };
+	return { work, currentContestYears };
 }
 
 function WorkItem({
@@ -103,36 +100,23 @@ function WorkGroup({
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-	const navLinks = loaderData.activeOrganizerContestYears.map(
-		(contestYear) => ({
-			name: contestYear.contest.name,
-			link:
-				'/' +
-				contestYear.contest.symbol +
-				'/' +
-				contestYear.contest_year.year,
-		})
-	);
 	return (
 		<>
-			<NavigationBar links={navLinks} />
-			<main className="container mx-auto">
-				<h1>Work to be done</h1>
-				<WorkGroup
-					works={loaderData.work.todo}
-					currentContestYears={loaderData.currentContestYears}
-				/>
-				<h1>Work waiting to be finished</h1>
-				<WorkGroup
-					works={loaderData.work.pending}
-					currentContestYears={loaderData.currentContestYears}
-				/>
-				<h1>Waiting work</h1>
-				<WorkGroup
-					works={loaderData.work.waiting}
-					currentContestYears={loaderData.currentContestYears}
-				/>
-			</main>
+			<h1>Work to be done</h1>
+			<WorkGroup
+				works={loaderData.work.todo}
+				currentContestYears={loaderData.currentContestYears}
+			/>
+			<h1>Work waiting to be finished</h1>
+			<WorkGroup
+				works={loaderData.work.pending}
+				currentContestYears={loaderData.currentContestYears}
+			/>
+			<h1>Waiting work</h1>
+			<WorkGroup
+				works={loaderData.work.waiting}
+				currentContestYears={loaderData.currentContestYears}
+			/>
 		</>
 	);
 }

@@ -83,6 +83,11 @@ export default function NavigationBar({
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent>
+									<DropdownMenuItem asChild>
+										<NavLink to="/user/api-keys">
+											Api keys
+										</NavLink>
+									</DropdownMenuItem>
 									<DropdownMenuItem
 										onClick={() => void auth.removeUser()}
 									>
