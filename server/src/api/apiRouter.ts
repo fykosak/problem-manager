@@ -9,6 +9,7 @@ import {
 	seriesTable,
 	topicTable,
 } from '@server/db/schema';
+import { StorageProvider } from '@server/sockets/storageProvider';
 
 import { asyncHandler } from './asyncHandler';
 import { UserAuthMiddleware } from './middleware';
@@ -65,10 +66,62 @@ apiRouter.get(
 );
 
 // TODO authorization
-apiRouter.get('/problem/:problemId(\\d+)', (req, res) => {
-	// TODO tex generation
-	res.sendStatus(501);
-});
+apiRouter.get(
+	'/problem/:problemId(\\d+)',
+	asyncHandler(async (req, res) => {
+		const problemId = Number(req.params.problemId);
+		const problem = await db.query.problemTable.findFirst({
+			where: eq(problemTable.problemId, problemId),
+			with: {
+				texts: true,
+				type: true,
+				topics: {
+					with: {
+						topic: true,
+					},
+				},
+				series: {
+					with: {
+						contestYear: true,
+					},
+				},
+			},
+		});
+
+		if (!problem) {
+			res.status(404).send('Problem does not exist');
+			return;
+		}
+
+		const ydocStorage = new StorageProvider();
+		const texts: Record<string, Record<string, string>> = {};
+
+		for (const text of problem.texts) {
+			const ydoc = await ydocStorage.getYDoc(text.textId);
+			const contents = ydoc.getText().toJSON();
+			if (!(text.type in texts)) {
+				texts[text.type] = {};
+			}
+			texts[text.type][text.lang] = contents;
+		}
+
+		res.json({
+			problemId: problem.problemId,
+			contest: problem.series
+				? problem.series.contestYear.contestId
+				: problem.contestId,
+			year: problem.series?.contestYear.year,
+			series: problem.series?.label,
+			seriesOrder: problem.seriesOrder,
+			metadata: problem.metadata,
+			type: problem.type.label,
+			topics: problem.topics.map(
+				(problemTopic) => problemTopic.topic.label
+			),
+			texts: texts,
+		});
+	})
+);
 
 // TODO authorization
 apiRouter.get(
