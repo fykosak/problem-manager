@@ -59,12 +59,6 @@ export function FileUploadForm({ problemId }: { problemId: number }) {
 			problemId: problemId,
 			files: files,
 		});
-
-		form.reset();
-		await revalidator.revalidate();
-		if (fileInputRef.current) {
-			fileInputRef.current.value = '';
-		}
 	}
 
 	return (
@@ -77,12 +71,18 @@ export function FileUploadForm({ problemId }: { problemId: number }) {
 					try {
 						await onSubmit(values);
 						toast.success('File uploaded');
+						form.reset();
+						if (fileInputRef.current) {
+							fileInputRef.current.value = '';
+						}
 					} catch (exception) {
 						form.setError('root', {
 							message: (exception as Error).message ?? 'Error',
 							type: 'server',
 						});
 						toast.error('Error occured while uploading');
+					} finally {
+						await revalidator.revalidate();
 					}
 				})}
 			>

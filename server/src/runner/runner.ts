@@ -40,7 +40,7 @@ export class Runner {
 		textLang: (typeof langEnum.enumValues)[number]
 	) {
 		const directoryName = this.problemId.toString();
-		const absolutePath = this.storage.getStoragePath();
+		const absolutePath = this.storage.getStorageDirectory();
 
 		// check folder exists
 		if (!fs.existsSync(absolutePath)) {
@@ -118,7 +118,7 @@ export class Runner {
 			method: 'POST',
 			body: JSON.stringify({
 				filepath: inputFile,
-				targetDirectory: this.storage.getExportedFilesPath(),
+				targetDirectory: this.storage.getExportedFilesDirectory(),
 			}),
 		});
 		if (!response.ok) {

@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import { and, asc, desc, eq, inArray } from 'drizzle-orm';
+import path from 'node:path';
 import * as Y from 'yjs';
 import { z } from 'zod';
 
@@ -271,11 +272,23 @@ export const problemRouter = trpc.router({
 
 				// TODO check for user permissions
 
+				// check for name collisions
+				const nameSet = new Set<string>();
+				for (const file of input.files) {
+					const pureName = path.parse(file.name).name;
+					if (nameSet.has(pureName)) {
+						throw new TRPCError({
+							message: `Cannot upload duplicate file ${pureName}`,
+							code: 'BAD_REQUEST',
+						});
+					}
+					nameSet.add(pureName);
+				}
+
 				const runner = new Runner(input.problemId);
 				const problemStorage = new ProblemStorage(input.problemId);
 
 				for (const file of input.files) {
-					console.log(file.data);
 					await problemStorage.saveFile(file.name, file.data);
 					const filepath = problemStorage.getPathForFile(file.name);
 					await runner.exportFile(filepath);

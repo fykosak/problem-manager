@@ -40,10 +40,8 @@ function DeleteFileButton({
 	const revalidator = useRevalidator();
 
 	async function deleteFile(filename: string) {
-		console.log('delete');
 		try {
 			await trpc.problem.files.delete.mutate({ problemId, filename });
-			await revalidator.revalidate();
 			toast.success(`File ${filename} deleted`);
 		} catch (error) {
 			if (error instanceof TRPCClientError) {
@@ -51,6 +49,8 @@ function DeleteFileButton({
 					description: error.message,
 				});
 			}
+		} finally {
+			await revalidator.revalidate();
 		}
 	}
 
@@ -141,11 +141,12 @@ export function FileListItem({
 			});
 			toast.success('File renamed');
 			setIsEditting(false);
-			await revalidator.revalidate();
 		} catch (error) {
 			if (error instanceof TRPCClientError) {
 				toast.error(error.message);
 			}
+		} finally {
+			await revalidator.revalidate();
 		}
 	}
 
@@ -166,7 +167,6 @@ export function FileListItem({
 									// eslint-disable-next-line
 									onClick={async () => {
 										if (isEditting) {
-											console.log('handle submit');
 											// handleSubmit returns a function that needs to be called
 											await form.handleSubmit(
 												handleSubmit
