@@ -1,0 +1,50 @@
+@precedence { commandargument @left, character @left }
+
+@top Document { (Text | InlineMath | Command | EqCommand | "[" | "]" | "{" | "}" | Newline)* }
+
+// MathCommandArgument is included to catch { math } groups
+Math {
+	!character (InlineMathContent | Command | MathCommandArgument | "[" | "]" | "{" | "}" | "\"" | Newline)*
+}
+
+InlineMath {
+	"$" Math "$"
+}
+
+Command {
+	CommandIdentifier (CommandArgument | CommandArgumentOptional)*
+}
+
+// command argument is included to catch {  } groups
+CommandArgument {
+	!commandargument "{" (Text | InlineMath | Command | CommandArgument | Newline )* "}"
+}
+
+MathCommandArgument {
+	!commandargument "{" Math "}"
+}
+
+CommandArgumentOptional {
+	!commandargument "[" (Text | InlineMath | Command | Newline)* "]"
+}
+
+EqCommandIdentifier {
+	@specialize<CommandIdentifier, "\\eq">
+}
+
+EqCommand {
+	 EqCommandIdentifier CommandArgumentOptional MathCommandArgument
+}
+
+@skip { Comment }
+
+@tokens {
+	Text { (![\\${}\[\]%\n])+ }
+	CommandIdentifier { "\\" ((@asciiLetter)+ |"%"|"{"|"}"|"\\"|"_") }
+	InlineMathContent { (![\\${}\[\]\"%\n])+ }
+	Comment { "%" ![\n]* }
+	Newline { "\n" }
+
+	// listing those characters to enable syntax highlighting
+	"[" "]" "{" "}" "$" "\""
+}

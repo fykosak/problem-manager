@@ -27,6 +27,7 @@ export const latexLanguage = LRLanguage.define({
 			styleTags({
 				InlineMathContent: t.string,
 				CommandIdentifier: t.keyword,
+				EqCommandIdentifier: t.keyword,
 				$: t.string,
 				'( )': t.paren,
 				'[ ]': t.squareBracket,

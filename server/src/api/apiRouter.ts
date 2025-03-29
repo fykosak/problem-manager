@@ -1,4 +1,5 @@
-import { eq, inArray } from 'drizzle-orm';
+import { ParserInput, latexLanguage } from '@latex/index.cjs';
+import { asc, eq, inArray } from 'drizzle-orm';
 import express from 'express';
 
 import { db } from '@server/db';
@@ -7,6 +8,7 @@ import {
 	problemTable,
 	problemTopicTable,
 	seriesTable,
+	textTable,
 	topicTable,
 } from '@server/db/schema';
 import { StorageProvider } from '@server/sockets/storageProvider';
@@ -141,14 +143,48 @@ apiRouter.get(
 
 // TODO authorization
 apiRouter.get(
-	'/series/:seriesId(\\d+)',
+	'/problem/:problemId(\\d+)/tex',
 	asyncHandler(async (req, res) => {
-		const seriesId = Number(req.params.seriesId);
-		const series = await db.query.seriesTable.findFirst({
-			where: eq(seriesTable.seriesId, seriesId),
-			with: { problems: true },
+		const problemId = Number(req.params.problemId);
+		const problem = await db.query.problemTable.findFirst({
+			where: eq(problemTable.problemId, problemId),
+			with: {
+				texts: {
+					orderBy: asc(textTable.textId),
+				},
+			},
 		});
 
-		res.json(series);
+		if (!problem) {
+			res.status(404).send('Problem does not exist');
+			return;
+		}
+
+		const ydocStorage = new StorageProvider();
+		const ydoc = await ydocStorage.getYDoc(problem.texts[1].textId);
+		const contents = ydoc.getText().toJSON();
+
+		const parserInput = new ParserInput(contents);
+		const tree = latexLanguage.parser.parse(parserInput);
+
+		const cursor = tree.cursor();
+		let depth = 0;
+		cursor.iterate(
+			() => {
+				depth++;
+				console.log(
+					' '.repeat(2 * depth) +
+						'|-' +
+						cursor.name +
+						': ' +
+						contents.slice(cursor.from, cursor.to)
+				);
+			},
+			() => {
+				depth--;
+			}
+		);
+
+		res.json('gut');
 	})
 );

@@ -19,8 +19,8 @@ jobs:
       - name: Install server dependencies
         working-directory: server
         run: npm install
-      - name: Install latex lib
-        working-directory: client/libs/lang-latex
+      - name: Install latex
+        working-directory: lang-latex
         run: npm install
       - name: Run client typecheck
         working-directory: client
@@ -38,6 +38,9 @@ jobs:
           cache-dependency-path: ./server/package-lock.json
       - name: Install dependencies
         working-directory: server
+        run: npm install
+      - name: Install latex
+        working-directory: lang-latex
         run: npm install
       - name: Run client typecheck
         working-directory: server

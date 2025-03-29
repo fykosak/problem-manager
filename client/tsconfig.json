@@ -13,7 +13,7 @@
     "paths": {
       "@client/*": ["./app/*"],
       "@server/*": ["../server/src/*"],
-      "@client/libs/*": ["./libs/*"]
+      "@latex/*": ["../lang-latex/dist/*"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

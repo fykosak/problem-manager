@@ -1,4 +1,6 @@
 FROM node:lts
-WORKDIR /app
 VOLUME /app
+
+WORKDIR /app/server
+
 CMD ["npx", "tsx", "watch", "src/index.ts"]

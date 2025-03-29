@@ -27,7 +27,9 @@
   },
   "devDependencies": {
     "@lezer/generator": "^1.7.2",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "mocha": "^9.2.2",
+    "prettier": "^3.5.3",
     "rollup": "^2.79.2",
     "rollup-plugin-dts": "^4.2.3",
     "rollup-plugin-ts": "^3.4.5",

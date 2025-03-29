@@ -4,6 +4,8 @@ import { basicCompletion, mathCompletion } from './completion';
 import { environmentFolding } from './folding';
 import { latexLanguage } from './language';
 
+export { latexLanguage } from './language';
+export { ParserInput } from './compiler/parserInput';
 export { latexLinter } from './linter';
 
 export function latex() {
