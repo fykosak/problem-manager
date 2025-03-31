@@ -15,7 +15,7 @@ Command {
 	CommandIdentifier (CommandArgument | CommandArgumentOptional)*
 }
 
-// command argument is included to catch {  } groups
+// command argument is included to catch { } groups
 CommandArgument {
 	!commandargument "{" (Text | InlineMath | Command | CommandArgument | Newline )* "}"
 }
@@ -40,7 +40,7 @@ EqCommand {
 
 @tokens {
 	Text { (![\\${}\[\]%\n])+ }
-	CommandIdentifier { "\\" ((@asciiLetter)+ |"%"|"{"|"}"|"\\"|"_") }
+	CommandIdentifier { "\\" ((@asciiLetter)+"*"? |"%"|"{"|"}"|"\\"|"_") }
 	InlineMathContent { (![\\${}\[\]\"%\n])+ }
 	Comment { "%" ![\n]* }
 	Newline { "\n" }

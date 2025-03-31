@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Latex language support for CodeMirror",
   "scripts": {
-    "test": "mocha test/test.js",
+    "test": "vitest",
     "prepare": "rollup -c"
   },
   "type": "module",
@@ -33,7 +33,8 @@
     "rollup": "^2.79.2",
     "rollup-plugin-dts": "^4.2.3",
     "rollup-plugin-ts": "^3.4.5",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "vitest": "^3.0.9"
   },
   "license": "MIT"
 }

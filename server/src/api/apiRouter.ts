@@ -1,4 +1,4 @@
-import { ParserInput, latexLanguage } from '@latex/index.cjs';
+import { HtmlGenerator, ParserInput, latexLanguage } from '@latex/index.cjs';
 import { asc, eq, inArray } from 'drizzle-orm';
 import express from 'express';
 
@@ -167,24 +167,8 @@ apiRouter.get(
 		const parserInput = new ParserInput(contents);
 		const tree = latexLanguage.parser.parse(parserInput);
 
-		const cursor = tree.cursor();
-		let depth = 0;
-		cursor.iterate(
-			() => {
-				depth++;
-				console.log(
-					' '.repeat(2 * depth) +
-						'|-' +
-						cursor.name +
-						': ' +
-						contents.slice(cursor.from, cursor.to)
-				);
-			},
-			() => {
-				depth--;
-			}
-		);
+		const html = new HtmlGenerator(tree, parserInput).generateHtml();
 
-		res.json('gut');
+		res.json(html);
 	})
 );
