@@ -4,7 +4,17 @@
 
 // MathCommandArgument is included to catch { math } groups
 Math {
-	!character (InlineMathContent | Command | MathCommandArgument | "[" | "]" | "{" | "}" | "\"" | Newline)*
+	!character (
+		InlineMathContent |
+		Command |
+		UnderscoreCommand |
+		MathCommandArgument |
+		QuoteMacro |
+		"[" | "]" | "{" | "}" |
+		Whitespace |
+		Number |
+		Newline
+	)*
 }
 
 InlineMath {
@@ -33,18 +43,31 @@ EqCommandIdentifier {
 }
 
 EqCommand {
-	 EqCommandIdentifier CommandArgumentOptional MathCommandArgument
+	 EqCommandIdentifier CommandArgumentOptional? MathCommandArgument
+}
+
+UnderscoreCommand {
+	@specialize<CommandIdentifier, "\\_"> (CommandArgument|Command|Singlechar)
+}
+
+QuoteMacro {
+	"\"" Number ("e" Number)? (Whitespace Math)? "\""
 }
 
 @skip { Comment }
 
 @tokens {
 	Text { (![\\${}\[\]%\n])+ }
-	CommandIdentifier { "\\" ((@asciiLetter)+"*"? |"%"|"{"|"}"|"\\"|"_") }
-	InlineMathContent { (![\\${}\[\]\"%\n])+ }
+	CommandIdentifier { "\\" ((@asciiLetter)+"*"?|"%"|"{"|"}"|"\\"|"_"|"("|")"|",") }
+	InlineMathContent { (![\\${}\[\]\"%\n\t\r 0-9])+ }
 	Comment { "%" ![\n]* }
 	Newline { "\n" }
+	Singlechar { @asciiLetter }
+	Whitespace { ("\t"|"\r"|" ")+ }
+	Number { ("+" | "-")? @digit+ ("~" @digit+)* ("," | ".")? @digit* ("~" @digit+)* }
 
 	// listing those characters to enable syntax highlighting
-	"[" "]" "{" "}" "$" "\""
+	"[" "]" "{" "}" "$" "\"" "e"
+
+	@precedence {Number, InlineMathContent}
 }

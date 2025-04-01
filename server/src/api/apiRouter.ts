@@ -168,6 +168,7 @@ apiRouter.get(
 		const tree = latexLanguage.parser.parse(parserInput);
 
 		const html = new HtmlGenerator(tree, parserInput).generateHtml();
+		console.log(html);
 
 		res.json(html);
 	})

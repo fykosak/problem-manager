@@ -12,7 +12,7 @@ one $math$ two
 
 ==>
 
-Document(Text,InlineMath(InlineMathContent),Text)
+Document(Text,InlineMath("$",Math(InlineMathContent),"$"),Text)
 
 # Command
 
@@ -60,7 +60,7 @@ $frac \frac{a}{b}$
 
 ==>
 
-Document(InlineMath(InlineMathContent, Command(CommandIdentifier, CommandArgument(Text), CommandArgument(Text))))
+Document(InlineMath("$",Math(InlineMathContent,Whitespace,Command(CommandIdentifier,CommandArgument("{",Text,"}"),CommandArgument("{",Text,"}"))),"$"))
 
 # Comment
 
@@ -84,7 +84,7 @@ $1.23 \%$ text
 
 ==>
 
-Document(InlineMath(InlineMathContent, Command(CommandIdentifier)), Text)
+Document(InlineMath("$",Math(Number,Whitespace,Command(CommandIdentifier)),"$"),Text)
 
 # Braces outside of command (normal mode)
 
@@ -100,7 +100,7 @@ $text {text} text$
 
 ==>
 
-Document(InlineMath(InlineMathContent, "{", InlineMathContent, "}", InlineMathContent))
+Document(InlineMath("$",Math(InlineMathContent,Whitespace,MathCommandArgument("{",Math(InlineMathContent),"}"),Whitespace,InlineMathContent),"$"))
 
 # Square brackets outside of command (normal mode)
 
@@ -116,7 +116,7 @@ $text [text] text$
 
 ==>
 
-Document(InlineMath(InlineMathContent, "[", InlineMathContent, "]", InlineMathContent))
+Document(InlineMath("$",Math(InlineMathContent,Whitespace,"[",InlineMathContent,"]",Whitespace,InlineMathContent),"$"))
 
 # Newline
 

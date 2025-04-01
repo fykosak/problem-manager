@@ -6,6 +6,5 @@
     "newLine": "lf",
     "declaration": true,
     "moduleResolution": "node"
-  },
-  "include": ["src/*.ts"]
+  }
 }
