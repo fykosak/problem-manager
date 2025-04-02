@@ -126,3 +126,13 @@ dolor sit amet
 ==>
 
 Document(Text, Newline, Text)
+
+# Environment
+
+\begin{environment}
+asdf
+\end{environment}
+
+==>
+
+Document(Environment(BeginEnv(BeginCommandIdentifier,EnvironmentNameArgument("{",EnvName,"}")),Newline,Text,Newline,EndEnv(EndCommandIdentifier,EnvironmentNameArgument("{",EnvName,"}"))))

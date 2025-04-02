@@ -4,7 +4,7 @@
   "description": "Latex language support for CodeMirror",
   "scripts": {
     "test": "vitest",
-    "prepare": "rollup -c",
+    "prepare": "lezer-generator src/syntax.grammar --typeScript --names -o src/parser && rollup -c",
     "lint": "eslint src/"
   },
   "type": "module",

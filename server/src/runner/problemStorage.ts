@@ -44,6 +44,10 @@ export class ProblemStorage {
 		return path.join(this.getExportedFilesDirectory(), filename);
 	}
 
+	/**
+	 * List files, that are in the provided directory. Returns the files as
+	 * basenames (file.ext without dir)
+	 */
 	private async getFilesFromDirectory(directory: string) {
 		try {
 			const files = await fs.readdir(directory, {
@@ -65,10 +69,16 @@ export class ProblemStorage {
 		}
 	}
 
+	/**
+	 * List uploaded files as basenames
+	 */
 	public async getFiles() {
 		return await this.getFilesFromDirectory(this.getFilesDirectory());
 	}
 
+	/**
+	 * List exported files as basenames
+	 */
 	public async getExportedFiles() {
 		return await this.getFilesFromDirectory(
 			this.getExportedFilesDirectory()
@@ -180,5 +190,50 @@ export class ProblemStorage {
 				);
 			}
 		}
+	}
+
+	private async getExportedFileAsDataUri(filename: string) {
+		const filepath = this.getPathForExportedFile(filename);
+		const ext = path.parse(filename).ext;
+		// TODO implement file to data uri
+		let buffer = 'data:image/';
+		switch (ext) {
+			case '.svg':
+				buffer += 'svg+xml';
+				break;
+			case '.png':
+				buffer += 'png';
+				break;
+			case '.jpg':
+				buffer += 'jpeg';
+				break;
+			default:
+				throw new Error('Unsupported extension');
+		}
+
+		const fileData = await fs.readFile(filepath);
+		buffer += ';base64,';
+		buffer += fileData.toString('base64');
+		return buffer;
+	}
+
+	/**
+	 * Find file in a suited format for web and return it as data URI.
+	 *
+	 * If the filename is provided with extension, the ext is striped
+	 * and suited file format is selected.
+	 *
+	 * @param filename Filename with or without extension
+	 */
+	public async getFileForWeb(filename: string) {
+		const baseFilename = path.parse(filename).name;
+		const exportedFiles = new Set(await this.getExportedFiles());
+		for (const ext of ['.svg', '.png', '.jpg']) {
+			if (exportedFiles.has(baseFilename + ext)) {
+				return await this.getExportedFileAsDataUri(baseFilename + ext);
+			}
+		}
+
+		throw new ProblemStorageError('No suited file format found');
 	}
 }

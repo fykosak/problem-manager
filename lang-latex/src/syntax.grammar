@@ -1,6 +1,7 @@
 @precedence { commandargument @left, character @left }
 
-@top Document { (Text | InlineMath | Command | EqCommand | "[" | "]" | "{" | "}" | Newline)* }
+@top Document { (Text | InlineMath | Command | EqCommand | Newline | "[" | "]" |
+"{" | "}" | Environment | ListEnvironment)* }
 
 // MathCommandArgument is included to catch { math } groups
 Math {
@@ -54,6 +55,49 @@ QuoteMacro {
 	"\"" Number ("e" Number)? (Whitespace Math)? "\""
 }
 
+EnvironmentNameArgument<name> {
+	"{" name "}"
+}
+
+BeginCommandIdentifier {
+	@specialize<CommandIdentifier, "\\begin">
+}
+
+BeginEnv<name> {
+	BeginCommandIdentifier
+	EnvironmentNameArgument<name>
+	CommandArgumentOptional?
+	CommandArgument*
+}
+
+EndCommandIdentifier {
+	@specialize<CommandIdentifier, "\\end">
+}
+
+EndEnv<name> {
+	EndCommandIdentifier
+	EnvironmentNameArgument<name>
+}
+
+Environment {
+	BeginEnv<EnvName>
+	(Text | InlineMath | Command | EqCommand | Newline | Environment)*
+	EndEnv<EnvName>
+}
+
+@external specialize {EnvName} specializeEnvName from "./tokenizer.ts" {
+	ListEnvName
+}
+
+ListEnvironment {
+	BeginEnv<ListEnvName>
+	ListItem {
+		@specialize<CommandIdentifier, "\\item">
+		(Text | InlineMath | Command | EqCommand | Newline | Environment)*
+	}+
+	EndEnv<ListEnvName>
+}
+
 @skip { Comment }
 
 @tokens {
@@ -65,6 +109,8 @@ QuoteMacro {
 	Singlechar { @asciiLetter }
 	Whitespace { ("\t"|"\r"|" ")+ }
 	Number { ("+" | "-")? @digit+ ("~" @digit+)* ("," | ".")? @digit* ("~" @digit+)* }
+
+	EnvName { @asciiLetter+ "*"? }
 
 	// listing those characters to enable syntax highlighting
 	"[" "]" "{" "}" "$" "\"" "e"

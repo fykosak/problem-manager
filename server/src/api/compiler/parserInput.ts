@@ -1,4 +1,4 @@
-import { Input } from '@lezer/common';
+import { type Input } from '@lezer/common';
 
 export class ParserInput implements Input {
 	private text: string;

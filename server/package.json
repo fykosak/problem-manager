@@ -8,7 +8,8 @@
     "typecheck": "tsc --build --noEmit",
     "prettier": "prettier . --check",
     "prettier:fix": "prettier . --write",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "test": "vitest ."
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
@@ -26,6 +27,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "@lezer/common": "^1.2.3",
     "@trpc/server": "^10.45.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",

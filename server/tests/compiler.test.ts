@@ -1,25 +1,27 @@
-import { expect, test } from 'vitest';
+import { latexLanguage } from '@latex/index';
+import { expect, test, vi } from 'vitest';
 
-import { latexLanguage } from '../dist';
-import { HtmlGenerator } from '../src/compiler/htmlGenerator';
-import { ParserInput } from '../src/compiler/parserInput';
+import { HtmlGenerator } from '@server/api/compiler/htmlGenerator';
+import { ParserInput } from '@server/api/compiler/parserInput';
+import { ProblemStorage } from '@server/runner/problemStorage';
 
-function parse(input: string): string {
+async function parse(input: string): Promise<string> {
 	const parserInput = new ParserInput(input);
 	const tree = latexLanguage.parser.parse(parserInput);
-	const generator = new HtmlGenerator(tree, parserInput);
+	const generator = new HtmlGenerator(tree, parserInput, 1);
 	generator.print();
-	return generator.generateHtml();
+	return await generator.generateHtml();
 }
 
-function runTestStrings(testCases: { input: string; output: string }[]) {
+async function runTestStrings(testCases: { input: string; output: string }[]) {
 	for (const testCase of testCases) {
-		expect(parse(testCase.input)).toBe(testCase.output);
+		const output = await parse(testCase.input);
+		expect(output).toBe(testCase.output);
 	}
 }
 
-test('basic formatting', () => {
-	runTestStrings([
+test('basic formatting', async () => {
+	await runTestStrings([
 		{
 			input: '\\textbf{asdf}',
 			output: '<bf>asdf</bf>',
@@ -39,8 +41,8 @@ test('basic formatting', () => {
 	]);
 });
 
-test('unknown commands', () => {
-	runTestStrings([
+test('unknown commands', async () => {
+	await runTestStrings([
 		{
 			input: '\\withoutargument',
 			output: '\\withoutargument',
@@ -64,8 +66,8 @@ test('unknown commands', () => {
 	]);
 });
 
-test('multiple arguments', () => {
-	runTestStrings([
+test('multiple arguments', async () => {
+	await runTestStrings([
 		{
 			input: '\\taskhint{label}{hint}',
 			output: '<em>label</em> hint',
@@ -77,8 +79,8 @@ test('multiple arguments', () => {
 	]);
 });
 
-test('multiple commands', () => {
-	runTestStrings([
+test('multiple commands', async () => {
+	await runTestStrings([
 		{
 			input: '\\textbf{asdf}\\emph{asdf}',
 			output: '<bf>asdf</bf><em>asdf</em>',
@@ -90,8 +92,8 @@ test('multiple commands', () => {
 	]);
 });
 
-test('nested commands', () => {
-	runTestStrings([
+test('nested commands', async () => {
+	await runTestStrings([
 		{
 			input: '\\textbf{before\\emph{inner}after}',
 			output: '<bf>before<em>inner</em>after</bf>',
@@ -103,8 +105,8 @@ test('nested commands', () => {
 	]);
 });
 
-test('ignored text commands', () => {
-	runTestStrings([
+test('ignored text commands', async () => {
+	await runTestStrings([
 		{ input: '\\null', output: '' },
 		{ input: '\\quad', output: '' },
 		{ input: '\\qquad', output: '' },
@@ -116,8 +118,8 @@ test('ignored text commands', () => {
 	]);
 });
 
-test('inline math and commands', () => {
-	runTestStrings([
+test('inline math and commands', async () => {
+	await runTestStrings([
 		{ input: '$a$', output: '$a$' },
 		{ input: 'text $math$ text', output: 'text $math$ text' },
 		{ input: '$math$ text $math$', output: '$math$ text $math$' },
@@ -141,8 +143,8 @@ test('inline math and commands', () => {
 	]);
 });
 
-test('eq command', () => {
-	runTestStrings([
+test('eq command', async () => {
+	await runTestStrings([
 		{
 			input: '\\eq{a+b}',
 			output: '\\begin{equation*}a+b\\end{equation*}',
@@ -169,8 +171,8 @@ test('eq command', () => {
 	]);
 });
 
-test('comments', () => {
-	runTestStrings([
+test('comments', async () => {
+	await runTestStrings([
 		{
 			input: '%comment',
 			output: '',
@@ -187,8 +189,8 @@ text`,
 	]);
 });
 
-test('text', () => {
-	runTestStrings([
+test('text', async () => {
+	await runTestStrings([
 		{
 			input: 'a~-- b',
 			output: 'a&nbsp;&ndash; b',
@@ -204,8 +206,8 @@ test('text', () => {
 	]);
 });
 
-test('quote macro', () => {
-	runTestStrings([
+test('quote macro', async () => {
+	await runTestStrings([
 		{
 			input: '$"20"$',
 			output: '$20$',
@@ -249,6 +251,83 @@ test('quote macro', () => {
 		{
 			input: '$"0.123~4 mm"$',
 			output: '$0{,}123\\,4\\,\\mathrm{mm}$',
+		},
+		{
+			input: '$\\jd{km.h^{-1}}$',
+			output: '$\\mathrm{km\\cdot h^{-1}}$',
+		},
+		{
+			input: '\\jd{km.h^{-1}}',
+			output: '$\\mathrm{km\\cdot h^{-1}}$',
+		},
+	]);
+});
+
+test('figures', async () => {
+	vi.spyOn(ProblemStorage.prototype, 'getFileForWeb').mockImplementation(
+		// eslint-disable-next-line
+		async (filename: string) => {
+			return filename;
+		}
+	);
+	await runTestStrings([
+		{
+			input: '\\fullfig{fig}{Figures}{fig1}[width=0.2\textwidth]',
+			output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
+		},
+		{
+			input: '\\fullfig[h]{fig}{Figures}{fig1}[width=0.2\textwidth]',
+			output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
+		},
+		{
+			input: '\\illfig{fig}{Figures}{fig1}{}',
+			output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
+		},
+		{
+			input: '\\illfig[O]{fig}{Figures}{fig1}{5}',
+			output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
+		},
+		{
+			input: '\\illfigi{fig}{Figures}{fig1}{}{0.15}',
+			output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
+		},
+		{
+			input: '\\illfigi[o]{fig}{Figures}{fig1}{}{0.15}',
+			output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
+		},
+	]);
+	vi.resetAllMocks();
+});
+
+test('environment', async () => {
+	await runTestStrings([
+		{
+			input: '\\begin{unknown}\\asdf\\end{unknown}',
+			output: '\\begin{unknown}\\asdf\\end{unknown}',
+		},
+		{
+			input: '\\begin{unknown}\\textbf{text}\\end{unknown}',
+			output: '\\begin{unknown}<bf>text</bf>\\end{unknown}',
+		},
+		{
+			input: '\\begin{unknown}[arg]{arg}asdf\\end{unknown}',
+			output: '\\begin{unknown}[arg]{arg}asdf\\end{unknown}',
+		},
+		{
+			input: '\\begin{enumerate}\\item asdf\\item qwer\\end{enumerate}',
+			output: '<ol><li>asdf</li><li>qwer</li></ol>',
+		},
+		{
+			input: '\\begin{compactenum}\\item asdf\\item qwer\\end{compactenum}',
+			output: '<ol><li>asdf</li><li>qwer</li></ol>',
+		},
+		{
+			input: '\\begin{itemize}\\item asdf\\item qwer\\end{itemize}',
+			output: '<ul><li>asdf</li><li>qwer</li></ul>',
+		},
+		{
+			input: '\\begin{compactitem}\\item asdf\\item qwer\\end{compactitem}',
+			output: '<ul><li>asdf</li><li>qwer</li></ul>',
 		},
 	]);
 });

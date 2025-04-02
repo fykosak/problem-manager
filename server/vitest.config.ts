@@ -10,6 +10,10 @@ export default defineConfig({
 				find: '@server/tests',
 				replacement: resolve(__dirname, './tests'),
 			},
+			{
+				find: '@latex',
+				replacement: resolve(__dirname, '../lang-latex/dist'),
+			},
 		],
 	},
 });

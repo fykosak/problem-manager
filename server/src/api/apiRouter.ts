@@ -1,4 +1,4 @@
-import { HtmlGenerator, ParserInput, latexLanguage } from '@latex/index.cjs';
+import { latexLanguage } from '@latex/index.cjs';
 import { asc, eq, inArray } from 'drizzle-orm';
 import express from 'express';
 
@@ -14,6 +14,8 @@ import {
 import { StorageProvider } from '@server/sockets/storageProvider';
 
 import { asyncHandler } from './asyncHandler';
+import { HtmlGenerator } from './compiler/htmlGenerator';
+import { ParserInput } from './compiler/parserInput';
 import { UserAuthMiddleware } from './middleware';
 
 export const apiRouter = express.Router();
@@ -167,7 +169,11 @@ apiRouter.get(
 		const parserInput = new ParserInput(contents);
 		const tree = latexLanguage.parser.parse(parserInput);
 
-		const html = new HtmlGenerator(tree, parserInput).generateHtml();
+		const html = await new HtmlGenerator(
+			tree,
+			parserInput,
+			problemId
+		).generateHtml();
 		console.log(html);
 
 		res.json(html);
