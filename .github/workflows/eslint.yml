@@ -11,7 +11,7 @@ jobs:
         with:
           node-version: 23
           cache: 'npm'
-          cache-dependency-path: ./client/package-lock.json
+          cache-dependency-path: ./package-lock.json
 
       - name: Install dependencies
         working-directory: client
@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: 23
           cache: 'npm'
-          cache-dependency-path: ./server/package-lock.json
+          cache-dependency-path: ./package-lock.json
       - name: Install dependencies
         working-directory: server
         run: npm install
@@ -55,7 +55,7 @@ jobs:
         with:
           node-version: 23
           cache: 'npm'
-          cache-dependency-path: ./builder/package-lock.json
+          cache-dependency-path: ./package-lock.json
       - name: Install dependencies
         working-directory: builder
         run: npm install

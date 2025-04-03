@@ -10,7 +10,7 @@ jobs:
         with:
           node-version: 23
           cache: 'npm'
-          cache-dependency-path: ./client/package-lock.json
+          cache-dependency-path: ./package-lock.json
       - name: Install dependencies
         working-directory: ./client
         run: npm install
@@ -27,14 +27,13 @@ jobs:
         with:
           node-version: 23
           cache: 'npm'
-          cache-dependency-path: ./server/package-lock.json
+          cache-dependency-path: ./package-lock.json
       - name: Install dependencies
         working-directory: ./server
         run: npm install
       - name: Check formatting
         working-directory: ./server
         run: npx prettier . --check --config ../.prettierrc
-
 
   builder:
     runs-on: ubuntu-24.04
@@ -45,7 +44,7 @@ jobs:
         with:
           node-version: 23
           cache: 'npm'
-          cache-dependency-path: ./builder/package-lock.json
+          cache-dependency-path: ./package-lock.json
       - name: Install dependencies
         working-directory: ./builder
         run: npm install
