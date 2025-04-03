@@ -1,8 +1,7 @@
 import { type SyntaxNode, Tree, TreeCursor } from '@lezer/common';
+import type { ParserInput } from 'lang-latex';
 
 import { ProblemStorage } from '@server/runner/problemStorage';
-
-import { ParserInput } from './parserInput';
 
 export class HtmlGenerator {
 	private tree: Tree;

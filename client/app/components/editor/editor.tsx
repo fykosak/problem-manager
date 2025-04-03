@@ -1,7 +1,7 @@
 import { lintGutter, linter } from '@codemirror/lint';
-import { latex, latexLinter } from '@latex/index';
 import { material } from '@uiw/codemirror-theme-material';
-import CodeMirror, { EditorView } from '@uiw/react-codemirror/src/index.js';
+import CodeMirror, { EditorView } from '@uiw/react-codemirror';
+import { latex, latexLinter } from 'lang-latex';
 import { ForwardedRef, forwardRef, useEffect, useRef, useState } from 'react';
 import { yCollab } from 'y-codemirror.next';
 import { WebsocketProvider } from 'y-websocket';

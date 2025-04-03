@@ -6,6 +6,7 @@ import { latexLanguage } from './language';
 
 export { latexLanguage } from './language';
 export { latexLinter } from './linter';
+export { ParserInput } from './parserInput';
 
 export function latex() {
 	return new LanguageSupport(latexLanguage, [

@@ -44,6 +44,7 @@
     "cmdk": "1.0.0",
     "express-fileupload": "^1.5.1",
     "isbot": "^5.1.22",
+    "lang-latex": "^0.1.0",
     "lucide-react": "^0.473.0",
     "next-themes": "^0.4.4",
     "oidc-client-ts": "^3.1.0",

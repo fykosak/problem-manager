@@ -27,7 +27,6 @@
     "paths": {
       "@server/*": ["./src/*"],
       "@server/tests/*": ["./tests/*"],
-      "@latex/*": ["../lang-latex/dist/*"]
     }
   }
 }

@@ -1,0 +1,10 @@
+{
+  "name": "problem-manager",
+  "private": true,
+  "workspaces": [
+    "server/",
+    "client/",
+    "builder/",
+    "lang-latex/"
+  ]
+}

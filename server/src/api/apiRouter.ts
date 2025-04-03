@@ -1,6 +1,6 @@
-import { latexLanguage } from '@latex/index.cjs';
 import { asc, eq, inArray } from 'drizzle-orm';
 import express from 'express';
+import { ParserInput, latexLanguage } from 'lang-latex';
 
 import { db } from '@server/db';
 import {
@@ -15,7 +15,6 @@ import { StorageProvider } from '@server/sockets/storageProvider';
 
 import { asyncHandler } from './asyncHandler';
 import { HtmlGenerator } from './compiler/htmlGenerator';
-import { ParserInput } from './compiler/parserInput';
 import { UserAuthMiddleware } from './middleware';
 
 export const apiRouter = express.Router();

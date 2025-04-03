@@ -10,7 +10,7 @@ export default [
 	route('/login', 'routes/login.tsx'),
 	layout('routes/authed.layout.tsx', [
 		layout('routes/base.layout.tsx', [
-			route('/', 'routes/index.tsx'),
+			index('routes/index.tsx'),
 			route('/user/api-keys', 'routes/user.apiKeys.tsx'),
 		]),
 		route(':contest/:year', 'routes/contest.layout.tsx', [

@@ -1,8 +1,7 @@
-import { latexLanguage } from '@latex/index';
+import { ParserInput, latexLanguage } from 'lang-latex';
 import { expect, test, vi } from 'vitest';
 
 import { HtmlGenerator } from '@server/api/compiler/htmlGenerator';
-import { ParserInput } from '@server/api/compiler/parserInput';
 import { ProblemStorage } from '@server/runner/problemStorage';
 
 async function parse(input: string): Promise<string> {

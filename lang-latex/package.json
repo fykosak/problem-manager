@@ -1,5 +1,5 @@
 {
-  "name": "codemirror-lang-latex",
+  "name": "lang-latex",
   "version": "0.1.0",
   "description": "Latex language support for CodeMirror",
   "scripts": {
@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
-    "@lezer/generator": "^1.7.2",
+    "@lezer/generator": "^1.7.3",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "eslint": "^9.23.0",
     "jiti": "^2.4.2",
