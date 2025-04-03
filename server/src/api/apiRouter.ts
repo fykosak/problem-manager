@@ -23,7 +23,7 @@ apiRouter.use('/', asyncHandler(UserAuthMiddleware));
 
 // TODO authorization
 apiRouter.get(
-	'/contest/:contestId(\\d+)/years',
+	'/contest/:contestId/years',
 	asyncHandler(async (req, res) => {
 		const contestId = Number(req.params.contestId);
 		const years = await db.query.contestYearTable.findMany({
@@ -37,7 +37,7 @@ apiRouter.get(
 
 // TODO authorization
 apiRouter.get(
-	'/contest/:contestId(\\d+)/topics',
+	'/contest/:contestId/topics',
 	asyncHandler(async (req, res) => {
 		const contestId = Number(req.params.contestId);
 		const topics = await db.query.topicTable.findMany({
@@ -50,7 +50,7 @@ apiRouter.get(
 
 // TODO authorization
 apiRouter.get(
-	'/topic/:topicId(\\d+)',
+	'/topic/:topicId',
 	asyncHandler(async (req, res) => {
 		const topicId = Number(req.params.topicId);
 		const problemTopics = await db.query.problemTopicTable.findMany({
@@ -70,7 +70,7 @@ apiRouter.get(
 
 // TODO authorization
 apiRouter.get(
-	'/problem/:problemId(\\d+)',
+	'/problem/:problemId',
 	asyncHandler(async (req, res) => {
 		const problemId = Number(req.params.problemId);
 		const problem = await db.query.problemTable.findFirst({
@@ -128,7 +128,7 @@ apiRouter.get(
 
 // TODO authorization
 apiRouter.get(
-	'/series/:seriesId(\\d+)',
+	'/series/:seriesId',
 	asyncHandler(async (req, res) => {
 		const seriesId = Number(req.params.seriesId);
 
@@ -144,7 +144,7 @@ apiRouter.get(
 
 // TODO authorization
 apiRouter.get(
-	'/problem/:problemId(\\d+)/tex',
+	'/problem/:problemId/tex',
 	asyncHandler(async (req, res) => {
 		const problemId = Number(req.params.problemId);
 		const problem = await db.query.problemTable.findFirst({

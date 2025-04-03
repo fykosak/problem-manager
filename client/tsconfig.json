@@ -12,7 +12,7 @@
     "baseUrl": ".",
     "paths": {
       "@client/*": ["./app/*"],
-      "@server/*": ["../server/src/*"],
+      "@server/*": ["../server/src/*"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

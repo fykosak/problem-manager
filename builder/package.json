@@ -6,12 +6,12 @@
     "prettier:fix": "prettier . --write"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "express": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
-    "@types/express": "^4.17.21",
+    "@types/express": "^5.0.1",
     "eslint": "^9.22.0",
     "jiti": "^2.4.2",
     "tsx": "^4.19.2",
