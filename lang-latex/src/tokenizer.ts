@@ -1,4 +1,4 @@
-import { ListEnvName } from './parser.terms.js';
+import { ListEnvName, TableEnvName, TabularEnvName } from './parser.terms.js';
 
 const listEnvNames = new Set([
 	'itemize',
@@ -9,9 +9,19 @@ const listEnvNames = new Set([
 	'compactdesc',
 ]);
 
+const tabularEnvNames = new Set(['tabular', 'tabularx', 'longtable']);
+
 export function specializeEnvName(name: string) {
 	if (listEnvNames.has(name)) {
 		return ListEnvName;
+	}
+
+	if (tabularEnvNames.has(name)) {
+		return TabularEnvName;
+	}
+
+	if (name === 'table') {
+		return TableEnvName;
 	}
 
 	return -1;

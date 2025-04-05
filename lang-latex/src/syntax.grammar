@@ -1,7 +1,19 @@
 @precedence { commandargument @left, character @left }
 
-@top Document { (Text | InlineMath | Command | EqCommand | Newline | "[" | "]" |
-"{" | "}" | Environment | ListEnvironment)* }
+@top Document {
+	(
+		Paragraph |
+		ListEnvironment |
+		TabularEnvironment |
+		TableEnvironment |
+		ParagraphSeparator
+	)*
+}
+
+Paragraph {
+	(Text | InlineMath | Command | EqCommand | Newline | "[" | "]" |
+	"{" | "}" | "&" | Environment )+ (ParagraphSeparator | EOF)
+}
 
 // MathCommandArgument is included to catch { math } groups
 Math {
@@ -51,6 +63,19 @@ UnderscoreCommand {
 	@specialize<CommandIdentifier, "\\_"> (CommandArgument|Command|Singlechar)
 }
 
+NewlineCommand {
+	@specialize<CommandIdentifier, "\\\\">
+}
+
+BooktabCommand {
+	@specialize<CommandIdentifier, "\\toprule" | "\\midrule" | "\\bottomrule" |
+	"\\botrule">
+}
+
+HlineCommand {
+	@specialize<CommandIdentifier, "\\hline">
+}
+
 QuoteMacro {
 	"\"" Number ("e" Number)? (Whitespace Math)? "\""
 }
@@ -81,12 +106,15 @@ EndEnv<name> {
 
 Environment {
 	BeginEnv<EnvName>
-	(Text | InlineMath | Command | EqCommand | Newline | Environment)*
+	(Text | InlineMath | Command | EqCommand | Newline | Environment |
+	ListEnvironment | TabularEnvironment)*
 	EndEnv<EnvName>
 }
 
 @external specialize {EnvName} specializeEnvName from "./tokenizer.ts" {
-	ListEnvName
+	ListEnvName,
+	TabularEnvName,
+	TableEnvName
 }
 
 ListEnvironment {
@@ -98,14 +126,29 @@ ListEnvironment {
 	EndEnv<ListEnvName>
 }
 
+TabularEnvironment {
+	BeginEnv<TabularEnvName>
+	(Text | InlineMath | Command | EqCommand | Newline | Environment |
+	NewlineCommand | "&" | BooktabCommand | HlineCommand)*
+	EndEnv<TabularEnvName>
+}
+
+TableEnvironment {
+	BeginEnv<TableEnvName>
+	(Text | InlineMath | Command | EqCommand | Newline | Environment | NewlineCommand | TabularEnvironment)*
+	EndEnv<TableEnvName>
+}
+
 @skip { Comment }
 
 @tokens {
-	Text { (![\\${}\[\]%\n])+ }
+	Text { (![\\${}\[\]%\n&])+ }
 	CommandIdentifier { "\\" ((@asciiLetter)+"*"?|"%"|"{"|"}"|"\\"|"_"|"("|")"|",") }
 	InlineMathContent { (![\\${}\[\]\"%\n\t\r 0-9])+ }
 	Comment { "%" ![\n]* }
 	Newline { "\n" }
+	ParagraphSeparator { "\n" "\n"+ }
+	EOF { @eof }
 	Singlechar { @asciiLetter }
 	Whitespace { ("\t"|"\r"|" ")+ }
 	Number { ("+" | "-")? @digit+ ("~" @digit+)* ("," | ".")? @digit* ("~" @digit+)* }
@@ -113,7 +156,8 @@ ListEnvironment {
 	EnvName { @asciiLetter+ "*"? }
 
 	// listing those characters to enable syntax highlighting
-	"[" "]" "{" "}" "$" "\"" "e"
+	"[" "]" "{" "}" "$" "\"" "e" "&"
 
 	@precedence {Number, InlineMathContent}
+	@precedence {ParagraphSeparator, Newline}
 }

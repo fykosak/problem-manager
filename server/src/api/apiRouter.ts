@@ -168,11 +168,8 @@ apiRouter.get(
 		const parserInput = new ParserInput(contents);
 		const tree = latexLanguage.parser.parse(parserInput);
 
-		const html = await new HtmlGenerator(
-			tree,
-			parserInput,
-			problemId
-		).generateHtml();
+		const generator = new HtmlGenerator(tree, parserInput, problemId);
+		const html = await generator.generateHtml();
 		console.log(html);
 
 		res.json(html);

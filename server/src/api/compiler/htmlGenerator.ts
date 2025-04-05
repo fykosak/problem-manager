@@ -41,7 +41,7 @@ export class HtmlGenerator {
 						'┖' +
 						cursor.name +
 						': ' +
-						this.parserInput.read(cursor.from, cursor.to)
+						this.parserInput.read(cursor.from, cursor.to).trim()
 				);
 			},
 			() => {
@@ -54,17 +54,17 @@ export class HtmlGenerator {
 		let html = '';
 
 		while (this.cursor.next()) {
-			console.log('generateHtml while loop: ' + this.cursor.name);
 			html += await this.generateNode();
 		}
 
 		return html;
 	}
 
-	private expectNext(): void {
+	private expectNext(): true {
 		if (!this.cursor.next()) {
 			throw new Error('Unexpected end of document');
 		}
+		return true;
 	}
 
 	private expectNodeName(nodeName: string): void {
@@ -73,6 +73,19 @@ export class HtmlGenerator {
 				`Wrong token received, expected ${nodeName}, received ${this.cursor.name}`
 			);
 		}
+	}
+
+	private async generateParagraph(): Promise<string> {
+		this.expectNodeName('Paragraph');
+		const topNode = this.cursor.node;
+		let buffer = '<p>';
+		while (this.expectNext()) {
+			buffer += await this.generateNode();
+			if (this.cursor.to >= topNode.to || this.cursor.name === 'EOF') {
+				break;
+			}
+		}
+		return buffer + '</p>';
 	}
 
 	/**
@@ -94,17 +107,12 @@ export class HtmlGenerator {
 		) {
 			throw new Error('Expected }');
 		}
-		console.log('argument: ' + this.getCursorText());
 		this.cursor.firstChild();
 
 		let buffer = '';
 		while (this.cursor.next() && this.cursor.to < topNode.to) {
-			console.log('argument child: ' + this.getCursorText());
 			buffer += await this.generateNode();
 		}
-		console.log(
-			'command arg end: ' + this.cursor.name + ': ' + this.getCursorText()
-		);
 
 		return buffer;
 	}
@@ -259,9 +267,15 @@ export class HtmlGenerator {
 			case '\\vspace*':
 			case '\\hspace':
 			case '\\hspace*':
+			case '\\label':
 				this.expectNext();
 				await this.generateCommandArgument(); // consume command argument
 				return ''; // ignore these commands
+			case '\\caption': {
+				this.expectNext();
+				const caption = await this.generateCommandArgument();
+				return `<caption>${caption}</caption>`;
+			}
 
 			// math commands
 			case '\\(':
@@ -447,12 +461,10 @@ export class HtmlGenerator {
 			this.expectNext();
 		}
 
-		console.log(firstPart);
 		firstPart = firstPart
 			.replace(/\./g, ',')
 			.replace(/,/g, '{,}')
 			.replace(/~/g, '\\,'); // TODO , -> . for en
-		console.log(firstPart);
 
 		if (this.cursor.name === '"') {
 			return firstPart;
@@ -475,10 +487,8 @@ export class HtmlGenerator {
 		this.expectNodeName('ListItem');
 		const topNode = this.cursor.node;
 
-		console.log('Generate ListNode');
 		let buffer = '';
 		while (this.cursor.next()) {
-			console.log('next');
 			buffer += await this.generateNode();
 			if (this.cursor.to >= topNode.to) {
 				break;
@@ -566,7 +576,6 @@ export class HtmlGenerator {
 		);
 
 		let buffer = '';
-		console.log(envName);
 		if (envName === 'enumerate' || envName === 'compactenum') {
 			buffer += '<ol>';
 		} else {
@@ -588,15 +597,226 @@ export class HtmlGenerator {
 			buffer += '</ul>';
 		}
 
-		console.log(buffer);
+		return buffer;
+	}
+
+	private getColumnDefinition(tableArgument: string) {
+		const columnDefinition = [];
+		const defaultColDefinition = {
+			startBorder: false,
+			endBorder: false,
+			align: 'start',
+		};
+		let currentColDefinition = { ...defaultColDefinition };
+		for (let index = 0; index < tableArgument.length; index++) {
+			if (tableArgument[index] === '|') {
+				currentColDefinition.startBorder = true;
+				index++;
+			}
+			if (index >= tableArgument.length) {
+				throw new Error('Table alignment definition expected');
+			}
+
+			switch (tableArgument[index]) {
+				case 'l':
+					currentColDefinition.align = 'start';
+					break;
+				case 'c':
+					currentColDefinition.align = 'center';
+					break;
+				case 'r':
+					currentColDefinition.align = 'end';
+					break;
+				default:
+					throw new Error('Table alignment definition expected');
+			}
+
+			index++;
+			if (index < tableArgument.length) {
+				if (tableArgument[index] === '|') {
+					currentColDefinition.endBorder = true;
+				} else {
+					index--;
+				}
+			}
+
+			columnDefinition.push(currentColDefinition);
+			currentColDefinition = { ...defaultColDefinition };
+		}
+
+		return columnDefinition;
+	}
+
+	private async generateTabularEnvironment(): Promise<string> {
+		this.expectNodeName('TabularEnvironment');
+		const topNode = this.cursor.node;
+		this.expectNext();
+		this.expectNodeName('BeginEnv');
+		this.expectNext();
+		this.expectNodeName('BeginCommandIdentifier');
+		this.expectNext();
+		this.expectNodeName('EnvironmentNameArgument');
+
+		// skip the env name
+		this.cursor.moveTo(this.cursor.to, -1);
+		this.expectNext();
+		this.expectNodeName('CommandArgument'); // tabular definition
+
+		const tableArgument = await this.generateCommandArgument();
+
+		const columnDefinition = this.getColumnDefinition(tableArgument);
+
+		const endNode = topNode.lastChild;
+		if (!endNode || endNode.name !== 'EndEnv') {
+			throw new Error('EndEnv expected');
+		}
+
+		const rows = [];
+		let currentRow = [];
+		const separatorRowIndexes = new Set<number>();
+		const borderRowIndexes = new Set<number>();
+
+		let buffer = '';
+
+		// Loop until EndEnv is met, in which instance the cursor will end up
+		// on the EndEnv.
+		while (this.cursor.next() && this.cursor.from < endNode.from) {
+			// push buffer as new cell and init next cell
+			if (this.cursor.name === '&') {
+				currentRow.push(buffer.trim());
+				buffer = '';
+				continue;
+			}
+
+			// row ended by newline, so push it and clear it
+			if (this.cursor.name === 'NewlineCommand') {
+				currentRow.push(buffer.trim());
+				buffer = '';
+				rows.push(currentRow);
+				currentRow = [];
+				continue;
+			}
+
+			if (this.cursor.name === 'BooktabCommand') {
+				// Current row index is the same as rows length, because current
+				// row is not added to the list, so the real number of lines is
+				// rows.length + 1, index starts from 0, so we need to subtract 1
+				// and these two cancel out.
+				separatorRowIndexes.add(rows.length);
+				continue;
+			}
+
+			if (this.cursor.name === 'HlineCommand') {
+				borderRowIndexes.add(rows.length);
+				continue;
+			}
+
+			buffer += await this.generateNode();
+		}
+
+		// last line does not need to end with a newline, so just add it if it's
+		// not empty
+		if (buffer.trim().length !== 0) {
+			currentRow.push(buffer.trim());
+		}
+
+		if (currentRow.length !== 0) {
+			rows.push(currentRow);
+		}
+
+		// consume end node
+		this.expectNodeName('EndEnv');
+		this.cursor.moveTo(this.cursor.to, -1);
+
+		// reconstruct the table
+		let output = '<tbody>';
+		for (const [rowIndex, row] of rows.entries()) {
+			if (separatorRowIndexes.has(rowIndex)) {
+				output += '<tr class="table-group-divider">';
+			} else if (borderRowIndexes.has(rowIndex)) {
+				output += '<tr class="border-top">';
+			} else {
+				output += '<tr>';
+			}
+			for (const [cellIndex, cell] of row.entries()) {
+				if (cellIndex >= columnDefinition.length) {
+					throw new Error('Too many cells in a table');
+				}
+				const colDef = columnDefinition[cellIndex];
+				const cellClasses = [];
+				if (colDef.startBorder) {
+					cellClasses.push('border-start');
+				}
+				if (colDef.endBorder) {
+					cellClasses.push('border-end');
+				}
+				if (colDef.align === 'center') {
+					cellClasses.push('text-center');
+				} else if (colDef.align === 'end') {
+					cellClasses.push('text-end');
+				}
+
+				if (cellClasses.length === 0) {
+					output += '<td>' + cell.trim() + '</td>';
+				} else {
+					output += `<td class="${cellClasses.join(' ')}">${cell.trim()}</td>`;
+				}
+			}
+			output += '</tr>';
+		}
+
+		// If bottomrule is alone on the last line, the line wont be added to
+		// rows because it's empty, but to have a separator we need the extra
+		// line, so just add it.
+		if (separatorRowIndexes.has(rows.length)) {
+			output += '<tr class="table-group-divider"></tr>';
+		} else if (borderRowIndexes.has(rows.length)) {
+			output += '<tr class="border-top"></tr>';
+		}
+
+		output += '</tbody>';
+
+		return output;
+	}
+
+	private async generateTableEnvironment() {
+		this.expectNodeName('TableEnvironment');
+
+		const endNode = this.cursor.node.lastChild;
+		if (!endNode || endNode.name !== 'EndEnv') {
+			throw new Error('EndEnv expected');
+		}
+
+		// consume BeginEnv
+		this.expectNext();
+		this.expectNodeName('BeginEnv');
+		this.cursor.moveTo(this.cursor.to, -1);
+
+		let buffer = '<table class="table table-borderless w-auto mx-auto">';
+
+		// Loop until EndEnv is met, in which instance the cursor will end up
+		// on the EndEnv.
+		while (this.cursor.next() && this.cursor.from < endNode.from) {
+			buffer += await this.generateNode();
+		}
+
+		// consume end node
+		this.expectNodeName('EndEnv');
+		this.cursor.moveTo(this.cursor.to, -1);
+
+		buffer += '</table>';
 
 		return buffer;
 	}
 
 	private async generateNode(): Promise<string> {
-		console.log(
-			'Generate node: ' + this.cursor.name + ' - ' + this.getCursorText()
-		);
+		if (this.cursor.name === 'Paragraph') {
+			return this.generateParagraph();
+		}
+
+		if (this.cursor.name === 'ParagraphSeparator') {
+			return '';
+		}
 
 		if (this.cursor.name === 'Comment') {
 			return '';
@@ -611,7 +831,7 @@ export class HtmlGenerator {
 		}
 
 		if (this.cursor.name === 'Command') {
-			return await this.generateCommand();
+			return this.generateCommand();
 		}
 
 		if (this.cursor.name === 'CommandArgument') {
@@ -648,6 +868,14 @@ export class HtmlGenerator {
 
 		if (this.cursor.name === 'ListEnvironment') {
 			return this.generateListEnvironment();
+		}
+
+		if (this.cursor.name === 'TabularEnvironment') {
+			return this.generateTabularEnvironment();
+		}
+
+		if (this.cursor.name === 'TableEnvironment') {
+			return this.generateTableEnvironment();
 		}
 
 		if (this.cursor.name === 'BeginEnv') {
