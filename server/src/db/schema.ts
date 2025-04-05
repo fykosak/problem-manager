@@ -210,6 +210,7 @@ export const textTable = pgTable(
 		lang: langEnum().notNull(),
 		type: textTypeEnum().notNull(),
 		contents: bytea(),
+		html: text(),
 	},
 	(table) => [unique().on(table.problemId, table.lang, table.type)]
 );

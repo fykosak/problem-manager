@@ -411,7 +411,7 @@ describe('environment', () => {
 			},
 			{
 				input: '\\begin{tabular}{ll}\\toprule sadf&asdf\\\\\\hline qwer&poiu\\\\\\hline\\end{tabular}',
-				output: '<tbody><tr class="table-group-divider"><td>sadf</td><td>asdf</td></tr><tr class="border-top"><td>qwer</td><td>poiu</td></tr></tbody>',
+				output: '<tbody><tr class="table-group-divider"><td>sadf</td><td>asdf</td></tr><tr class="border-top"><td>qwer</td><td>poiu</td></tr><tr class="border-top"></tr></tbody>',
 			},
 		]);
 	});
@@ -420,11 +420,11 @@ describe('environment', () => {
 		await runTestStrings([
 			{
 				input: '\\begin{table}\\end{table}',
-				output: '<table class="table table-borderless w-auto mx-auto"></table>',
+				output: '<table class="table table-sm table-borderless w-auto mx-auto"></table>',
 			},
 			{
 				input: '\\begin{table}\\caption{Toto je caption}\\label{table}\\begin{tabular}{ll}sadf&asdf\\end{tabular}\\end{table}',
-				output: '<table class="table table-borderless w-auto mx-auto"><caption>Toto je caption</caption><tbody><tr><td>sadf</td><td>asdf</td></tr></tbody></table>',
+				output: '<table class="table table-sm table-borderless w-auto mx-auto"><caption>Toto je caption</caption><tbody><tr><td>sadf</td><td>asdf</td></tr></tbody></table>',
 			},
 		]);
 	});

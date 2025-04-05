@@ -135,7 +135,17 @@ apiRouter.get(
 		// TODO html generation
 		const series = await db.query.seriesTable.findFirst({
 			where: eq(seriesTable.seriesId, seriesId),
-			with: { problems: true },
+			with: {
+				problems: {
+					with: {
+						texts: {
+							columns: {
+								contents: false,
+							},
+						},
+					},
+				},
+			},
 		});
 
 		res.json(series);
@@ -144,7 +154,7 @@ apiRouter.get(
 
 // TODO authorization
 apiRouter.get(
-	'/problem/:problemId/tex',
+	'/problem/:problemId/texts',
 	asyncHandler(async (req, res) => {
 		const problemId = Number(req.params.problemId);
 		const problem = await db.query.problemTable.findFirst({

@@ -34,6 +34,7 @@ export default [
 				route('work', 'routes/task.work.tsx'),
 				route('metadata', 'routes/task.metadata.tsx'),
 				route('files', 'routes/task.files.tsx'),
+				route('web-texts', 'routes/task.webTexts.tsx'),
 			]),
 		]),
 	]),

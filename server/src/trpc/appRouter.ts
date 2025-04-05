@@ -9,6 +9,7 @@ import { contestRouter } from './routers/contestRouter';
 import { personRouter } from './routers/personRouter';
 import { problemRouter } from './routers/problemRouter';
 import { seriesRouter } from './routers/seriesRouter';
+import { textRouter } from './routers/textRouter';
 import { trpc } from './trpc';
 
 export const appRouter = trpc.router({
@@ -23,6 +24,7 @@ export const appRouter = trpc.router({
 	person: personRouter,
 	problem: problemRouter,
 	series: seriesRouter,
+	text: textRouter,
 	work: trpc.router({
 		updatePersonWork: authedProcedure
 			.input(

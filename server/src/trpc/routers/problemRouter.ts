@@ -54,19 +54,19 @@ export const problemRouter = trpc.router({
 	texts: authedProcedure
 		.input(
 			z.object({
-				taskId: z.number(),
+				problemId: z.number(),
 				textType: z.enum(textTypeEnum.enumValues).nullish(),
 			})
 		)
 		.query(async ({ input }) => {
 			const texts = await db.query.textTable.findMany({
 				where: and(
-					eq(textTable.problemId, input.taskId),
+					eq(textTable.problemId, input.problemId),
 					input.textType
 						? eq(textTable.type, input.textType)
 						: undefined
 				),
-				orderBy: asc(textTable.lang),
+				orderBy: [asc(textTable.type), asc(textTable.lang)],
 			});
 
 			if (texts.length === 0) {
@@ -345,7 +345,7 @@ export const problemRouter = trpc.router({
 			}
 
 			if (
-				!problem.contest ||
+				!problem.contest || // problem already is assigned to series
 				!acl.isAllowedContest(
 					ctx.aclRoles,
 					problem.contest.symbol,

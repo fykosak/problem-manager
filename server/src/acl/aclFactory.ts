@@ -16,3 +16,5 @@ acl.addRole(ContestRole.manager, ContestRole.organizer);
 acl.allow(ContestRole.organizer, 'problem');
 acl.allow(ContestRole.organizer, 'contest');
 acl.allow(ContestRole.manager, 'series');
+acl.allow(ContestRole.manager, 'text', 'release');
+acl.allow(ContestRole.manager, 'text', 'revoke');

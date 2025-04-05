@@ -792,7 +792,8 @@ export class HtmlGenerator {
 		this.expectNodeName('BeginEnv');
 		this.cursor.moveTo(this.cursor.to, -1);
 
-		let buffer = '<table class="table table-borderless w-auto mx-auto">';
+		let buffer =
+			'<table class="table table-sm table-borderless w-auto mx-auto">';
 
 		// Loop until EndEnv is met, in which instance the cursor will end up
 		// on the EndEnv.
@@ -810,80 +811,63 @@ export class HtmlGenerator {
 	}
 
 	private async generateNode(): Promise<string> {
-		if (this.cursor.name === 'Paragraph') {
-			return this.generateParagraph();
-		}
+		switch (this.cursor.name) {
+			case 'Paragraph':
+				return this.generateParagraph();
 
-		if (this.cursor.name === 'ParagraphSeparator') {
-			return '';
-		}
+			case 'ParagraphSeparator':
+			case 'Comment':
+				return '';
 
-		if (this.cursor.name === 'Comment') {
-			return '';
-		}
+			case 'EqCommand':
+				return this.generateEqCommand();
 
-		if (this.cursor.name === 'EqCommand') {
-			return this.generateEqCommand();
-		}
+			case 'UnderscoreCommand':
+				return this.generateUnderscoreCommand();
 
-		if (this.cursor.name === 'UnderscoreCommand') {
-			return this.generateUnderscoreCommand();
-		}
+			case 'Command':
+				return this.generateCommand();
 
-		if (this.cursor.name === 'Command') {
-			return this.generateCommand();
-		}
+			case 'CommandArgument':
+				return '{' + (await this.generateCommandArgument()) + '}';
 
-		if (this.cursor.name === 'CommandArgument') {
-			return '{' + (await this.generateCommandArgument()) + '}';
-		}
+			case 'CommandArgumentOptional':
+				return (
+					'[' + (await this.generateCommandArgumentOptional()) + ']'
+				);
 
-		if (this.cursor.name === 'CommandArgumentOptional') {
-			return '[' + (await this.generateCommandArgumentOptional()) + ']';
-		}
+			case 'MathCommandArgument':
+				return '{' + (await this.generateMathArgument()) + '}';
 
-		if (this.cursor.name === 'MathCommandArgument') {
-			return '{' + (await this.generateMathArgument()) + '}';
-		}
+			case 'InlineMath':
+				return this.generateInlineMath();
 
-		if (this.cursor.name === 'InlineMath') {
-			return this.generateInlineMath();
-		}
+			case 'Math':
+				return this.generateMath();
 
-		if (this.cursor.name === 'Math') {
-			return this.generateMath();
-		}
+			case 'Text':
+				return this.generateText();
 
-		if (this.cursor.name === 'Text') {
-			return this.generateText();
-		}
+			case 'QuoteMacro':
+				return this.generateQuoteMacro();
 
-		if (this.cursor.name === 'QuoteMacro') {
-			return this.generateQuoteMacro();
-		}
+			case 'Environment':
+				return this.generateEnvironment();
 
-		if (this.cursor.name === 'Environment') {
-			return this.generateEnvironment();
-		}
+			case 'ListEnvironment':
+				return this.generateListEnvironment();
 
-		if (this.cursor.name === 'ListEnvironment') {
-			return this.generateListEnvironment();
-		}
+			case 'TabularEnvironment':
+				return this.generateTabularEnvironment();
 
-		if (this.cursor.name === 'TabularEnvironment') {
-			return this.generateTabularEnvironment();
-		}
+			case 'TableEnvironment':
+				return this.generateTableEnvironment();
 
-		if (this.cursor.name === 'TableEnvironment') {
-			return this.generateTableEnvironment();
-		}
+			case 'BeginEnv':
+				return this.generateBeginEnv();
 
-		if (this.cursor.name === 'BeginEnv') {
-			return this.generateBeginEnv();
-		}
-
-		if (this.cursor.name === 'EndEnv') {
-			return this.generateEndEnv();
+			case 'EndEnv':
+				return this.generateEndEnv();
 		}
 
 		if (!this.cursor.node.firstChild) {

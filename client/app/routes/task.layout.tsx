@@ -36,7 +36,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	}
 
 	const texts = await trpc.problem.texts.query({
-		taskId: taskId,
+		problemId: taskId,
 	});
 
 	const textsById = new Map<number, trpcOutputTypes['problem']['texts'][0]>();
@@ -75,6 +75,11 @@ function ProblemSidebar() {
 								<SidebarMenuButton asChild>
 									<NavLink to={'files'}>Soubory</NavLink>
 								</SidebarMenuButton>
+								<SidebarMenuButton asChild>
+									<NavLink to={'web-texts'}>
+										Texts for web
+									</NavLink>
+								</SidebarMenuButton>
 							</SidebarMenuItem>
 						</SidebarMenu>
 					</SidebarGroupContent>
@@ -92,7 +97,7 @@ function ProblemSidebar() {
 								</SelectTrigger>
 								<SelectContent>
 									{Object.values(Layout).map((layout) => (
-										<SelectItem value={layout}>
+										<SelectItem value={layout} key={layout}>
 											{getLayoutLabel(layout)}
 										</SelectItem>
 									))}
