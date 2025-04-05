@@ -1,8 +1,12 @@
-import { eq } from 'drizzle-orm';
+import { type InferSelectModel, eq } from 'drizzle-orm';
 import type { NextFunction, Request, Response } from 'express';
 
 import { db } from '@server/db';
-import { apiKeyTable, personTable } from '@server/db/schema';
+import { apiKeyTable, organizerTable, personTable } from '@server/db/schema';
+
+export type RequestPerson = InferSelectModel<typeof personTable> & {
+	organizers: InferSelectModel<typeof organizerTable>[];
+};
 
 export async function UserAuthMiddleware(
 	req: Request,

@@ -1,6 +1,6 @@
-import { asc, eq, inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import express from 'express';
-import { ParserInput, latexLanguage } from 'lang-latex';
+import { type Response } from 'express';
 
 import { db } from '@server/db';
 import {
@@ -8,24 +8,39 @@ import {
 	problemTable,
 	problemTopicTable,
 	seriesTable,
-	textTable,
 	topicTable,
 } from '@server/db/schema';
 import { StorageProvider } from '@server/sockets/storageProvider';
 
 import { asyncHandler } from './asyncHandler';
-import { HtmlGenerator } from './compiler/htmlGenerator';
-import { UserAuthMiddleware } from './middleware';
+import { type RequestPerson, UserAuthMiddleware } from './middleware';
 
 export const apiRouter = express.Router();
 
 apiRouter.use('/', asyncHandler(UserAuthMiddleware));
 
-// TODO authorization
+function testPersonAuthorized(contestId: number, res: Response) {
+	const person = res.locals.person as RequestPerson;
+	const organizer = person.organizers.find(
+		(organizer) => organizer.contestId === contestId
+	);
+
+	if (!organizer) {
+		throw new Error('Unauthorized to access this contest');
+	}
+}
+
 apiRouter.get(
 	'/contest/:contestId/years',
 	asyncHandler(async (req, res) => {
 		const contestId = Number(req.params.contestId);
+
+		try {
+			testPersonAuthorized(contestId, res);
+		} catch {
+			res.status(403).send('Cannot access this contest');
+		}
+
 		const years = await db.query.contestYearTable.findMany({
 			where: eq(contestYearTable.contestId, contestId),
 			with: { series: true },
@@ -35,11 +50,17 @@ apiRouter.get(
 	})
 );
 
-// TODO authorization
 apiRouter.get(
 	'/contest/:contestId/topics',
 	asyncHandler(async (req, res) => {
 		const contestId = Number(req.params.contestId);
+
+		try {
+			testPersonAuthorized(contestId, res);
+		} catch {
+			res.status(403).send('Cannot access this contest');
+		}
+
 		const topics = await db.query.topicTable.findMany({
 			where: eq(topicTable.contestId, contestId),
 		});
@@ -48,11 +69,27 @@ apiRouter.get(
 	})
 );
 
-// TODO authorization
 apiRouter.get(
 	'/topic/:topicId',
 	asyncHandler(async (req, res) => {
 		const topicId = Number(req.params.topicId);
+
+		const topic = await db.query.topicTable.findFirst({
+			where: eq(topicTable.topicId, topicId),
+		});
+
+		if (!topic) {
+			res.status(404).send('Topic not found');
+			return;
+		}
+
+		try {
+			testPersonAuthorized(topic.contestId, res);
+		} catch {
+			res.status(403).send('Cannot access this contest');
+			return;
+		}
+
 		const problemTopics = await db.query.problemTopicTable.findMany({
 			where: eq(problemTopicTable.topicId, topicId),
 		});
@@ -68,7 +105,43 @@ apiRouter.get(
 	})
 );
 
-// TODO authorization
+apiRouter.get(
+	'/series/:seriesId',
+	asyncHandler(async (req, res) => {
+		const seriesId = Number(req.params.seriesId);
+
+		const series = await db.query.seriesTable.findFirst({
+			where: eq(seriesTable.seriesId, seriesId),
+			with: {
+				problems: {
+					with: {
+						texts: {
+							columns: {
+								contents: false,
+							},
+						},
+					},
+				},
+				contestYear: true,
+			},
+		});
+
+		if (!series) {
+			res.status(404).send('Series does not exist');
+			return;
+		}
+
+		try {
+			testPersonAuthorized(series.contestYear.contestId, res);
+		} catch {
+			res.status(403).send('Cannot access this contest');
+			return;
+		}
+
+		res.json(series);
+	})
+);
+
 apiRouter.get(
 	'/problem/:problemId',
 	asyncHandler(async (req, res) => {
@@ -96,6 +169,22 @@ apiRouter.get(
 			return;
 		}
 
+		const contestId = problem.series
+			? problem.series.contestYear.contestId
+			: problem.contestId;
+
+		if (!contestId) {
+			res.status(500).send('Problem not assigned to contest');
+			return;
+		}
+
+		try {
+			testPersonAuthorized(contestId, res);
+		} catch {
+			res.status(403).send('Cannot access this contest');
+			return;
+		}
+
 		const ydocStorage = new StorageProvider();
 		const texts: Record<string, Record<string, string>> = {};
 
@@ -110,9 +199,7 @@ apiRouter.get(
 
 		res.json({
 			problemId: problem.problemId,
-			contest: problem.series
-				? problem.series.contestYear.contestId
-				: problem.contestId,
+			contest: contestId,
 			year: problem.series?.contestYear.year,
 			series: problem.series?.label,
 			seriesOrder: problem.seriesOrder,
@@ -123,65 +210,5 @@ apiRouter.get(
 			),
 			texts: texts,
 		});
-	})
-);
-
-// TODO authorization
-apiRouter.get(
-	'/series/:seriesId',
-	asyncHandler(async (req, res) => {
-		const seriesId = Number(req.params.seriesId);
-
-		// TODO html generation
-		const series = await db.query.seriesTable.findFirst({
-			where: eq(seriesTable.seriesId, seriesId),
-			with: {
-				problems: {
-					with: {
-						texts: {
-							columns: {
-								contents: false,
-							},
-						},
-					},
-				},
-			},
-		});
-
-		res.json(series);
-	})
-);
-
-// TODO authorization
-apiRouter.get(
-	'/problem/:problemId/texts',
-	asyncHandler(async (req, res) => {
-		const problemId = Number(req.params.problemId);
-		const problem = await db.query.problemTable.findFirst({
-			where: eq(problemTable.problemId, problemId),
-			with: {
-				texts: {
-					orderBy: asc(textTable.textId),
-				},
-			},
-		});
-
-		if (!problem) {
-			res.status(404).send('Problem does not exist');
-			return;
-		}
-
-		const ydocStorage = new StorageProvider();
-		const ydoc = await ydocStorage.getYDoc(problem.texts[1].textId);
-		const contents = ydoc.getText().toJSON();
-
-		const parserInput = new ParserInput(contents);
-		const tree = latexLanguage.parser.parse(parserInput);
-
-		const generator = new HtmlGenerator(tree, parserInput, problemId);
-		const html = await generator.generateHtml();
-		console.log(html);
-
-		res.json(html);
 	})
 );
