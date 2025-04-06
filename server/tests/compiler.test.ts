@@ -62,6 +62,15 @@ describe('commands', () => {
 		]);
 	});
 
+	test('too many arguments', async () => {
+		await runTestStrings([
+			{
+				input: '\\textbf{asdf}{qwer}',
+				output: '<p><bf>asdf</bf>{qwer}</p>',
+			},
+		]);
+	});
+
 	test('unknown commands', async () => {
 		await runTestStrings([
 			{

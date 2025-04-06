@@ -32,13 +32,17 @@ export function EditorLayoutProvider({
 	const [desktopLayout, setDesktopLayout] = useState<Layout>(Layout.TEXT_PDF);
 
 	function setSelectedTextId(container: string, textId: number | null) {
-		const newMap = new Map(selectedTextIds);
-		if (!textId) {
-			newMap.delete(container);
-		} else {
-			newMap.set(container, textId);
-		}
-		setSelectedTextIds(newMap);
+		setSelectedTextIds((oldMap) => {
+			const newMap = new Map(oldMap);
+
+			if (!textId) {
+				newMap.delete(container);
+			} else {
+				newMap.set(container, textId);
+			}
+
+			return newMap;
+		});
 	}
 
 	const containerRefs = useRef(new Map<string, HTMLDivElement>());
