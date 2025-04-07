@@ -1,6 +1,6 @@
 .env
 .env.local
-!.env.example
+.env.development
 .DS_Store
 .react-router
 build

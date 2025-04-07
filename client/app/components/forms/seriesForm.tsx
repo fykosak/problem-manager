@@ -116,7 +116,7 @@ export function SeriesForm({
 					name="release"
 					render={({ field: { value, onChange, ...fieldProps } }) => (
 						<FormItem>
-							<FormLabel>Series deadline</FormLabel>
+							<FormLabel>Series release</FormLabel>
 							<Input
 								type="datetime-local"
 								value={

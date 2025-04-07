@@ -13,6 +13,7 @@ import logoFullWhite from '@client/assets/logoFullWhite.png';
 
 import type { Route } from './+types/root';
 import stylesheet from './app.css?url';
+import { Loader } from './components/ui/loader';
 import { Toaster } from './components/ui/sonner';
 import { config } from './config';
 import { ThemeProvider } from './hooks/themeProvider';
@@ -37,6 +38,14 @@ export function meta() {
 		{ property: 'og:title', content: 'Problem manager' },
 		{ property: 'og:image', content: config?.ROOT_URL + logoFullWhite },
 	];
+}
+
+export function HydrateFallback() {
+	return (
+		<div className="w-100 h-100 flex items-center align-center">
+			<Loader />
+		</div>
+	);
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {

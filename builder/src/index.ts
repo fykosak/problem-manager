@@ -48,7 +48,6 @@ app.post(
 		const builder = new TaskBuilder(dirPath);
 		const log = await builder.build(file);
 
-		console.log(req.body);
 		res.send(log);
 	})
 );

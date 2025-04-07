@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
 	{
-		ignores: ['.react-router/'],
+		ignores: ['.react-router/', 'build/'],
 	},
 	eslint.configs.recommended,
 	tseslint.configs.recommendedTypeChecked,

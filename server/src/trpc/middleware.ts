@@ -90,6 +90,7 @@ export const contestProcedure = authedProcedure
 			return false;
 		}
 
+		// TODO by group, not by org
 		if (!isPersonOrganizer()) {
 			throw new TRPCError({
 				code: 'FORBIDDEN',

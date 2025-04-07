@@ -24,19 +24,18 @@
     "@codemirror/view": "^6.35.0",
     "@lezer/common": "^1.2.3",
     "@lezer/highlight": "^1.2.1",
-    "@lezer/lr": "^1.4.2"
+    "@lezer/generator": "^1.7.3",
+    "@lezer/lr": "^1.4.2",
+    "rollup": "^2.79.2",
+    "rollup-plugin-ts": "^3.4.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
-    "@lezer/generator": "^1.7.3",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "eslint": "^9.23.0",
     "jiti": "^2.4.2",
     "mocha": "^9.2.2",
     "prettier": "^3.5.3",
-    "rollup": "^2.79.2",
-    "rollup-plugin-dts": "^4.2.3",
-    "rollup-plugin-ts": "^3.4.5",
     "typescript": "^4.9.5",
     "typescript-eslint": "^8.29.0",
     "vitest": "^3.0.9"

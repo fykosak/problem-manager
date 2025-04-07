@@ -1,10 +1,12 @@
 {
   "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
     "strict": true,
     "target": "es6",
     "module": "es2020",
     "newLine": "lf",
     "declaration": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "typeRoots": ["./node_modules/@types"]
   }
 }
