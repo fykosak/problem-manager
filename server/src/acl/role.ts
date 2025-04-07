@@ -3,7 +3,6 @@ import { ACL } from './acl';
 export type AssertionType = true | ((data: unknown) => boolean);
 export type ActionType = string | typeof ACL.All;
 
-// TODO support actions and assertions
 export class Role {
 	private permissions = new Map<string, Map<ActionType, AssertionType>>();
 	private allowedAll = false;
