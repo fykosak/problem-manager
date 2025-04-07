@@ -3,7 +3,11 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
 	{
-		ignores: ['src/sockets/persistance.ts', 'src/sockets/yjs.ts', 'coverage/'],
+		ignores: [
+			'src/sockets/persistance.ts',
+			'src/sockets/yjs.ts',
+			'coverage/',
+		],
 	},
 	eslint.configs.recommended,
 	tseslint.configs.recommendedTypeChecked,

@@ -15,7 +15,9 @@ RUN npm install-clean
 FROM node:22-alpine AS build
 COPY --from=deps /app/node_modules /app/node_modules
 COPY --from=deps /app/server/node_modules /app/server/node_modules
-COPY . /app/
+COPY --from=latex /app/lang-latex /app/lang-latex
+COPY ./server /app/server
+COPY ./client /app/client
 WORKDIR /app/client
 RUN npm run build
 
