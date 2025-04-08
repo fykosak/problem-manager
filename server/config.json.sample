@@ -1,8 +1,10 @@
 {
   "oidcCertsUrl": "",
-  "fksdbApiUrl": "https://db.fykos.cz",
+  "builderUrl": "http://builder:8080",
+  "fksdbApiUrl": "https://db.fykos.cz/api",
   "fksdbLogin": "",
   "fksdbPassword": "",
+  "dbConnection": "postgresql://user:password@url/db_name",
   "roleMapping": {
     "baseRole": {
       "admin": ["role"]

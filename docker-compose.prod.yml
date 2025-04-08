@@ -1,0 +1,49 @@
+services:
+  client:
+    image: problem-manager-client-prod
+    restart: on-failure:3
+    environment:
+      APP_ROOT_URL: ''
+      APP_API_URL: ''
+      APP_OIDC_AUTHORITY_URL: ''
+      APP_OIDC_CLIENT_ID: ''
+    build:
+      dockerfile: client/Dockerfile
+    ports:
+      - 8080:80
+  server:
+    image: problem-manager-server
+    restart: on-failure:3
+    build:
+      dockerfile: server/Dockerfile
+    volumes:
+      - ./server/config.json:/app/server/config.json
+      - ./task_data:/data
+    ports:
+      - 8081:8080
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+  db:
+    image: postgres:17
+    restart: on-failure:3
+    shm_size: 128mb
+    environment:
+      POSTGRES_DB: problem_manager
+      POSTGRES_USER: pm
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./postgresql_data:/var/lib/postgresql/data
+  builder:
+    image: problem-manager-builder
+    restart: on-failure:3
+    build:
+      dockerfile: builder/Dockerfile
+    ports:
+      - 8082:8080
+    volumes:
+      - ./task_data:/data
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8083:8080

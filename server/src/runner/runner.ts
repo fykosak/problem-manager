@@ -2,6 +2,8 @@ import { and, eq } from 'drizzle-orm';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import config from '@server/config';
+
 import { db } from '../db';
 import { langEnum, textTable, textTypeEnum } from '../db/schema';
 import { StorageProvider } from '../sockets/storageProvider';
@@ -19,7 +21,7 @@ export class Runner {
 	}
 
 	private getRunner() {
-		return 'http://builder:8080';
+		return config.builderUrl; // TODO config
 	}
 
 	public getPdfContents(

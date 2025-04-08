@@ -113,9 +113,11 @@ function getACLConfig(json: Record<string, unknown>, property: string) {
 const config = {
 	/** URL to oidc realm certs, for example https://mykeycloak.example.com/realms/master/protocol/openid-connect/certs */
 	oidcCertsUrl: getRequiredString(jsonConfig, 'oidcCertsUrl'),
+	builderUrl: getRequiredString(jsonConfig, 'builderUrl'),
 	fksdbApiUrl: getRequiredString(jsonConfig, 'fksdbApiUrl'),
 	fksdbLogin: getRequiredString(jsonConfig, 'fksdbLogin'),
 	fksdbPassword: getRequiredString(jsonConfig, 'fksdbPassword'),
+	dbConnection: getRequiredString(jsonConfig, 'dbConnection'),
 	roleMapping: getACLConfig(jsonConfig, 'roleMapping'),
 };
 

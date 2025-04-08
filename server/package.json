@@ -6,6 +6,7 @@
     "dev": "bun --watch src/index.ts",
     "lint": "eslint .",
     "typecheck": "tsc --build --noEmit",
+    "start": "node index.js",
     "prettier": "prettier . --check",
     "prettier:fix": "prettier . --write",
     "db:push": "drizzle-kit push",

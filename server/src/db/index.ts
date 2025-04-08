@@ -1,9 +1,11 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 
+import config from '@server/config';
+
 import * as schema from './schema';
 
 export const db = drizzle({
-	connection: 'postgresql://pm:password@db/problem_manager',
+	connection: config.dbConnection,
 	casing: 'snake_case',
 	schema,
 });

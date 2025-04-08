@@ -195,7 +195,6 @@ export class ProblemStorage {
 	private async getExportedFileAsDataUri(filename: string) {
 		const filepath = this.getPathForExportedFile(filename);
 		const ext = path.parse(filename).ext;
-		// TODO implement file to data uri
 		let buffer = 'data:image/';
 		switch (ext) {
 			case '.svg':

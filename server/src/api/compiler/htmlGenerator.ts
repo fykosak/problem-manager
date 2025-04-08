@@ -145,7 +145,6 @@ export class HtmlGenerator {
 		return buffer;
 	}
 
-	// TODO image source from storage
 	// generate html for \fullfig[position]{filename}{caption}{label}[opts]
 	private async generateCommandFullfig(
 		commandNode: SyntaxNode
