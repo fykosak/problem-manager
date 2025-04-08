@@ -5,6 +5,12 @@
   "fksdbLogin": "",
   "fksdbPassword": "",
   "dbConnection": "postgresql://user:password@url/db_name",
+  "contestTextLangs": {
+    "fykos": ["cs", "en"],
+    "fol": ["cs", "en"],
+    "fof": ["cs", "en"],
+    "vyfuk": ["cs"]
+  },
   "roleMapping": {
     "baseRole": {
       "admin": ["role"]

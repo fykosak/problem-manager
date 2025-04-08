@@ -1,5 +1,6 @@
 import { and, desc, eq } from 'drizzle-orm';
 
+import config from '@server/config';
 import { db } from '@server/db';
 import {
 	contestTable,
@@ -16,12 +17,17 @@ import { authedProcedure, contestProcedure } from '../middleware';
 export const contestRouter = trpc.router({
 	// TODO filter by organizer contests
 	createProblemData: authedProcedure.query(async () => {
-		return await db.query.contestTable.findMany({
+		const contests = await db.query.contestTable.findMany({
 			with: {
 				topics: true,
 				types: true,
 			},
 		});
+		const contestTextLangs = config.contestTextLangs;
+		return {
+			contests,
+			contestTextLangs: Object.fromEntries(contestTextLangs),
+		};
 	}),
 	/**
 	 * All contests with their active contest years

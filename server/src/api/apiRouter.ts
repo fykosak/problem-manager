@@ -1,14 +1,20 @@
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import express from 'express';
 import { type Response } from 'express';
+import * as Y from 'yjs';
 
 import { db } from '@server/db';
 import {
+	contestTable,
 	contestYearTable,
+	langEnum,
 	problemTable,
 	problemTopicTable,
 	seriesTable,
+	textTable,
+	textTypeEnum,
 	topicTable,
+	workTable,
 } from '@server/db/schema';
 import { StorageProvider } from '@server/sockets/storageProvider';
 
@@ -210,5 +216,112 @@ apiRouter.get(
 			),
 			texts: texts,
 		});
+	})
+);
+
+apiRouter.post(
+	'/problem/import',
+	asyncHandler(async (req, res) => {
+		const contest = await db.query.contestTable.findFirst({
+			where: eq(contestTable.symbol, req.body.contest), // eslint-disable-line
+		});
+
+		if (!contest) {
+			res.status(401).send('Invalid contest');
+			return;
+		}
+
+		try {
+			testPersonAuthorized(contest.contestId, res);
+		} catch {
+			res.status(403).send('Cannot access this contest');
+			return;
+		}
+
+		const contestYear = await db.query.contestYearTable.findFirst({
+			where: and(
+				eq(contestYearTable.contestId, contest.contestId),
+				eq(contestYearTable.year, req.body.year) // eslint-disable-line
+			),
+		});
+
+		if (!contestYear) {
+			res.status(401).send('Invalid contest year');
+			return;
+		}
+
+		const series = await db.query.seriesTable.findFirst({
+			where: and(
+				eq(seriesTable.contestYearId, contestYear.contestYearId),
+				eq(seriesTable.label, String(req.body.series)) // eslint-disable-line
+			),
+		});
+
+		if (!series) {
+			res.status(401).send('Invalid series');
+			return;
+		}
+
+		const probNumber = req.body.number as number; // eslint-disable-line
+		const problem = (
+			await db
+				.insert(problemTable)
+				.values({
+					seriesId: series.seriesId,
+					seriesOrder: probNumber,
+					typeId:
+						probNumber < 3 // TODO remove hardcoded text type ids
+							? 12
+							: probNumber == 6
+								? 15
+								: probNumber == 7
+									? 14
+									: probNumber == 8
+										? 23
+										: 13,
+					metadata: {
+						name: req.body.name, // eslint-disable-line
+						origin: req.body.origin, // eslint-disable-line
+						points: req.body.points, // eslint-disable-line
+					},
+				})
+				.returning()
+		)[0];
+
+		for (const type of textTypeEnum.enumValues) {
+			// eslint-disable-next-line
+			for (const lang in req.body[type]) {
+				if (!(langEnum.enumValues as string[]).includes(lang)) {
+					continue;
+				}
+				const taskYDoc = new Y.Doc();
+				taskYDoc.getText().insert(0, req.body[type][lang]); // eslint-disable-line
+				// @ts-expect-error Lang is check that its valid, but it's type is
+				// not specified.
+				await db.insert(textTable).values({
+					problemId: problem.problemId,
+					lang: lang,
+					type: type,
+					contents: Y.encodeStateAsUpdate(taskYDoc),
+				});
+			}
+		}
+
+		for (const group of ['zadání', 'řešení']) {
+			for (const work of [
+				'odborná korektura',
+				'jazyková korektura',
+				'typografická korektura',
+			]) {
+				await db.insert(workTable).values({
+					problemId: problem.problemId,
+					label: work,
+					group: group,
+					state: 'done',
+				});
+			}
+		}
+
+		res.sendStatus(200);
 	})
 );

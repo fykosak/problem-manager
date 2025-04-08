@@ -41,10 +41,10 @@ const formSchema = z.object({
 
 export function CreateProblemForm({
 	currentContestSymbol,
-	contests,
+	contestData,
 }: {
 	currentContestSymbol: string;
-	contests: trpcOutputTypes['contest']['createProblemData'];
+	contestData: trpcOutputTypes['contest']['createProblemData'];
 }) {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -98,9 +98,21 @@ export function CreateProblemForm({
 		resetField('type');
 	}, [contestSymbol]);
 
+	const contests = contestData.contests;
 	const selectedContest = contests.find(
 		(contest) => contest.symbol === contestSymbol
 	);
+	const langs = contestData.contestTextLangs[contestSymbol] ?? [];
+
+	function langLabel(lang: string) {
+		if (lang === 'cs') {
+			return 'Čeština';
+		}
+		if (lang === 'en') {
+			return 'Angličtina';
+		}
+		return lang;
+	}
 
 	function getTopicsCheckboxes() {
 		const selectableTopics = selectedContest ? selectedContest.topics : [];
@@ -190,10 +202,11 @@ export function CreateProblemForm({
 									<SelectValue placeholder="Select lang" />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="cs">Čeština</SelectItem>
-									<SelectItem value="en">
-										Angličtina
-									</SelectItem>
+									{langs.map((lang) => (
+										<SelectItem key={lang} value={lang}>
+											{langLabel(lang)}
+										</SelectItem>
+									))}
 								</SelectContent>
 							</Select>
 							<FormMessage />
