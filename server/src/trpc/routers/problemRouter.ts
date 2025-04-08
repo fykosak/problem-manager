@@ -5,6 +5,7 @@ import * as Y from 'yjs';
 import { z } from 'zod';
 
 import { acl } from '@server/acl/aclFactory';
+import config from '@server/config';
 import { db } from '@server/db';
 import {
 	authorTable,
@@ -215,12 +216,32 @@ export const problemRouter = trpc.router({
 			// add text
 			const taskYDoc = new Y.Doc();
 			taskYDoc.getText().insert(0, input.task);
-			await db.insert(textTable).values({
-				problemId: problem.problemId,
-				lang: input.lang,
-				type: 'task',
-				contents: Y.encodeStateAsUpdate(taskYDoc),
-			});
+
+			const langs = config.contestTextLangs.get(ctx.contest.symbol);
+			if (!langs) {
+				throw new TRPCError({
+					message: 'Could not get languages for contest',
+					code: 'INTERNAL_SERVER_ERROR',
+				});
+			}
+			for (const lang of langs) {
+				for (const type of textTypeEnum.enumValues) {
+					if (!(langEnum.enumValues as string[]).includes(lang)) {
+						continue;
+					}
+					// @ts-expect-error Lang is check that its valid, but it's type is
+					// not specified.
+					await db.insert(textTable).values({
+						problemId: problem.problemId,
+						lang: lang,
+						type: type,
+						contents:
+							type === 'task' && lang === input.lang
+								? Y.encodeStateAsUpdate(taskYDoc)
+								: null,
+					});
+				}
+			}
 
 			// add topics
 			await db.insert(problemTopicTable).values(

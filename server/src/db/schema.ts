@@ -206,7 +206,7 @@ export const textTable = pgTable(
 		textId: serial().primaryKey(),
 		problemId: integer()
 			.notNull()
-			.references(() => problemTable.problemId),
+			.references(() => problemTable.problemId, { onDelete: 'cascade' }),
 		lang: langEnum().notNull(),
 		type: textTypeEnum().notNull(),
 		contents: bytea(),
@@ -227,7 +227,7 @@ export const textVersionTable = pgTable('text_version', {
 	textVersionId: serial().primaryKey(),
 	textId: integer()
 		.notNull()
-		.references(() => textTable.textId),
+		.references(() => textTable.textId, { onDelete: 'cascade' }),
 	contents: text().notNull(),
 	personId: integer().references(() => personTable.personId),
 	created: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -318,7 +318,7 @@ export const workTable = pgTable('work', {
 	workId: serial().primaryKey(),
 	problemId: integer()
 		.notNull()
-		.references(() => problemTable.problemId),
+		.references(() => problemTable.problemId, { onDelete: 'cascade' }),
 	label: varchar({ length: 255 }).notNull(),
 	group: varchar({ length: 255 }),
 	state: workStateEnum().notNull().default('waiting'),
@@ -338,10 +338,10 @@ export const personWorkTable = pgTable(
 		personWorkId: serial().primaryKey(),
 		workId: integer()
 			.notNull()
-			.references(() => workTable.workId),
+			.references(() => workTable.workId, { onDelete: 'cascade' }),
 		personId: integer()
 			.notNull()
-			.references(() => personTable.personId),
+			.references(() => personTable.personId, { onDelete: 'cascade' }),
 	},
 	(table) => [unique().on(table.personId, table.workId)]
 );

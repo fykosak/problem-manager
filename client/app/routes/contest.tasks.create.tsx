@@ -17,7 +17,7 @@ export default function ContestTaskSuggestion({
 			<h1>Navrhnout úlohu</h1>
 			<CreateProblemForm
 				currentContestSymbol={params.contest}
-				contests={loaderData}
+				contestData={loaderData}
 			/>
 		</div>
 	);
