@@ -1,7 +1,8 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 
-import * as schema from './schema';
 import config from '@server/config';
+
+import * as schema from './schema';
 
 export const db = drizzle({
 	connection: config.dbConnection,
