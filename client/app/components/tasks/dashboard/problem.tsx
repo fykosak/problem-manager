@@ -24,7 +24,7 @@ export function Problem({
 
 	return (
 		<Card>
-			<CardHeader>
+			<CardHeader className="p-4">
 				<CardTitle className="flex flex-row justify-between items-center gap-2">
 					<Link to={'task/' + problem.problemId}>
 						{'name' in problem.metadata
@@ -34,11 +34,13 @@ export function Problem({
 								: ''
 							: ''}
 					</Link>
-					<Badge className="bg-green-500">{problem.type.label}</Badge>
+					<Badge className="bg-green-500 text-background">
+						{problem.type.label}
+					</Badge>
 				</CardTitle>
 				<CardDescription>úloha {problem.seriesOrder}</CardDescription>
 			</CardHeader>
-			<CardContent>
+			<CardContent className="p-4 pt-0">
 				<ProgressWork workStats={workStats} />
 			</CardContent>
 		</Card>

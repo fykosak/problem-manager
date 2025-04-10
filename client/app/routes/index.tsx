@@ -77,43 +77,57 @@ function WorkItem({
 }
 
 function WorkGroup({
+	header,
 	works,
 	currentContestYears,
 }: {
+	header: string;
 	works: trpcOutputTypes['person']['work'];
 	currentContestYears: trpcOutputTypes['contest']['currentContests'];
 }) {
 	if (works.length === 0) {
-		return <Badge>No work found</Badge>;
+		return null;
 	}
 	return (
-		<div className="flex flex-col md:flex-row flex-wrap gap-2">
-			{works.map((work) => (
-				<WorkItem
-					key={work.person_work.personWorkId}
-					work={work}
-					currentContestYears={currentContestYears}
-				/>
-			))}
-		</div>
+		<>
+			<h1>{header}</h1>
+			<div className="flex flex-col md:flex-row flex-wrap gap-2">
+				{works.map((work) => (
+					<WorkItem
+						key={work.person_work.personWorkId}
+						work={work}
+						currentContestYears={currentContestYears}
+					/>
+				))}
+			</div>
+		</>
 	);
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
+	const workCount = Object.values(loaderData.work).reduce(
+		(sum, works) => sum + works.length,
+		0
+	);
+
+	if (workCount === 0) {
+		return <Badge>No work found</Badge>;
+	}
+
 	return (
 		<>
-			<h1>Work to be done</h1>
 			<WorkGroup
+				header={'Korektury potřeba udělat'}
 				works={loaderData.work.todo}
 				currentContestYears={loaderData.currentContestYears}
 			/>
-			<h1>Work waiting to be finished</h1>
 			<WorkGroup
+				header={'Rozpracované korektury na dokončení'}
 				works={loaderData.work.pending}
 				currentContestYears={loaderData.currentContestYears}
 			/>
-			<h1>Waiting work</h1>
 			<WorkGroup
+				header={'Korektury čekající na jiné korektury'}
 				works={loaderData.work.waiting}
 				currentContestYears={loaderData.currentContestYears}
 			/>

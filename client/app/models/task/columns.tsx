@@ -74,6 +74,13 @@ function RowActions({
 				</DropdownMenuTrigger>
 				<DropdownMenuContent>
 					<DropdownMenuItem>
+						<DialogTrigger>
+							<NavLink to={'../task/' + problem.problemId}>
+								Otevřit úlohu
+							</NavLink>
+						</DialogTrigger>
+					</DropdownMenuItem>
+					<DropdownMenuItem>
 						<DialogTrigger>Vybrat do série</DialogTrigger>
 					</DropdownMenuItem>
 				</DropdownMenuContent>

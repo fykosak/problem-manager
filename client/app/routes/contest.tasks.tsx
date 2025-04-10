@@ -29,7 +29,7 @@ export default function Tasks({ params, loaderData }: Route.ComponentProps) {
 					'edit'
 				) && (
 					<Link to="tasks/ordering">
-						<Button>Order tasks</Button>
+						<Button>Seřadit úlohy</Button>
 					</Link>
 				)}
 				{acl.isAllowedContest(
@@ -39,7 +39,7 @@ export default function Tasks({ params, loaderData }: Route.ComponentProps) {
 					'create'
 				) && (
 					<Link to="series/create">
-						<Button>Add series</Button>
+						<Button>Přidat sérii</Button>
 					</Link>
 				)}
 			</div>

@@ -105,7 +105,7 @@ export function SeriesForm({
 					name="label"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>Series label</FormLabel>
+							<FormLabel>Označení série</FormLabel>
 							<Input {...field} />
 							<FormMessage />
 						</FormItem>
@@ -116,7 +116,7 @@ export function SeriesForm({
 					name="release"
 					render={({ field: { value, onChange, ...fieldProps } }) => (
 						<FormItem>
-							<FormLabel>Series release</FormLabel>
+							<FormLabel>Termín zveřejnění</FormLabel>
 							<Input
 								type="datetime-local"
 								value={
@@ -136,7 +136,7 @@ export function SeriesForm({
 					name="deadline"
 					render={({ field: { value, onChange, ...fieldProps } }) => (
 						<FormItem>
-							<FormLabel>Series deadline</FormLabel>
+							<FormLabel>Termín deadlinu</FormLabel>
 							<Input
 								type="datetime-local"
 								value={

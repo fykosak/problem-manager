@@ -35,7 +35,7 @@ export function Series({
 				</div>
 				{series.release && (
 					<div className="text-sm text-muted-foreground">
-						Release: {new Date(series.release).toLocaleString()}
+						Zveřejnění: {new Date(series.release).toLocaleString()}
 					</div>
 				)}
 				{series.deadline && (
@@ -45,7 +45,7 @@ export function Series({
 				)}
 			</div>
 			{series.problems.length === 0 ? (
-				<Badge>No tasks</Badge>
+				<Badge>Žádné úlohy</Badge>
 			) : (
 				<div className="flex flex-col gap-2">
 					{series.problems.map((problem) => (

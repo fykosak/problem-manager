@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router';
 
 import { Button } from '../ui/button';
+import { Loader } from '../ui/loader';
 
 export default function NavLinkItem(props: {
 	to: string;
@@ -9,11 +10,12 @@ export default function NavLinkItem(props: {
 }) {
 	return (
 		<NavLink to={props.to} end>
-			{({ isActive }) => (
+			{({ isActive, isPending }) => (
 				<Button
 					variant={isActive ? 'default' : 'outline'}
 					onClick={props.onClick}
 				>
+					{isPending && <Loader />}
 					{props.name}
 				</Button>
 			)}
