@@ -355,6 +355,7 @@ export const problemRouter = trpc.router({
 				where: eq(problemTable.problemId, input.problemId),
 				with: {
 					contest: true,
+					work: true,
 				},
 			});
 
@@ -410,5 +411,44 @@ export const problemRouter = trpc.router({
 							: 1,
 				})
 				.where(eq(problemTable.problemId, problem.problemId));
+
+			const workConfig = config.contestWork[problem.contest.symbol];
+			if (!workConfig) {
+				return;
+			}
+
+			// Add default (and missing) work to the problem
+			const existingWork = new Map<string | null, Set<string>>();
+			for (const work of problem.work) {
+				const group = existingWork.get(work.group) ?? new Set();
+				group.add(work.label);
+				existingWork.set(work.group, group);
+			}
+
+			const newWorkItems = [];
+			for (const workGroup of workConfig) {
+				for (const workItem of workGroup.items) {
+					if (workItem.optional) {
+						continue;
+					}
+
+					if (
+						existingWork.has(workGroup.groupName) &&
+						existingWork
+							.get(workGroup.groupName)
+							?.has(workItem.name)
+					) {
+						continue;
+					}
+
+					newWorkItems.push({
+						problemId: problem.problemId,
+						group: workGroup.groupName,
+						label: workItem.name,
+					});
+				}
+			}
+
+			await db.insert(workTable).values(newWorkItems);
 		}),
 });
