@@ -1,4 +1,4 @@
-import { ConfigError } from '@server/configUtils';
+import { ConfigError } from '@server/config/configUtils';
 
 /**
  * Gets string type from env property

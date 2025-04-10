@@ -19,6 +19,17 @@
       "fykos": {
         "contest.organizer": ["role"],
       }
-    }
+    },
+  "contestWork": {
+    "fykos": [
+      {
+        "groupName": "Zadání",
+        "items": [
+          {
+            "name": "text zadání"
+          },
+        ]
+      }
+    ]
   }
 }

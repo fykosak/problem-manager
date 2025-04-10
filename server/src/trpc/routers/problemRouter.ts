@@ -5,7 +5,7 @@ import * as Y from 'yjs';
 import { z } from 'zod';
 
 import { acl } from '@server/acl/aclFactory';
-import config from '@server/config';
+import config from '@server/config/config';
 import { db } from '@server/db';
 import {
 	authorTable,
