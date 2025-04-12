@@ -108,6 +108,33 @@ export const problemRouter = trpc.router({
 			return work;
 		}),
 
+	addWork: authedProcedure
+		.input(
+			z.object({
+				problemId: z.number(),
+				newWork: z
+					.object({
+						group: z.string().nonempty(),
+						label: z.string().nonempty(),
+					})
+					.array(),
+			})
+		)
+		.mutation(async ({ input }) => {
+			const workWithProblemId = input.newWork.map((work) => ({
+				...work,
+				problemId: input.problemId,
+			}));
+			try {
+				await db.insert(workTable).values(workWithProblemId);
+			} catch {
+				throw new TRPCError({
+					message: 'Failed to add work to the problem',
+					code: 'INTERNAL_SERVER_ERROR',
+				});
+			}
+		}),
+
 	updateMetadata: authedProcedure
 		.input(
 			z.object({
