@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router';
 
 import { Layout, getLayoutLabel } from '@client/components/editor/layoutEnum';
 import NavigationSuspense from '@client/components/navigation/navigationSuspense';
+import { Loader } from '@client/components/ui/loader';
 import {
 	SelectContent,
 	SelectItem,
@@ -30,13 +31,15 @@ import { trpc, type trpcOutputTypes } from '@client/trpc';
 import { Route } from './+types/task.layout';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-	const taskId = Number(params.taskId);
-	if (isNaN(taskId) || !isFinite(taskId)) {
+	const problemId = Number(params.taskId);
+	if (isNaN(problemId) || !isFinite(problemId)) {
 		throw new Error('Invalid task id');
 	}
 
+	const problem = await trpc.problem.info.query(problemId);
+
 	const texts = await trpc.problem.texts.query({
-		problemId: taskId,
+		problemId: problemId,
 	});
 
 	const textsById = new Map<number, trpcOutputTypes['problem']['texts'][0]>();
@@ -50,36 +53,73 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 		textsByType.set(text.type, textsOfSameType);
 	}
 
-	return { textsById, textsByType };
+	return { problem, textsById, textsByType };
 }
 
-function ProblemSidebar() {
+function SiderbarNavlink({ to, label }: { to: string; label: string }) {
+	return (
+		<NavLink to={to} end>
+			{({ isActive, isPending }) => (
+				<SidebarMenuButton isActive={isActive}>
+					{isPending && <Loader />}
+					{label}
+				</SidebarMenuButton>
+			)}
+		</NavLink>
+	);
+}
+
+function ProblemSidebar({
+	problem,
+}: {
+	problem: trpcOutputTypes['problem']['info'];
+}) {
 	const { desktopLayout, setDesktopLayout } = useEditorLayout();
 	return (
 		<Sidebar>
 			<SidebarContent>
 				<SidebarGroup>
-					<SidebarGroupLabel>Úloha</SidebarGroupLabel>
+					<SidebarGroupLabel className="flex flex-col items-start h-auto">
+						<span>
+							{
+								(
+									problem.metadata.name as Record<
+										string,
+										string
+									>
+								).cs
+							}
+						</span>
+						{problem.series && (
+							<span>
+								série {problem.series.label}, ročník{' '}
+								{problem.series.contestYear.year}
+							</span>
+						)}
+					</SidebarGroupLabel>
 					<SidebarGroupContent>
 						<SidebarMenu>
 							<SidebarMenuItem>
-								<SidebarMenuButton asChild>
-									<NavLink to={''}>Edit</NavLink>
-								</SidebarMenuButton>
-								<SidebarMenuButton asChild>
-									<NavLink to={'metadata'}>Metadata</NavLink>
-								</SidebarMenuButton>
-								<SidebarMenuButton asChild>
-									<NavLink to={'work'}>Korektury</NavLink>
-								</SidebarMenuButton>
-								<SidebarMenuButton asChild>
-									<NavLink to={'files'}>Soubory</NavLink>
-								</SidebarMenuButton>
-								<SidebarMenuButton asChild>
-									<NavLink to={'web-texts'}>
-										Texts for web
-									</NavLink>
-								</SidebarMenuButton>
+								<SiderbarNavlink
+									to={''}
+									label={'Editor textů'}
+								/>
+								<SiderbarNavlink
+									to={'metadata'}
+									label={'Metadata'}
+								/>
+								<SiderbarNavlink
+									to={'work'}
+									label={'Korektury a úkoly'}
+								/>
+								<SiderbarNavlink
+									to={'files'}
+									label={'Soubory'}
+								/>
+								<SiderbarNavlink
+									to={'web-texts'}
+									label={'Zveřejnění textů'}
+								/>
 							</SidebarMenuItem>
 						</SidebarMenu>
 					</SidebarGroupContent>
@@ -115,7 +155,7 @@ export default function Task({ loaderData }: Route.ComponentProps) {
 	return (
 		<EditorLayoutProvider textData={loaderData}>
 			<SidebarProvider className="flex-1">
-				<ProblemSidebar />
+				<ProblemSidebar problem={loaderData.problem} />
 				<main className="w-full">
 					<SidebarTrigger className="absolute top-0 left-0" />
 					<NavigationSuspense>

@@ -26,6 +26,33 @@ import { authedProcedure, contestProcedure } from '../middleware';
 import { trpc } from '../trpc';
 
 export const problemRouter = trpc.router({
+	info: authedProcedure.input(z.number()).query(async ({ input }) => {
+		const problem = await db.query.problemTable.findFirst({
+			where: eq(problemTable.problemId, input),
+			with: {
+				series: {
+					with: {
+						contestYear: {
+							with: {
+								contest: true,
+							},
+						},
+					},
+				},
+				contest: true,
+			},
+		});
+
+		if (!problem) {
+			throw new TRPCError({
+				code: 'NOT_FOUND',
+				message: 'Problem not found',
+			});
+		}
+
+		return problem;
+	}),
+
 	metadata: authedProcedure.input(z.number()).query(async (opts) => {
 		const taskData = await db.query.problemTable.findFirst({
 			columns: {

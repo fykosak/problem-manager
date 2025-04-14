@@ -341,7 +341,7 @@ export function CreateProblemForm({
 					onClick={form.handleSubmit(submitAndRedirect)}
 					disabled={formState.isSubmitting}
 				>
-					Uložit a pokračovat v editaci
+					Uložit a otevřít v editoru
 				</Button>
 			</div>
 		</Form>

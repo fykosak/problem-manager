@@ -19,19 +19,20 @@ export function Series({
 	return (
 		<div className="md:w-80">
 			<div className="my-2">
-				<div className="flex flex-row gap-2 items-center">
+				<div className="flex flex-row gap-2 items-center justify-between">
 					<h2 className="py-2">série {series.label}</h2>
 					{acl.isAllowedContest(
 						personRoles,
 						series.contestYear.contest.symbol,
 						'series',
 						'edit'
+					) && (
+						<NavLink to={`series/${series.seriesId}/edit`}>
+							<Button variant="outline">
+								<Pen /> Upravit
+							</Button>
+						</NavLink>
 					)}
-					<NavLink to={`series/${series.seriesId}/edit`}>
-						<Button variant="outline" size="icon">
-							<Pen />
-						</Button>
-					</NavLink>
 				</div>
 				{series.release && (
 					<div className="text-sm text-muted-foreground">
