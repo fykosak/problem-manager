@@ -34,11 +34,11 @@ import { Textarea } from '../ui/textarea';
 const formSchema = z.object({
 	contestSymbol: z.string(),
 	lang: z.enum(langEnum.enumValues),
-	name: z.string().nonempty(),
+	name: z.string().nonempty('Název nemůže být prázdný'),
 	origin: z.string().optional(),
-	task: z.string().nonempty(),
-	topics: z.number().array().min(1),
-	type: z.coerce.number(),
+	task: z.string().nonempty('Text zádání nemůže být prázdný'),
+	topics: z.number().array().min(1, 'Alespoň jeden topic musí být přidělen'),
+	type: z.coerce.number({ message: 'Potřeba vybrat typ úlohy' }),
 });
 
 export function CreateProblemForm({
@@ -251,9 +251,12 @@ export function CreateProblemForm({
 					name="origin"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>Origin</FormLabel>
+							<FormLabel>Původ úlohy</FormLabel>
 							<FormControl>
-								<Input placeholder="Origin" {...field} />
+								<Input
+									placeholder="Krátká věta o původu/vzniku úlohy"
+									{...field}
+								/>
 							</FormControl>
 							<FormMessage />
 						</FormItem>
