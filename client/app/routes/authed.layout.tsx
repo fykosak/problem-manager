@@ -1,9 +1,10 @@
 import { TRPCClientError } from '@trpc/client';
 import { useAuth } from 'react-oidc-context';
 import { Navigate, Outlet } from 'react-router';
+import { redirect } from 'react-router';
 
 import { PersonRolesProvider } from '@client/hooks/personRolesProvider';
-import { trpc } from '@client/trpc';
+import { getUser, trpc } from '@client/trpc';
 
 import { Route } from './+types/authed.layout';
 
@@ -15,6 +16,11 @@ function saveLoginRedirectUrl() {
 }
 
 export async function clientLoader() {
+	const user = getUser();
+	if (!user || user.expired) {
+		saveLoginRedirectUrl();
+		return redirect('/login');
+	}
 	const roles = await trpc.person.roles.query();
 	return { roles };
 }
@@ -43,6 +49,14 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 		if (!error.data) {
 			throw error;
 		}
+
+		// React router does not currentcly fully support middleware.
+		// This means there is not way to globally check if user is
+		// authenticated before a page load.
+		// Client loader is trying to check, but when user navigates
+		// to a site and the tokens are expired / non existend, it
+		// still sends the trpc request because authed layout is
+		// not rerendered
 
 		// eslint-disable-next-line
 		if (error.data.code === 'UNAUTHORIZED') {

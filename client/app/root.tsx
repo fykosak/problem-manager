@@ -95,6 +95,9 @@ export default function App() {
 				window.location.pathname
 			);
 		},
+		onSignoutCallback: (): void => {
+			window.location.pathname = '/login';
+		},
 		userStore: new WebStorageStateStore({ store: window.localStorage }),
 	};
 

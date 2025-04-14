@@ -20,8 +20,12 @@ export default function Login() {
 	}
 
 	if (auth.isAuthenticated) {
-		const loginRedirect = localStorage.getItem('loginRedirect') ?? '/';
-		localStorage.removeItem('loginRedirect');
+		console.log(localStorage.getItem('loginRedirect'));
+		let loginRedirect = localStorage.getItem('loginRedirect') ?? '/';
+		if (loginRedirect === '/login') {
+			loginRedirect = '/';
+		}
+		console.log(loginRedirect);
 		return <Navigate to={loginRedirect} />;
 	}
 

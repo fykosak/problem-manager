@@ -6,7 +6,7 @@ import type { AppRouter } from '@server/trpc/appRouter';
 
 import { config } from './config';
 
-function getUser() {
+export function getUser() {
 	const authority = config.OIDC_AUTHORITY_URL;
 	const clientId = config.OIDC_CLIENT_ID;
 	const oidcStorage = localStorage.getItem(
