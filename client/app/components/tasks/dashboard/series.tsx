@@ -5,7 +5,7 @@ import { acl } from '@server/acl/aclFactory';
 
 import { Badge } from '@client/components/ui/badge';
 import { Button } from '@client/components/ui/button';
-import { useUserRoles } from '@client/hooks/usePersonRoles';
+import { usePersonRoles } from '@client/hooks/usePersonRoles';
 import { trpcOutputTypes } from '@client/trpc';
 
 import { Problem } from './problem';
@@ -15,7 +15,7 @@ export function Series({
 }: {
 	series: trpcOutputTypes['series']['list'][0];
 }) {
-	const personRoles = useUserRoles();
+	const personRoles = usePersonRoles();
 	return (
 		<div className="md:w-80">
 			<div className="my-2">

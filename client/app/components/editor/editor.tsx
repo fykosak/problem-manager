@@ -5,7 +5,6 @@ import { latex, latexLinter } from 'lang-latex';
 import { CircleCheckIcon } from 'lucide-react';
 import { ForwardedRef, forwardRef, useEffect, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
-import { toast } from 'sonner';
 import { yCollab } from 'y-codemirror.next';
 import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';

@@ -58,9 +58,9 @@ export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
 			<DataTable
 				columns={getColumns(loaderData.series)}
 				data={loaderData.problems}
-				getOnRowClick={(row) => () => {
-					navigate('../task/' + row.original.problemId);
-				}}
+				getOnRowClick={(row) => () =>
+					navigate('../task/' + row.original.problemId)
+				}
 			/>
 		</>
 	);

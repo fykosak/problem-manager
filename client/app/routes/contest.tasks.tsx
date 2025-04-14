@@ -4,7 +4,7 @@ import { acl } from '@server/acl/aclFactory';
 
 import { ProblemDashboard } from '@client/components/tasks/dashboard/problemDashboard';
 import { Button } from '@client/components/ui/button';
-import { useUserRoles } from '@client/hooks/usePersonRoles';
+import { usePersonRoles } from '@client/hooks/usePersonRoles';
 import { trpc } from '@client/trpc';
 
 import { Route } from './+types/contest.tasks';
@@ -18,7 +18,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export default function Tasks({ params, loaderData }: Route.ComponentProps) {
-	const personRoles = useUserRoles();
+	const personRoles = usePersonRoles();
 	return (
 		<>
 			<div className="space-x-2 my-2">

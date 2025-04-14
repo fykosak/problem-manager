@@ -12,6 +12,7 @@ export default [
 		layout('routes/base.layout.tsx', [
 			index('routes/index.tsx'),
 			route('/user/api-keys', 'routes/user.apiKeys.tsx'),
+			route('/create-problem', 'routes/base.createProblem.tsx'),
 		]),
 		route(':contest/:year', 'routes/contest.layout.tsx', [
 			layout('routes/contest.main.layout.tsx', [

@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { acl } from '@server/acl/aclFactory';
 import { getPersonRoles } from '@server/acl/getPersonRoles';
 import { db } from '@server/db';
 import { contestTable, personTable } from '@server/db/schema';
@@ -81,17 +82,9 @@ export const contestProcedure = authedProcedure
 			});
 		}
 
-		function isPersonOrganizer() {
-			for (const organizer of ctx.person.organizers) {
-				if (organizer.contestId === contest?.contestId) {
-					return true;
-				}
-			}
-			return false;
-		}
-
-		// TODO by group, not by org
-		if (!isPersonOrganizer()) {
+		if (
+			!acl.isAllowedContest(ctx.aclRoles, input.contestSymbol, 'contest')
+		) {
 			throw new TRPCError({
 				code: 'FORBIDDEN',
 				message: 'You cannot access this contest',

@@ -5,8 +5,10 @@ import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import { acl } from '@server/acl/aclFactory';
 import { langEnum } from '@server/db/schema';
 
+import { usePersonRoles } from '@client/hooks/usePersonRoles';
 import { trpc, type trpcOutputTypes } from '@client/trpc';
 
 import { Button } from '../ui/button';
@@ -43,7 +45,7 @@ export function CreateProblemForm({
 	currentContestSymbol,
 	contestData,
 }: {
-	currentContestSymbol: string;
+	currentContestSymbol?: string;
 	contestData: trpcOutputTypes['contest']['createProblemData'];
 }) {
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -98,7 +100,10 @@ export function CreateProblemForm({
 		resetField('type');
 	}, [contestSymbol]);
 
-	const contests = contestData.contests;
+	const personRoles = usePersonRoles();
+	const contests = contestData.contests.filter((contest) =>
+		acl.isAllowedContest(personRoles, contest.symbol, 'problem', 'create')
+	);
 	const selectedContest = contests.find(
 		(contest) => contest.symbol === contestSymbol
 	);
@@ -124,7 +129,7 @@ export function CreateProblemForm({
 				render={({ field }) => (
 					<FormItem
 						key={topic.topicId}
-						className="flex flex-row items-start space-x-3 space-y-0"
+						className="flex flex-row items-start space-x-2 space-y-0"
 					>
 						<FormControl>
 							<Checkbox
@@ -153,44 +158,57 @@ export function CreateProblemForm({
 		));
 	}
 
+	const contestSelectComponent = (
+		<FormField
+			control={form.control}
+			name="contestSymbol"
+			render={({ field }) => (
+				<FormItem className="space-x-2">
+					<FormLabel>Soutěž</FormLabel>
+					<Select
+						onValueChange={field.onChange}
+						value={field.value ? field.value : ''}
+					>
+						<SelectTrigger>
+							<SelectValue placeholder="Vyber soutěž" />
+						</SelectTrigger>
+						<SelectContent>
+							{contests.map((contest) => (
+								<SelectItem
+									value={contest.symbol}
+									key={contest.symbol}
+								>
+									{contest.name}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
+	);
+
+	if (!contestSymbol) {
+		return (
+			<Form {...form}>
+				<div>{errors.root?.message}</div>
+				<form className="space-y-8">{contestSelectComponent}</form>
+			</Form>
+		);
+	}
+
 	return (
 		<Form {...form}>
 			<div>{errors.root?.message}</div>
 			<form className="space-y-8">
-				<FormField
-					control={form.control}
-					name="contestSymbol"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Soutěž</FormLabel>
-							<Select
-								onValueChange={field.onChange}
-								value={field.value ? field.value : ''}
-							>
-								<SelectTrigger>
-									<SelectValue placeholder="Select contest" />
-								</SelectTrigger>
-								<SelectContent>
-									{contests.map((contest) => (
-										<SelectItem
-											value={contest.symbol}
-											key={contest.symbol}
-										>
-											{contest.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+				{contestSelectComponent}
 
 				<FormField
 					control={form.control}
 					name="lang"
 					render={({ field }) => (
-						<FormItem>
+						<FormItem className="space-x-2">
 							<FormLabel>Jazyk návrhu</FormLabel>
 							<Select
 								onValueChange={field.onChange}
@@ -278,7 +296,7 @@ export function CreateProblemForm({
 					control={form.control}
 					name="type"
 					render={({ field }) => (
-						<FormItem>
+						<FormItem className="space-x-2">
 							<FormLabel>Typ úlohy</FormLabel>
 							<Select
 								onValueChange={field.onChange}
@@ -307,7 +325,7 @@ export function CreateProblemForm({
 				/>
 			</form>
 
-			<div className="space-x-2 my-2">
+			<div className="space-y-2 space-x-2 my-2">
 				<Button
 					// eslint-disable-next-line
 					onClick={form.handleSubmit(submitAndContinue)}

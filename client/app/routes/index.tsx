@@ -1,10 +1,14 @@
+import { Plus } from 'lucide-react';
 import { NavLink } from 'react-router';
+
+import { acl } from '@server/acl/aclFactory';
 
 import {
 	getWorkStateColor,
 	getWorkStateLabel,
 } from '@client/components/tasks/workComponent';
 import { Badge } from '@client/components/ui/badge';
+import { Button } from '@client/components/ui/button';
 import {
 	Card,
 	CardContent,
@@ -12,6 +16,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@client/components/ui/card';
+import { usePersonRoles } from '@client/hooks/usePersonRoles';
 import { trpc, trpcOutputTypes } from '@client/trpc';
 
 import { Route } from './+types/index';
@@ -104,33 +109,97 @@ function WorkGroup({
 	);
 }
 
+function NavTile({
+	text,
+	icon,
+	link,
+}: {
+	text: string;
+	icon: React.ReactNode;
+	link: string;
+}) {
+	return (
+		<NavLink to={link}>
+			<Button
+				variant={'outline'}
+				className="flex flex-col gap-2 h-auto [&_svg]:size-24 [&_img]:size-24 py-4 w-48 min-h-48"
+			>
+				{icon}
+				<span className="font-semibold">{text}</span>
+			</Button>
+		</NavLink>
+	);
+}
+
 export default function Home({ loaderData }: Route.ComponentProps) {
 	const workCount = Object.values(loaderData.work).reduce(
 		(sum, works) => sum + works.length,
 		0
 	);
 
-	if (workCount === 0) {
-		return <Badge>No work found</Badge>;
-	}
+	const workGroups =
+		workCount === 0 ? (
+			<Badge>No work found</Badge>
+		) : (
+			<>
+				<WorkGroup
+					header={'Úkoly potřeba udělat'}
+					works={loaderData.work.todo}
+					currentContestYears={loaderData.currentContestYears}
+				/>
+				<WorkGroup
+					header={'Rozpracované úkoly na dokončení'}
+					works={loaderData.work.pending}
+					currentContestYears={loaderData.currentContestYears}
+				/>
+				<WorkGroup
+					header={'Úkoly čekající na dokončení jiných úkolů'}
+					works={loaderData.work.waiting}
+					currentContestYears={loaderData.currentContestYears}
+				/>
+			</>
+		);
+
+	const personRoles = usePersonRoles();
 
 	return (
 		<>
-			<WorkGroup
-				header={'Korektury potřeba udělat'}
-				works={loaderData.work.todo}
-				currentContestYears={loaderData.currentContestYears}
-			/>
-			<WorkGroup
-				header={'Rozpracované korektury na dokončení'}
-				works={loaderData.work.pending}
-				currentContestYears={loaderData.currentContestYears}
-			/>
-			<WorkGroup
-				header={'Korektury čekající na jiné korektury'}
-				works={loaderData.work.waiting}
-				currentContestYears={loaderData.currentContestYears}
-			/>
+			<div className="flex flex-row gap-4 justify-center">
+				<NavTile
+					text="Navrhnout úlohu"
+					icon={<Plus />}
+					link={'create-problem'}
+				/>
+				{loaderData.currentContestYears
+					.filter((contest) => {
+						return acl.isAllowedContest(
+							personRoles,
+							contest.contest.symbol,
+							'contest'
+						);
+					})
+					.map((contest) => (
+						<NavTile
+							text={contest.contest.name}
+							icon={
+								<img
+									src={
+										'/logos/' +
+										contest.contest.symbol +
+										'.svg'
+									}
+								/>
+							}
+							link={
+								'/' +
+								contest.contest.symbol +
+								'/' +
+								contest.contest_year.year
+							}
+						/>
+					))}
+			</div>
+			{workGroups}
 		</>
 	);
 }
