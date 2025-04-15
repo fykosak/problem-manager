@@ -1,4 +1,4 @@
-import config from '@server/config';
+import config from '@server/config/config';
 
 import type { PersonRoles, RoleMapping } from './roleTypes';
 

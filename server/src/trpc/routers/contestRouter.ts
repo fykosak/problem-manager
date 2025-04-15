@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import config from '@server/config';
+import config from '@server/config/config';
 import { db } from '@server/db';
 import {
 	contestTable,
@@ -103,5 +103,8 @@ export const contestRouter = trpc.router({
 			},
 			where: eq(problemTable.contestId, ctx.contest.contestId),
 		});
+	}),
+	availableWork: contestProcedure.query(({ ctx }) => {
+		return config.contestWork[ctx.contest.symbol];
 	}),
 });

@@ -314,15 +314,19 @@ export const workStateEnum = pgEnum('work_state', [
 	'done',
 ]);
 
-export const workTable = pgTable('work', {
-	workId: serial().primaryKey(),
-	problemId: integer()
-		.notNull()
-		.references(() => problemTable.problemId, { onDelete: 'cascade' }),
-	label: varchar({ length: 255 }).notNull(),
-	group: varchar({ length: 255 }),
-	state: workStateEnum().notNull().default('waiting'),
-});
+export const workTable = pgTable(
+	'work',
+	{
+		workId: serial().primaryKey(),
+		problemId: integer()
+			.notNull()
+			.references(() => problemTable.problemId, { onDelete: 'cascade' }),
+		label: varchar({ length: 255 }).notNull(),
+		group: varchar({ length: 255 }),
+		state: workStateEnum().notNull().default('waiting'),
+	},
+	(table) => [unique().on(table.problemId, table.group, table.label)]
+);
 
 export const workRelations = relations(workTable, ({ one, many }) => ({
 	problem: one(problemTable, {
