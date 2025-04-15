@@ -16,6 +16,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@client/components/ui/card';
+import { ContestIcon } from '@client/components/ui/contestIcon';
 import { usePersonRoles } from '@client/hooks/usePersonRoles';
 import { trpc, trpcOutputTypes } from '@client/trpc';
 
@@ -182,12 +183,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 						<NavTile
 							text={contest.contest.name}
 							icon={
-								<img
-									src={
-										'/logos/' +
-										contest.contest.symbol +
-										'.svg'
-									}
+								<ContestIcon
+									contestSymbol={contest.contest.symbol}
 								/>
 							}
 							link={

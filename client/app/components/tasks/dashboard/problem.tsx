@@ -1,6 +1,8 @@
+import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { Badge } from '@client/components/ui/badge';
+import { Button } from '@client/components/ui/button';
 import {
 	Card,
 	CardContent,
@@ -43,9 +45,26 @@ export function Problem({
 				</CardTitle>
 				<CardDescription>úloha {problem.seriesOrder}</CardDescription>
 			</CardHeader>
-			<CardContent className="p-4 pt-0">
-				<ProgressWork workStats={workStats} />
-			</CardContent>
+			{problem.work.length > 0 && (
+				<CardContent className="p-4 pt-0 flex flex-row items-center gap-2">
+					<div className="grow">
+						<ProgressWork workStats={workStats} />
+					</div>
+					<Link to={'task/' + problem.problemId + '/work'}>
+						<Button
+							variant="ghost"
+							size="sm"
+							className={'text-sm gap-0 px-2'}
+						>
+							{Math.round(
+								(100 * (workStats.get('done') ?? 0)) /
+									problem.work.length
+							)}{' '}
+							% <ArrowRight />
+						</Button>
+					</Link>
+				</CardContent>
+			)}
 		</Card>
 	);
 }

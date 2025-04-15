@@ -5,6 +5,7 @@ import useCurrentRoute from '@client/hooks/useCurrentRoute';
 import { cn } from '@client/lib/utils';
 
 import { buttonVariants } from '../ui/button';
+import { ContestIcon } from '../ui/contestIcon';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -55,18 +56,16 @@ export default function ContestNavigationBar({
 	}
 
 	const contestItems = contests.map((contest) => {
-		const contestYear = contest.years.at(-1)?.year;
+		const contestYear = contest.years.at(0)?.year;
 		const path = generatePath('/' + currentRoute.route.path, {
 			...currentRoute.params,
 			contest: contest.symbol,
 			year: contestYear,
 		});
 		return (
-			<DropdownLinkItem
-				key={contest.contestId}
-				to={path}
-				name={contest.name}
-			/>
+			<DropdownLinkItem key={contest.contestId} to={path}>
+				<ContestIcon contestSymbol={contest.symbol} /> {contest.name}
+			</DropdownLinkItem>
 		);
 	});
 	const yearItems = selectedContest.years.map((year) => {
@@ -75,11 +74,9 @@ export default function ContestNavigationBar({
 			year: year.year,
 		});
 		return (
-			<DropdownLinkItem
-				key={year.year}
-				to={path}
-				name={year.year + '. ročník'}
-			/>
+			<DropdownLinkItem key={year.year} to={path}>
+				{year.year + '. ročník'}
+			</DropdownLinkItem>
 		);
 	});
 
@@ -97,6 +94,7 @@ export default function ContestNavigationBar({
 			<DropdownMenu>
 				<DropdownMenuTrigger>
 					<div className={cn(buttonVariants({ variant: 'ghost' }))}>
+						<ContestIcon contestSymbol={selectedContest.symbol} />
 						{selectedContest.name} <ArrowDown />
 					</div>
 				</DropdownMenuTrigger>
