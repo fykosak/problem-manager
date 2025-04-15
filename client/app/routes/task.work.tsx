@@ -31,7 +31,7 @@ export default function Work({ loaderData }: Route.ComponentProps) {
 	for (const [key, elements] of groups.entries()) {
 		groupElements.push(
 			<div key={key} className="flex flex-col gap-2">
-				{key}
+				<h3>{key}</h3>
 				{elements}
 			</div>
 		);
@@ -41,7 +41,7 @@ export default function Work({ loaderData }: Route.ComponentProps) {
 		<div className="flex flex-row justify-center px-4 sm:px-6 lg:px-8">
 			<div>
 				<h1>Korektury a úkoly</h1>
-				<div className="flex flex-col lg:flex-row gap-2 flex-wrap">
+				<div className="flex flex-col lg:flex-row gap-12 flex-wrap">
 					{groupElements}
 				</div>
 			</div>

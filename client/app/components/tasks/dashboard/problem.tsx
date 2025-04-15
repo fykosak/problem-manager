@@ -26,7 +26,10 @@ export function Problem({
 		<Card>
 			<CardHeader className="p-4">
 				<CardTitle className="flex flex-row justify-between items-center gap-2">
-					<Link to={'task/' + problem.problemId}>
+					<Link
+						to={'task/' + problem.problemId}
+						className="hover:underline"
+					>
 						{'name' in problem.metadata
 							? // @ts-expect-error not defined metadata type
 								'cs' in problem.metadata.name

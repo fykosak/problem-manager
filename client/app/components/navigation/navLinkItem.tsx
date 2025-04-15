@@ -12,8 +12,13 @@ export default function NavLinkItem(props: {
 		<NavLink to={props.to} end>
 			{({ isActive, isPending }) => (
 				<Button
-					variant={isActive ? 'default' : 'outline'}
+					variant={'ghost'}
 					onClick={props.onClick}
+					className={
+						isActive
+							? 'border-b-2 border-primary rounded-b-none'
+							: ''
+					}
 				>
 					{isPending && <Loader />}
 					{props.name}
