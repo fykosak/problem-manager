@@ -48,7 +48,8 @@ export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
 
 	return (
 		<>
-			<div className="my-5">
+			<h1>Návrhy na úlohy</h1>
+			<div className="my-2">
 				<Button asChild>
 					<NavLink to={'../tasks/create'}>
 						<Plus /> Navrhnout úlohu

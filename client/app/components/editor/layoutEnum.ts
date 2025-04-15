@@ -20,10 +20,10 @@ export enum Layout {
 export function getLayoutLabel(layout: Layout): string {
 	switch (layout) {
 		case Layout.TEXT_PDF:
-			return 'Text and PDF';
+			return 'Text a PDF';
 		case Layout.TEXT_TEXT_PDF:
-			return '2 texts and PDF';
+			return '2 texty a PDF';
 		case Layout.TEXT_TEXT:
-			return '2 texts side by side';
+			return '2 texty vedle sebe';
 	}
 }

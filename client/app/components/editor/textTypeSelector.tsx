@@ -121,13 +121,33 @@ export function TextTypeSelector({
 		return;
 	}
 
+	function getTypeLabel(type: string) {
+		switch (type) {
+			case 'task':
+				return 'Zadání';
+			case 'solution':
+				return 'Řešení';
+		}
+		return type;
+	}
+
+	function getLangLabel(lang: string) {
+		switch (lang) {
+			case 'cs':
+				return 'Čeština';
+			case 'en':
+				return 'Angličtina';
+		}
+		return lang;
+	}
+
 	return (
 		<div className="flex flex-row gap-2">
 			<Tabs onValueChange={selectType} value={selectedTextType}>
 				<TabsList>
 					{Array.from(textData.textsByType.keys()).map((type) => (
 						<TabsTrigger key={type} value={type}>
-							{type}
+							{getTypeLabel(type)}
 						</TabsTrigger>
 					))}
 				</TabsList>
@@ -140,7 +160,7 @@ export function TextTypeSelector({
 							value={text.lang}
 							disabled={excludedTextIds.has(text.textId)}
 						>
-							{text.lang}
+							{getLangLabel(text.lang)}
 						</TabsTrigger>
 					))}
 				</TabsList>

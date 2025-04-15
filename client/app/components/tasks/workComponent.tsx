@@ -19,13 +19,13 @@ export function getWorkStateLabel(
 ): string {
 	switch (workState) {
 		case 'waiting':
-			return 'Waiting';
+			return 'Čeká';
 		case 'todo':
-			return 'To be done';
+			return 'Potřeba udělat';
 		case 'pending':
-			return 'Pending';
+			return 'Rozpracované';
 		case 'done':
-			return 'Done';
+			return 'Hotovo';
 	}
 }
 

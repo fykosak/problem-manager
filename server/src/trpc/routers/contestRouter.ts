@@ -1,4 +1,6 @@
+import { TRPCError } from '@trpc/server';
 import { and, desc, eq } from 'drizzle-orm';
+import { z } from 'zod';
 
 import config from '@server/config';
 import { db } from '@server/db';
@@ -29,6 +31,26 @@ export const contestRouter = trpc.router({
 			contestTextLangs: Object.fromEntries(contestTextLangs),
 		};
 	}),
+	contestYear: contestProcedure
+		.input(z.object({ contestYear: z.number() }))
+		.query(async ({ ctx, input }) => {
+			const contestYear = await db.query.contestYearTable.findFirst({
+				where: and(
+					eq(contestYearTable.year, input.contestYear),
+					eq(contestYearTable.contestId, ctx.contest.contestId)
+				),
+				with: {
+					contest: true,
+				},
+			});
+			if (!contestYear) {
+				throw new TRPCError({
+					message: 'Context year not found',
+					code: 'NOT_FOUND',
+				});
+			}
+			return contestYear;
+		}),
 	/**
 	 * All contests with their active contest years
 	 */

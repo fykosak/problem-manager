@@ -153,7 +153,7 @@ export function SeriesForm({
 				/>
 				<Button type="submit" disabled={formState.isSubmitting}>
 					{formState.isSubmitting && <Loader />}
-					{!series ? <>Create</> : <>Save</>}
+					{!series ? <>Vytvořit</> : <>Uložit</>}
 				</Button>
 			</form>
 		</Form>

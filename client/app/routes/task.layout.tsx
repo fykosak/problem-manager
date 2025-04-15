@@ -1,3 +1,4 @@
+import { Braces, LetterText, ListTodo, Paperclip, Pen } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router';
 
 import { Layout, getLayoutLabel } from '@client/components/editor/layoutEnum';
@@ -56,13 +57,21 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	return { problem, textsById, textsByType };
 }
 
-function SiderbarNavlink({ to, label }: { to: string; label: string }) {
+function SiderbarNavlink({
+	to,
+	label,
+	icon,
+}: {
+	to: string;
+	label: string;
+	icon?: React.ReactNode;
+}) {
 	return (
 		<NavLink to={to} end>
 			{({ isActive, isPending }) => (
 				<SidebarMenuButton isActive={isActive}>
 					{isPending && <Loader />}
-					{label}
+					{icon} {label}
 				</SidebarMenuButton>
 			)}
 		</NavLink>
@@ -103,28 +112,33 @@ function ProblemSidebar({
 								<SiderbarNavlink
 									to={''}
 									label={'Editor textů'}
+									icon={<Pen />}
 								/>
 								<SiderbarNavlink
 									to={'metadata'}
-									label={'Metadata'}
+									label={'Info o úloze'}
+									icon={<Braces />}
 								/>
 								<SiderbarNavlink
 									to={'work'}
 									label={'Korektury a úkoly'}
+									icon={<ListTodo />}
 								/>
 								<SiderbarNavlink
 									to={'files'}
 									label={'Soubory'}
+									icon={<Paperclip />}
 								/>
 								<SiderbarNavlink
 									to={'web-texts'}
 									label={'Zveřejnění textů'}
+									icon={<LetterText />}
 								/>
 							</SidebarMenuItem>
 						</SidebarMenu>
 					</SidebarGroupContent>
 					<SidebarGroup>
-						<SidebarGroupLabel>Layout</SidebarGroupLabel>
+						<SidebarGroupLabel>Rozložení</SidebarGroupLabel>
 						<SidebarGroupContent>
 							<Select
 								onValueChange={(value) =>
@@ -133,7 +147,7 @@ function ProblemSidebar({
 								defaultValue={desktopLayout}
 							>
 								<SelectTrigger size="sm">
-									<SelectValue placeholder="select layout" />
+									<SelectValue placeholder="Vybrat rozložení" />
 								</SelectTrigger>
 								<SelectContent>
 									{Object.values(Layout).map((layout) => (

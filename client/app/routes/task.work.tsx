@@ -40,7 +40,7 @@ export default function Work({ loaderData }: Route.ComponentProps) {
 	return (
 		<div className="flex flex-row justify-center px-4 sm:px-6 lg:px-8">
 			<div>
-				<h1>Úkoly</h1>
+				<h1>Korektury a úkoly</h1>
 				<div className="flex flex-col lg:flex-row gap-2 flex-wrap">
 					{groupElements}
 				</div>

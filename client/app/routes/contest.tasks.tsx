@@ -1,3 +1,4 @@
+import { ListOrdered, Plus } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { acl } from '@server/acl/aclFactory';
@@ -14,23 +15,49 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 		contestSymbol: params.contest,
 		contestYear: Number(params.year),
 	});
-	return { series };
+	const contestYear = await trpc.contest.contestYear.query({
+		contestSymbol: params.contest,
+		contestYear: Number(params.year),
+	});
+	return { series, contestYear };
 }
 
 export default function Tasks({ params, loaderData }: Route.ComponentProps) {
 	const personRoles = usePersonRoles();
 	return (
 		<>
-			<div className="space-x-2 my-2">
+			<div className="mb-4">
+				<h1 className="pb-0">Úlohy</h1>
+				<span className="font-semibold">
+					ročník {loaderData.contestYear.year},{' '}
+					{loaderData.contestYear.contest.name}
+				</span>
+			</div>
+			<div className="my-2 flex flex-row gap-2 flex-wrap">
+				{acl.isAllowedContest(
+					personRoles,
+					params.contest,
+					'problem',
+					'create'
+				) && (
+					<Button asChild>
+						<Link to={'tasks/create'}>
+							<Plus /> Navrhnout úlohu
+						</Link>
+					</Button>
+				)}
 				{acl.isAllowedContest(
 					personRoles,
 					params.contest,
 					'series',
 					'edit'
 				) && (
-					<Link to="tasks/ordering">
-						<Button>Seřadit úlohy</Button>
-					</Link>
+					<Button asChild>
+						<Link to="tasks/ordering">
+							<ListOrdered />
+							Seřadit úlohy
+						</Link>
+					</Button>
 				)}
 				{acl.isAllowedContest(
 					personRoles,
@@ -38,9 +65,12 @@ export default function Tasks({ params, loaderData }: Route.ComponentProps) {
 					'series',
 					'create'
 				) && (
-					<Link to="series/create">
-						<Button>Přidat sérii</Button>
-					</Link>
+					<Button asChild>
+						<Link to="series/create">
+							<Plus />
+							Přidat sérii
+						</Link>
+					</Button>
 				)}
 			</div>
 			<ProblemDashboard series={loaderData.series} />

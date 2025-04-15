@@ -16,7 +16,7 @@ export default function TaskFiles({
 }: Route.ComponentProps) {
 	return (
 		<div className="max-w-screen-sm mx-auto px-4 sm:px-6 lg:px-8">
-			<h1>Files</h1>
+			<h1>Soubory</h1>
 			<FileUploadForm problemId={Number(params.taskId)} />
 			<FileList
 				problemId={Number(params.taskId)}
