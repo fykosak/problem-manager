@@ -5,7 +5,7 @@ import * as Y from 'yjs';
 import { z } from 'zod';
 
 import { acl } from '@server/acl/aclFactory';
-import config from '@server/config';
+import config from '@server/config/config';
 import { db } from '@server/db';
 import {
 	authorTable,
@@ -106,6 +106,33 @@ export const problemRouter = trpc.router({
 				.where(eq(workTable.workId, opts.input.workId))
 				.returning();
 			return work;
+		}),
+
+	addWork: authedProcedure
+		.input(
+			z.object({
+				problemId: z.number(),
+				newWork: z
+					.object({
+						group: z.string().nonempty(),
+						label: z.string().nonempty(),
+					})
+					.array(),
+			})
+		)
+		.mutation(async ({ input }) => {
+			const workWithProblemId = input.newWork.map((work) => ({
+				...work,
+				problemId: input.problemId,
+			}));
+			try {
+				await db.insert(workTable).values(workWithProblemId);
+			} catch {
+				throw new TRPCError({
+					message: 'Failed to add work to the problem',
+					code: 'INTERNAL_SERVER_ERROR',
+				});
+			}
 		}),
 
 	updateMetadata: authedProcedure
@@ -355,6 +382,7 @@ export const problemRouter = trpc.router({
 				where: eq(problemTable.problemId, input.problemId),
 				with: {
 					contest: true,
+					work: true,
 				},
 			});
 
@@ -410,5 +438,44 @@ export const problemRouter = trpc.router({
 							: 1,
 				})
 				.where(eq(problemTable.problemId, problem.problemId));
+
+			const workConfig = config.contestWork[problem.contest.symbol];
+			if (!workConfig) {
+				return;
+			}
+
+			// Add default (and missing) work to the problem
+			const existingWork = new Map<string | null, Set<string>>();
+			for (const work of problem.work) {
+				const group = existingWork.get(work.group) ?? new Set();
+				group.add(work.label);
+				existingWork.set(work.group, group);
+			}
+
+			const newWorkItems = [];
+			for (const workGroup of workConfig) {
+				for (const workItem of workGroup.items) {
+					if (workItem.optional) {
+						continue;
+					}
+
+					if (
+						existingWork.has(workGroup.groupName) &&
+						existingWork
+							.get(workGroup.groupName)
+							?.has(workItem.name)
+					) {
+						continue;
+					}
+
+					newWorkItems.push({
+						problemId: problem.problemId,
+						group: workGroup.groupName,
+						label: workItem.name,
+					});
+				}
+			}
+
+			await db.insert(workTable).values(newWorkItems);
 		}),
 });

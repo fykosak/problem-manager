@@ -1,11 +1,6 @@
-import { readFileSync } from 'fs';
+import { BaseRole, ContestRole, type RoleMapping } from '@server/acl/roleTypes';
 
-import { BaseRole, ContestRole, type RoleMapping } from './acl/roleTypes';
-import { ConfigError, getRequiredString } from './configUtils';
-
-const jsonConfig = JSON.parse(
-	readFileSync('./config.json').toString()
-) as Record<string, unknown>;
+import { ConfigError } from './configUtils';
 
 /**
  * Get typed role map from object, for example from
@@ -41,41 +36,10 @@ function getRoleMappping(json: unknown) {
 
 	return typedRoleMap;
 }
-function getContestTextLangs(json: Record<string, unknown>, property: string) {
-	const textsConfig = json[property];
-	if (!textsConfig || typeof textsConfig !== 'object') {
-		throw new ConfigError('Texts config is not an object');
-	}
 
-	const contestTextLangs = new Map<string, string[]>();
-
-	for (const contest in textsConfig) {
-		const langList = (textsConfig as Record<string, unknown>)[contest];
-		if (!Array.isArray(langList)) {
-			throw new ConfigError(`Language list for ${contest} is not a list`);
-		}
-
-		const langs = new Set<string>();
-		for (const lang of langList) {
-			if (typeof lang !== 'string') {
-				throw new ConfigError(
-					`Language list should be a list of strings`
-				);
-			}
-			if (lang !== 'cs' && lang !== 'en') {
-				throw new ConfigError(
-					`Invalid language ${lang}, use only cs,en`
-				);
-			}
-			langs.add(lang);
-		}
-
-		contestTextLangs.set(contest, Array.from(langs));
-	}
-
-	return contestTextLangs;
-}
-
+/**
+ * Get role mappings using `getRoleMappping` for all contests specified
+ */
 function getContestRoleMap(json: unknown) {
 	if (typeof json !== 'object') {
 		throw new ConfigError('Role map must be an object');
@@ -101,7 +65,12 @@ function getContestRoleMap(json: unknown) {
 	return contestRoleMap;
 }
 
-function getACLConfig(json: Record<string, unknown>, property: string) {
+/**
+ * Read role mappings for ACL from config in defined scopes.
+ * - `baseRole` - base roles linked to the whole system, like admin
+ * - `contestRole` - roles specific to a contest, i.e. organizer
+ */
+export function getACLConfig(json: Record<string, unknown>, property: string) {
 	const aclConfig = json[property];
 	if (typeof aclConfig !== 'object') {
 		throw new ConfigError('Acl config is not an object');
@@ -140,20 +109,3 @@ function getACLConfig(json: Record<string, unknown>, property: string) {
 
 	return roleMap;
 }
-
-/**
- * Typed config values derived from config.json
- */
-const config = {
-	/** URL to oidc realm certs, for example https://mykeycloak.example.com/realms/master/protocol/openid-connect/certs */
-	oidcCertsUrl: getRequiredString(jsonConfig, 'oidcCertsUrl'),
-	builderUrl: getRequiredString(jsonConfig, 'builderUrl'),
-	fksdbApiUrl: getRequiredString(jsonConfig, 'fksdbApiUrl'),
-	fksdbLogin: getRequiredString(jsonConfig, 'fksdbLogin'),
-	fksdbPassword: getRequiredString(jsonConfig, 'fksdbPassword'),
-	dbConnection: getRequiredString(jsonConfig, 'dbConnection'),
-	contestTextLangs: getContestTextLangs(jsonConfig, 'contestTextLangs'),
-	roleMapping: getACLConfig(jsonConfig, 'roleMapping'),
-};
-
-export default config;

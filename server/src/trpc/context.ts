@@ -1,7 +1,7 @@
 import * as trpcExpress from '@trpc/server/adapters/express';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
-import config from '../config';
+import config from '@server/config/config';
 
 export async function createContext({
 	req,
