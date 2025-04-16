@@ -24,10 +24,10 @@ export function Series({
 }) {
 	const personRoles = usePersonRoles();
 	return (
-		<div className="md:w-80">
+		<div className="md:w-[17rem] sm:w-80">
 			<Card>
 				<CardHeader className="p-4">
-					<CardTitle className="flex flex-row gap-2 items-center justify-between">
+					<CardTitle className="flex flex-row gap-2 items-center justify-between gap-1">
 						<h2 className="py-2">série {series.label}</h2>
 						{acl.isAllowedContest(
 							personRoles,
@@ -57,7 +57,7 @@ export function Series({
 						)}
 					</CardDescription>
 				</CardHeader>
-				<CardContent className="p-4">
+				<CardContent className="p-2">
 					{series.problems.length === 0 ? (
 						<Badge>Žádné úlohy</Badge>
 					) : (

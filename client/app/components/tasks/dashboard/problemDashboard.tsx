@@ -12,7 +12,7 @@ export function ProblemDashboard({
 		return <Badge>Žádné série v ročníku</Badge>;
 	}
 	return (
-		<div className="flex flex-col md:flex-row flex-wrap justify-around gap-5">
+		<div className="flex flex-col md:flex-row flex-wrap justify-around gap-2">
 			{series.map((series) => (
 				<Series key={series.seriesId} series={series} />
 			))}

@@ -10,7 +10,7 @@ export function ContestIcon({
 	return (
 		<img
 			src={'/logos/' + contestSymbol + '.svg'}
-			className={cn('size-8', className)}
+			className={cn('size-6', className)}
 		/>
 	);
 }

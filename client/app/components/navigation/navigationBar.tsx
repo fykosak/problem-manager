@@ -34,11 +34,11 @@ export default function NavigationBar({
 	}
 
 	return (
-		<div className="w-full bg-sidebar">
+		<div className="w-full bg-sidebar h-14">
 			<div className="container mx-auto px-4 sm:px-6 lg:px-8 m-auto h-full">
 				<nav className="flex items-center justify-between flex-wrap lg:space-x-2 h-full">
 					<NavLink to="/">
-						<Logo className="h-[4rem]" />
+						<Logo className="h-[2.5rem] me-2" />
 					</NavLink>
 					<Button
 						className="lg:hidden"
@@ -57,7 +57,7 @@ export default function NavigationBar({
 						<div
 							className={
 								(navHidden ? 'hidden' : 'flex') +
-								' lg:flex flex-col lg:flex-row w-full lg:w-auto lg:items-center lg:gap-2 my-2'
+								' lg:flex flex-col lg:flex-row w-full lg:w-auto lg:items-center lg:gap-2'
 							}
 						>
 							{links.map((link) => (
@@ -72,7 +72,7 @@ export default function NavigationBar({
 						<div
 							className={
 								(navHidden ? 'hidden' : 'flex') +
-								' lg:flex flex-col lg:flex-row w-full lg:w-auto lg:items-center lg:gap-2 my-2'
+								' lg:flex flex-col lg:flex-row w-full lg:w-auto lg:items-center lg:gap-2'
 							}
 						>
 							{children}

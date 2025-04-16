@@ -29,7 +29,7 @@ export function WebTextItem({
 			await trpc.text.release.mutate({
 				textId: text.textId,
 			});
-			toast.success('Text released');
+			toast.success('Text zveřejněn');
 			await revalidator.revalidate();
 		} catch (error) {
 			if (error instanceof TRPCClientError) {
@@ -43,7 +43,7 @@ export function WebTextItem({
 			await trpc.text.revoke.mutate({
 				textId: text.textId,
 			});
-			toast.success('Text revoked');
+			toast.success('Text odveřejněn');
 			await revalidator.revalidate();
 		} catch (error) {
 			if (error instanceof TRPCClientError) {
@@ -59,11 +59,11 @@ export function WebTextItem({
 					{text.type} - {text.lang}
 					{text.html ? (
 						<Badge variant="success" className="ms-2">
-							Released
+							Zveřejněno
 						</Badge>
 					) : (
 						<Badge variant="destructive" className="ms-2">
-							Not released
+							Nezveřejněno
 						</Badge>
 					)}
 				</span>
@@ -71,7 +71,11 @@ export function WebTextItem({
 					{/*eslint-disable-next-line*/}
 					<Button onClick={form.handleSubmit(handleRelease)}>
 						{form.formState.isSubmitting && <Loader />}{' '}
-						{text.html ? <>Rerelease</> : <>Release</>}
+						{text.html ? (
+							<>Zveřejnit aktuální verzi</>
+						) : (
+							<>Zveřejnit</>
+						)}
 					</Button>
 					{text.html && (
 						<Button
@@ -79,7 +83,8 @@ export function WebTextItem({
 							// eslint-disable-next-line
 							onClick={form.handleSubmit(handleRevoke)}
 						>
-							{form.formState.isSubmitting && <Loader />}Revoke
+							{form.formState.isSubmitting && <Loader />}
+							Odveřejnit
 						</Button>
 					)}
 				</span>

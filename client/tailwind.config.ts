@@ -8,6 +8,10 @@ export default {
 	content: ['./app/**/{**,.client,.server}/**/*.{js,jsx,ts,tsx}'],
 	theme: {
 		extend: {
+			screens: {
+				'3xl': '1792px',
+				'4xl': '2048px',
+			},
 			fontFamily: {
 				sans: [
 					'Inter',
