@@ -12,5 +12,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export default function TaskOrdering({ loaderData }: Route.ComponentProps) {
-	return <ProblemOrdering series={loaderData.series} />;
+	return (
+		<>
+			<h1>Seřazení úloh</h1>
+			<ProblemOrdering series={loaderData.series} />
+		</>
+	);
 }

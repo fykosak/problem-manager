@@ -1,8 +1,8 @@
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@server/db';
-import { personWorkTable } from '@server/db/schema';
+import { contestYearTable, personWorkTable } from '@server/db/schema';
 
 import { authedProcedure } from './middleware';
 import { contestRouter } from './routers/contestRouter';
@@ -16,7 +16,9 @@ export const appRouter = trpc.router({
 	getContests: authedProcedure.query(async () => {
 		return await db.query.contestTable.findMany({
 			with: {
-				years: true,
+				years: {
+					orderBy: desc(contestYearTable.year),
+				},
 			},
 		});
 	}),

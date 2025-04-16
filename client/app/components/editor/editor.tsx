@@ -2,19 +2,26 @@ import { lintGutter, linter } from '@codemirror/lint';
 import { material } from '@uiw/codemirror-theme-material';
 import CodeMirror, { EditorView } from '@uiw/react-codemirror';
 import { latex, latexLinter } from 'lang-latex';
+import { CircleCheckIcon } from 'lucide-react';
 import { ForwardedRef, forwardRef, useEffect, useRef, useState } from 'react';
+import { useAuth } from 'react-oidc-context';
 import { yCollab } from 'y-codemirror.next';
 import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
 
+import { Loader } from '../ui/loader';
+
 const Editor = forwardRef(
 	({ textId }: { textId: number }, ref: ForwardedRef<HTMLDivElement>) => {
+		const auth = useAuth();
 		const ydocRef = useRef(new Y.Doc());
 		const providerRef = useRef<WebsocketProvider | null>(null);
 		const yTextRef = useRef(ydocRef.current.getText());
 		const undoManagerRef = useRef(new Y.UndoManager(yTextRef.current));
 
-		const [connected, setConnected] = useState(false);
+		const [connectionStatus, setConnectionStatus] =
+			useState('disconnected');
+		const [syncStatus, setSyncStatus] = useState(false);
 
 		// Set user awareness on mount
 		useEffect(() => {
@@ -22,24 +29,23 @@ const Editor = forwardRef(
 			const provider = new WebsocketProvider(
 				'ws://localhost:8081',
 				textId.toString(),
-				ydoc,
-				{ connect: false }
+				ydoc
 			);
 			providerRef.current = provider;
 
-			provider.connect();
-			setConnected(true);
+			provider.on('status', ({ status }) => setConnectionStatus(status));
+			provider.on('sync', (sync) => setSyncStatus(sync));
 
-			const user = {
-				name: 'Anonymous ' + Math.floor(Math.random() * 100),
+			const awarenessUser = {
+				name: auth.user?.profile.name ?? '',
 				color: '#553322',
 				colorLight: '#998866',
 			};
-			provider.awareness.setLocalStateField('user', user);
+			provider.awareness.setLocalStateField('user', awarenessUser);
 
 			// Ensure user mapping
 			const userData = new Y.PermanentUserData(ydoc);
-			userData.setUserMapping(ydoc, ydoc.clientID, user.name);
+			userData.setUserMapping(ydoc, ydoc.clientID, awarenessUser.name);
 
 			return () => {
 				provider.destroy();
@@ -57,8 +63,21 @@ const Editor = forwardRef(
 		if (!undoManagerRef.current) {
 			return null;
 		}
-		if (!connected) {
-			return null;
+
+		if (connectionStatus === 'disconnected') {
+			return (
+				<div ref={ref} className="h-full flex flex-col">
+					<Loader /> Odpojeno
+				</div>
+			);
+		}
+
+		if (connectionStatus == 'connecting') {
+			return (
+				<div ref={ref} className="h-full flex flex-col">
+					<Loader /> Připojování
+				</div>
+			);
 		}
 
 		/* CSS trick:
@@ -74,6 +93,18 @@ const Editor = forwardRef(
 		 */
 		return (
 			<div ref={ref} className="h-full flex flex-col">
+				<div className="inline-flex gap-2 text-sm">
+					{syncStatus ? (
+						<>
+							<CircleCheckIcon className="text-green-500" />{' '}
+							Uloženo
+						</>
+					) : (
+						<>
+							<Loader /> Synchronizace
+						</>
+					)}
+				</div>
 				<CodeMirror
 					value={yTextRef.current.toJSON()}
 					height="100%"

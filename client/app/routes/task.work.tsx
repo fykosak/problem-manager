@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogTitle } from '@radix-ui/react-dialog';
+import { Plus } from 'lucide-react';
 import { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRevalidator } from 'react-router';
@@ -185,7 +186,7 @@ export default function Work({ loaderData, params }: Route.ComponentProps) {
 	for (const [key, elements] of groups.entries()) {
 		groupElements.push(
 			<div key={key} className="flex flex-col gap-2">
-				{key}
+				<h3>{key}</h3>
 				{elements}
 			</div>
 		);
@@ -194,29 +195,32 @@ export default function Work({ loaderData, params }: Route.ComponentProps) {
 	const [open, setOpen] = useState(false);
 
 	return (
-		<>
-			<div className="flex flex-row justify-center px-4 sm:px-6 lg:px-8">
-				<div>
-					<Dialog open={open} onOpenChange={setOpen}>
-						<DialogTrigger asChild>
-							<Button>Přidat korekturu</Button>
-						</DialogTrigger>
-						<DialogContent>
-							<DialogTitle>Přidat korekturu</DialogTitle>
-							<AddWorkForm
-								availableWork={loaderData.availableWork}
-								currentWork={loaderData.work}
-								problemId={Number(params.taskId)}
-								setOpen={setOpen}
-							/>
-						</DialogContent>
-					</Dialog>
-					<h1>Korektury</h1>
-					<div className="flex flex-col lg:flex-row gap-2 flex-wrap">
-						{groupElements}
-					</div>
+		<div className="flex flex-row justify-center px-4 sm:px-6 lg:px-8">
+			<div>
+				<h1>Korektury a úkoly</h1>
+				<Dialog open={open} onOpenChange={setOpen}>
+					<DialogTrigger asChild>
+						<Button>
+							<Plus />
+							Přidat korekturu
+						</Button>
+					</DialogTrigger>
+					<DialogContent>
+						<DialogTitle className="inline-flex items-center gap-2">
+							<Plus /> Přidat korekturu
+						</DialogTitle>
+						<AddWorkForm
+							availableWork={loaderData.availableWork}
+							currentWork={loaderData.work}
+							problemId={Number(params.taskId)}
+							setOpen={setOpen}
+						/>
+					</DialogContent>
+				</Dialog>
+				<div className="flex flex-col lg:flex-row gap-12 flex-wrap my-4">
+					{groupElements}
 				</div>
 			</div>
-		</>
+		</div>
 	);
 }

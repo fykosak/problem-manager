@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react';
 import { NavLink } from 'react-router';
+import { useNavigate } from 'react-router';
 
 import { Button } from '@client/components/ui/button';
 import { DataTable } from '@client/components/ui/dataTable';
@@ -43,9 +44,12 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
+	const navigate = useNavigate();
+
 	return (
 		<>
-			<div className="my-5">
+			<h1>Návrhy na úlohy</h1>
+			<div className="my-2">
 				<Button asChild>
 					<NavLink to={'../tasks/create'}>
 						<Plus /> Navrhnout úlohu
@@ -55,6 +59,9 @@ export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
 			<DataTable
 				columns={getColumns(loaderData.series)}
 				data={loaderData.problems}
+				getOnRowClick={(row) => () =>
+					navigate('../task/' + row.original.problemId)
+				}
 			/>
 		</>
 	);

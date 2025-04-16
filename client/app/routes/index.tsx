@@ -1,10 +1,14 @@
+import { Plus } from 'lucide-react';
 import { NavLink } from 'react-router';
+
+import { acl } from '@server/acl/aclFactory';
 
 import {
 	getWorkStateColor,
 	getWorkStateLabel,
 } from '@client/components/tasks/workComponent';
 import { Badge } from '@client/components/ui/badge';
+import { Button } from '@client/components/ui/button';
 import {
 	Card,
 	CardContent,
@@ -12,6 +16,8 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@client/components/ui/card';
+import { ContestIcon } from '@client/components/ui/contestIcon';
+import { usePersonRoles } from '@client/hooks/usePersonRoles';
 import { trpc, trpcOutputTypes } from '@client/trpc';
 
 import { Route } from './+types/index';
@@ -77,46 +83,120 @@ function WorkItem({
 }
 
 function WorkGroup({
+	header,
 	works,
 	currentContestYears,
 }: {
+	header: string;
 	works: trpcOutputTypes['person']['work'];
 	currentContestYears: trpcOutputTypes['contest']['currentContests'];
 }) {
 	if (works.length === 0) {
-		return <Badge>No work found</Badge>;
+		return null;
 	}
 	return (
-		<div className="flex flex-col md:flex-row flex-wrap gap-2">
-			{works.map((work) => (
-				<WorkItem
-					key={work.person_work.personWorkId}
-					work={work}
-					currentContestYears={currentContestYears}
-				/>
-			))}
-		</div>
+		<>
+			<h1>{header}</h1>
+			<div className="flex flex-col md:flex-row flex-wrap gap-2">
+				{works.map((work) => (
+					<WorkItem
+						key={work.person_work.personWorkId}
+						work={work}
+						currentContestYears={currentContestYears}
+					/>
+				))}
+			</div>
+		</>
+	);
+}
+
+function NavTile({
+	text,
+	icon,
+	link,
+}: {
+	text: string;
+	icon: React.ReactNode;
+	link: string;
+}) {
+	return (
+		<NavLink to={link}>
+			<Button
+				variant={'outline'}
+				className="flex flex-col gap-2 h-auto [&_svg]:size-24 [&_img]:size-24 py-4 w-48 min-h-48"
+			>
+				{icon}
+				<span className="font-semibold">{text}</span>
+			</Button>
+		</NavLink>
 	);
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
+	const workCount = Object.values(loaderData.work).reduce(
+		(sum, works) => sum + works.length,
+		0
+	);
+
+	const workGroups =
+		workCount === 0 ? (
+			<Badge>No work found</Badge>
+		) : (
+			<>
+				<WorkGroup
+					header={'Úkoly potřeba udělat'}
+					works={loaderData.work.todo}
+					currentContestYears={loaderData.currentContestYears}
+				/>
+				<WorkGroup
+					header={'Rozpracované úkoly na dokončení'}
+					works={loaderData.work.pending}
+					currentContestYears={loaderData.currentContestYears}
+				/>
+				<WorkGroup
+					header={'Úkoly čekající na dokončení jiných úkolů'}
+					works={loaderData.work.waiting}
+					currentContestYears={loaderData.currentContestYears}
+				/>
+			</>
+		);
+
+	const personRoles = usePersonRoles();
+
 	return (
 		<>
-			<h1>Work to be done</h1>
-			<WorkGroup
-				works={loaderData.work.todo}
-				currentContestYears={loaderData.currentContestYears}
-			/>
-			<h1>Work waiting to be finished</h1>
-			<WorkGroup
-				works={loaderData.work.pending}
-				currentContestYears={loaderData.currentContestYears}
-			/>
-			<h1>Waiting work</h1>
-			<WorkGroup
-				works={loaderData.work.waiting}
-				currentContestYears={loaderData.currentContestYears}
-			/>
+			<div className="flex flex-row gap-4 justify-center">
+				<NavTile
+					text="Navrhnout úlohu"
+					icon={<Plus />}
+					link={'create-problem'}
+				/>
+				{loaderData.currentContestYears
+					.filter((contest) => {
+						return acl.isAllowedContest(
+							personRoles,
+							contest.contest.symbol,
+							'contest'
+						);
+					})
+					.map((contest) => (
+						<NavTile
+							text={contest.contest.name}
+							icon={
+								<ContestIcon
+									contestSymbol={contest.contest.symbol}
+								/>
+							}
+							link={
+								'/' +
+								contest.contest.symbol +
+								'/' +
+								contest.contest_year.year
+							}
+						/>
+					))}
+			</div>
+			{workGroups}
 		</>
 	);
 }

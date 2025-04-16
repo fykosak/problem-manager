@@ -43,7 +43,7 @@ function ProgressWork({
 				const translateX = (runningSum / numberOfWorks) * (1 / width);
 				runningSum = runningSum + workStateCount;
 				return (
-					<TooltipProvider key={workState}>
+					<TooltipProvider key={workState} delayDuration={200}>
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<ProgressPrimitive.Indicator

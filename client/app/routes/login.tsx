@@ -2,6 +2,7 @@ import { useAuth } from 'react-oidc-context';
 import { Navigate } from 'react-router';
 
 import { Button } from '@client/components/ui/button';
+import { Loader } from '@client/components/ui/loader';
 import Logo from '@client/components/ui/logo';
 
 export default function Login() {
@@ -10,18 +11,30 @@ export default function Login() {
 	switch (auth.activeNavigator) {
 		case 'signinRedirect':
 		case 'signinSilent':
-			return <div>Signing you in...</div>;
+			return (
+				<div>
+					<Loader /> Přihlašování
+				</div>
+			);
 		case 'signoutRedirect':
-			return <div>Signing you out...</div>;
+			return (
+				<div>
+					<Loader /> Odhlašování
+				</div>
+			);
 	}
 
 	if (auth.isLoading) {
-		return <div>Loading...</div>;
+		return <Loader />;
 	}
 
 	if (auth.isAuthenticated) {
-		const loginRedirect = localStorage.getItem('loginRedirect') ?? '/';
-		localStorage.removeItem('loginRedirect');
+		console.log(localStorage.getItem('loginRedirect'));
+		let loginRedirect = localStorage.getItem('loginRedirect') ?? '/';
+		if (loginRedirect === '/login') {
+			loginRedirect = '/';
+		}
+		console.log(loginRedirect);
 		return <Navigate to={loginRedirect} />;
 	}
 
@@ -37,7 +50,7 @@ export default function Login() {
 					className="self-stretch"
 					onClick={() => void auth.signinRedirect()}
 				>
-					Log in
+					Přihlásit se
 				</Button>
 			</div>
 		</div>

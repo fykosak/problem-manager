@@ -19,13 +19,13 @@ export function getWorkStateLabel(
 ): string {
 	switch (workState) {
 		case 'waiting':
-			return 'Waiting';
+			return 'Čeká';
 		case 'todo':
-			return 'To be done';
+			return 'Potřeba udělat';
 		case 'pending':
-			return 'Pending';
+			return 'Rozpracované';
 		case 'done':
-			return 'Done';
+			return 'Hotovo';
 	}
 }
 
@@ -34,13 +34,13 @@ export function getWorkStateColor(
 ): string {
 	switch (workState) {
 		case 'waiting':
-			return 'bg-neutral-500 hover:bg-neutral-500/80 text-white';
+			return 'bg-neutral-500 text-white';
 		case 'todo':
-			return 'bg-red-500 hover:bg-red-600 text-white';
+			return 'bg-destructive text-destructive-foreground';
 		case 'pending':
-			return 'bg-yellow-500 hover:bg-yellow-600 text-black';
+			return 'bg-yellow-500 text-black';
 		case 'done':
-			return 'bg-green-500 hover:bg-green-600 text-black';
+			return 'bg-green-500 text-black';
 	}
 }
 

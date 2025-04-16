@@ -1,6 +1,8 @@
+import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { Badge } from '@client/components/ui/badge';
+import { Button } from '@client/components/ui/button';
 import {
 	Card,
 	CardContent,
@@ -24,9 +26,12 @@ export function Problem({
 
 	return (
 		<Card>
-			<CardHeader>
+			<CardHeader className="p-4">
 				<CardTitle className="flex flex-row justify-between items-center gap-2">
-					<Link to={'task/' + problem.problemId}>
+					<Link
+						to={'task/' + problem.problemId}
+						className="hover:underline"
+					>
 						{'name' in problem.metadata
 							? // @ts-expect-error not defined metadata type
 								'cs' in problem.metadata.name
@@ -34,13 +39,32 @@ export function Problem({
 								: ''
 							: ''}
 					</Link>
-					<Badge className="bg-green-500">{problem.type.label}</Badge>
+					<Badge className="bg-green-500 text-background">
+						{problem.type.label}
+					</Badge>
 				</CardTitle>
 				<CardDescription>úloha {problem.seriesOrder}</CardDescription>
 			</CardHeader>
-			<CardContent>
-				<ProgressWork workStats={workStats} />
-			</CardContent>
+			{problem.work.length > 0 && (
+				<CardContent className="p-4 pt-0 flex flex-row items-center gap-2">
+					<div className="grow">
+						<ProgressWork workStats={workStats} />
+					</div>
+					<Link to={'task/' + problem.problemId + '/work'}>
+						<Button
+							variant="ghost"
+							size="sm"
+							className={'text-sm gap-0 px-2'}
+						>
+							{Math.round(
+								(100 * (workStats.get('done') ?? 0)) /
+									problem.work.length
+							)}{' '}
+							% <ArrowRight />
+						</Button>
+					</Link>
+				</CardContent>
+			)}
 		</Card>
 	);
 }

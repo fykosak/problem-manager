@@ -2,7 +2,7 @@ import { useContext } from 'react';
 
 import { PersonRolesContext } from './personRolesProvider';
 
-export function useUserRoles() {
+export function usePersonRoles() {
 	const context = useContext(PersonRolesContext);
 
 	if (!context) {

@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { DialogDescription, DialogTitle } from '@radix-ui/react-dialog';
 import { TRPCClientError } from '@trpc/client';
-import { Trash } from 'lucide-react';
+import { Plus, Trash } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRevalidator } from 'react-router';
@@ -192,7 +192,9 @@ function NewKeyDialog() {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button>Generate new key</Button>
+				<Button>
+					<Plus /> Vygenerovat nový API klíč
+				</Button>
 			</DialogTrigger>
 			<DialogContent>
 				<DialogHeader>
@@ -257,6 +259,7 @@ function NewKeyDialog() {
 export default function ApiKeys({ loaderData }: Route.ComponentProps) {
 	return (
 		<>
+			<h1>API klíče</h1>
 			<NewKeyDialog />
 			<Table>
 				<TableHeader>

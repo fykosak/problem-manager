@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import crypto from 'node:crypto';
 import { z } from 'zod';
 
@@ -63,23 +63,23 @@ export const personRouter = trpc.router({
 	 * Return list of contest years, that are active and person is
 	 * organizing them.
 	 */
-	activeContestYears: authedProcedure.query(async ({ ctx }) => {
-		// TODO create logic for active contest year
-		// TODO filter by since and until
-		const contestIds = ctx.person.organizers.map(
-			(organizer) => organizer.contestId
-		);
+	//activeContestYears: authedProcedure.query(async ({ ctx }) => {
+	//	// TODO create logic for active contest year
+	//	// TODO filter by since and until
+	//	const contestIds = ctx.person.organizers.map(
+	//		(organizer) => organizer.contestId
+	//	);
 
-		return await db
-			.selectDistinctOn([contestYearTable.contestId])
-			.from(contestYearTable)
-			.innerJoin(
-				contestTable,
-				eq(contestTable.contestId, contestYearTable.contestId)
-			)
-			.where(inArray(contestYearTable.contestId, contestIds))
-			.orderBy(contestYearTable.contestId, desc(contestYearTable.year));
-	}),
+	//	return await db
+	//		.selectDistinctOn([contestYearTable.contestId])
+	//		.from(contestYearTable)
+	//		.innerJoin(
+	//			contestTable,
+	//			eq(contestTable.contestId, contestYearTable.contestId)
+	//		)
+	//		.where(inArray(contestYearTable.contestId, contestIds))
+	//		.orderBy(contestYearTable.contestId, desc(contestYearTable.year));
+	//}),
 
 	roles: authedProcedure.query(({ ctx }) => {
 		// Map and Set cannot be serialized and must be converted to arrays and objects

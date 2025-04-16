@@ -3,6 +3,7 @@ import {
 	ColumnDef,
 	ColumnFiltersState,
 	PaginationState,
+	Row,
 	SortingState,
 	flexRender,
 	getCoreRowModel,
@@ -93,11 +94,15 @@ export function DataTableColumnSorter<TData, TValue>({
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
+	getOnRowClick?: (
+		row: Row<TData>
+	) => React.MouseEventHandler<HTMLTableRowElement>;
 }
 
 export function DataTable<TData, TValue>({
 	columns,
 	data,
+	getOnRowClick,
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] =
@@ -183,6 +188,14 @@ export function DataTable<TData, TValue>({
 									key={row.id}
 									data-state={
 										row.getIsSelected() && 'selected'
+									}
+									onClick={
+										getOnRowClick
+											? getOnRowClick(row)
+											: undefined
+									}
+									className={
+										getOnRowClick && 'cursor-pointer'
 									}
 								>
 									{row.getVisibleCells().map((cell) => (

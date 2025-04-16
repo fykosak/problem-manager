@@ -37,13 +37,13 @@ export default function PdfViewer({
 		>
 			<Document
 				file={file}
+				noData={'Nenačten žádný dokument'}
+				error={'Chyba při načítání dokumentu'}
+				loading={'Načítání dokumentu'}
 				onLoadError={console.error}
 				onLoadSuccess={onDocumentLoadSuccess}
 				externalLinkTarget="_blank"
 			>
-				{
-					//<Outline />
-				}
 				<div className="m-auto" style={{ width: `${width + 10}px` }}>
 					{Array.from(new Array(numPages), (el, index) => (
 						<Page

@@ -16,7 +16,7 @@ export default function ContestSeriesCreate({
 }: Route.ComponentProps) {
 	return (
 		<>
-			<h1>Edit series</h1>
+			<h1>Upravit sérii</h1>
 			<SeriesForm
 				contestSymbol={params.contest}
 				contestYear={Number(params.year)}

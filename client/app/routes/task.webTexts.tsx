@@ -13,7 +13,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 export default function WebTexts({ loaderData }: Route.ComponentProps) {
 	return (
 		<div className="max-w-screen-sm mx-auto px-4 sm:px-6 lg:px-8">
-			<h1>Web texts</h1>
+			<h1>Zveřejnění textů na web</h1>
 			<WebTextsList texts={loaderData.texts} />
 		</div>
 	);
