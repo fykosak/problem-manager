@@ -9,6 +9,8 @@ import { yCollab } from 'y-codemirror.next';
 import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
 
+import { config } from '@client/config';
+
 import { Loader } from '../ui/loader';
 
 const Editor = forwardRef(
@@ -27,7 +29,7 @@ const Editor = forwardRef(
 		useEffect(() => {
 			const ydoc = ydocRef.current;
 			const provider = new WebsocketProvider(
-				'ws://localhost:8081',
+				config.WS_URL,
 				textId.toString(),
 				ydoc
 			);
