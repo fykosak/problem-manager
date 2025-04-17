@@ -42,8 +42,8 @@ export function meta() {
 
 export function HydrateFallback() {
 	return (
-		<div className="w-100 h-100 flex items-center align-center">
-			<Loader />
+		<div className="w-full h-screen flex items-center justify-center">
+			<Loader className="block" />
 		</div>
 	);
 }

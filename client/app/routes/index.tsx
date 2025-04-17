@@ -165,7 +165,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
 	return (
 		<>
-			<div className="flex flex-row gap-4 justify-center">
+			<div className="flex flex-row flex-wrap gap-4 justify-center">
 				<NavTile
 					text="Navrhnout úlohu"
 					icon={<Plus />}

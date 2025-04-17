@@ -44,7 +44,7 @@ export default function Login() {
 
 	return (
 		<div className="flex flex-col items-center justify-center w-full h-screen">
-			<div className="flex flex-col items-center w-full md:max-w-md">
+			<div className="flex flex-col items-center w-full sm:max-w-md p-6">
 				<Logo className="h-48 my-5" />
 				<Button
 					className="self-stretch"
