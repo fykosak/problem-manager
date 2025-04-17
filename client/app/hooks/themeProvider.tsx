@@ -26,7 +26,11 @@ export function ThemeProvider({
 	defaultTheme = 'system',
 	...props
 }: ThemeProviderProps) {
-	const [theme, setTheme] = useState<Theme>(defaultTheme);
+	let savedTheme = null;
+	if (typeof localStorage !== 'undefined') {
+		savedTheme = localStorage.getItem('theme') as Theme;
+	}
+	const [theme, setTheme] = useState<Theme>(savedTheme ?? defaultTheme);
 	const [usedColor, setUsedColor] = useState<'dark' | 'light'>('light');
 
 	useEffect(() => {
@@ -55,6 +59,7 @@ export function ThemeProvider({
 		usedColor,
 		setTheme: (theme: Theme) => {
 			setTheme(theme);
+			localStorage.setItem('theme', theme);
 		},
 	};
 

@@ -1,7 +1,15 @@
 import { useNavigation } from 'react-router';
 
+import { Loader } from '../ui/loader';
+
 function Loading() {
-	return <p>Loading</p>;
+	return (
+		<div className="flex w-full justify-center items-center my-2">
+			<span className="inline-flex">
+				<Loader /> Loading
+			</span>
+		</div>
+	);
 }
 
 export default function NavigationSuspense({

@@ -22,6 +22,8 @@ export const config = {
 	ROOT_URL: getRequiredString('VITE_ROOT_URL'),
 	/** App API url, for example https://api.example.com */
 	API_URL: getRequiredString('VITE_API_URL'),
+	/** App WebSocket url, for example ws://api.example.com */
+	WS_URL: getRequiredString('VITE_WS_URL'),
 	/** URL to oidc realm certs, for example https://mykeycloak.example.com/realms/master/protocol/openid-connect/certs */
 	OIDC_AUTHORITY_URL: getRequiredString('VITE_OIDC_AUTHORITY_URL'),
 	OIDC_CLIENT_ID: getRequiredString('VITE_OIDC_CLIENT_ID'),
