@@ -189,11 +189,23 @@ export function DataTable<TData, TValue>({
 									data-state={
 										row.getIsSelected() && 'selected'
 									}
-									onClick={
-										getOnRowClick
-											? getOnRowClick(row)
-											: undefined
-									}
+									onClick={(event) => {
+										if (!getOnRowClick) {
+											return;
+										}
+										// Check if we are clicking inside the
+										// row or cell and not inside the dialog.
+										const targetElement =
+											event.target as HTMLElement;
+										if (
+											targetElement.tagName !== 'TD' &&
+											targetElement.tagName !== 'TR'
+										) {
+											return;
+										}
+										const handler = getOnRowClick(row);
+										handler(event);
+									}}
 									className={
 										getOnRowClick && 'cursor-pointer'
 									}
