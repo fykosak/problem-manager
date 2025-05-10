@@ -21,7 +21,7 @@ export class Runner {
 	}
 
 	private getRunner() {
-		return config.builderUrl; // TODO config
+		return config.builderUrl;
 	}
 
 	public getPdfContents(

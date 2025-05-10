@@ -1,5 +1,10 @@
 /**
- * Modified code from https://github.com/overleaf/overleaf/blob/ed9844b2ec79c7f1bbc45c4a47897967bf1a9e52/services/web/frontend/js/ide/log-parser/latex-log-parser.js
+ * LatexParser class for parsing the TeX output log and returning it as an array
+ * of messages.
+ *
+ * The code is a typescript modification of the original javascript code from
+ * the Overleaf project. Original code can be found here:
+ * https://github.com/overleaf/overleaf/blob/ed9844b2ec79c7f1bbc45c4a47897967bf1a9e52/services/web/frontend/js/ide/log-parser/latex-log-parser.js
  */
 
 // Define some constants

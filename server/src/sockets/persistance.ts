@@ -11,8 +11,7 @@ const SNAPSHOT_PERIODICITY_THRESHOLD = 5 * 60 * 1000; // 5 minutes
 
 const storage = new StorageProvider();
 
-// TODO better name
-class Keeper {
+class VersionKeeper {
 	textId: number;
 	ydoc: WSSharedDoc;
 	inactivityTimeout: Timer | null = null;
@@ -101,7 +100,7 @@ class Keeper {
 	}
 }
 
-const keepers = new Map<number, Keeper>();
+const keepers = new Map<number, VersionKeeper>();
 
 export const persistance: persistenceType = {
 	provider: null,
@@ -122,7 +121,7 @@ export const persistance: persistenceType = {
 
 		let keeper = keepers.get(textId);
 		if (!keeper) {
-			keeper = new Keeper(textId, ydoc);
+			keeper = new VersionKeeper(textId, ydoc);
 			keepers.set(textId, keeper);
 		}
 

@@ -1,3 +1,8 @@
+/*
+ * Component for drag-n-drop ordering of problems.
+ * Largely inspired from a multicontainer example here:
+ * https://github.com/clauderic/dnd-kit/blob/e9215e820798459ae036896fce7fd9a6fe855772/stories/2%20-%20Presets/Sortable/MultipleContainers.tsx
+ */
 import {
 	CollisionDetection,
 	DndContext,
@@ -25,8 +30,6 @@ import { trpc, trpcOutputTypes } from '@client/trpc';
 
 import { Problem } from './problem';
 import { Series } from './series';
-
-// Modified code from https://github.com/clauderic/dnd-kit/blob/e9215e820798459ae036896fce7fd9a6fe855772/stories/2%20-%20Presets/Sortable/MultipleContainers.tsx
 
 export function ProblemOrdering({
 	series,

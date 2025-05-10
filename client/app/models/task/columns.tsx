@@ -98,24 +98,30 @@ function RowActions({
 							Otevřit úlohu
 						</NavLink>
 					</DropdownMenuItem>
-					<Form {...deleteForm}>
-						<DropdownMenuItem
-							onSelect={async (event) => {
-								event.preventDefault();
-								await deleteForm.handleSubmit(() =>
-									onDeleteProblem(problem.problemId)
-								)();
-								setOpen(false);
-								await revalidator.revalidate();
-							}}
-						>
-							{deleteForm.formState.isSubmitting && <Loader />}
-							Přesunout do koše
+					{problem.state === 'active' && (
+						<Form {...deleteForm}>
+							<DropdownMenuItem
+								onSelect={async (event) => {
+									event.preventDefault();
+									await deleteForm.handleSubmit(() =>
+										onDeleteProblem(problem.problemId)
+									)();
+									setOpen(false);
+									await revalidator.revalidate();
+								}}
+							>
+								{deleteForm.formState.isSubmitting && (
+									<Loader />
+								)}
+								Přesunout do koše
+							</DropdownMenuItem>
+						</Form>
+					)}
+					{problem.state === 'active' && (
+						<DropdownMenuItem>
+							<DialogTrigger>Vybrat do série</DialogTrigger>
 						</DropdownMenuItem>
-					</Form>
-					<DropdownMenuItem>
-						<DialogTrigger>Vybrat do série</DialogTrigger>
-					</DropdownMenuItem>
+					)}
 				</DropdownMenuContent>
 			</DropdownMenu>
 			<DialogContent>

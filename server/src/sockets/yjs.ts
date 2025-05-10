@@ -1,7 +1,9 @@
 /**
- * Modified code from https://github.com/yjs/y-websocket/blob/master/bin/utils.cjs
- * Copied here, because importing it from the package caused double Yjs load, which
- * caused a segmentation fault in bun.
+ * Websocket server for a Yjs connection.
+ *
+ * This is a modified code from https://github.com/yjs/y-websocket-server/blob/3dff975c68a035cd0b29992cc688ecb52540eb21/src/utils.js
+ * Copied here because it's not a library but a standalone implementation that
+ * is supposted to be a minimal example for other implementations.
  */
 // @ts-nocheck
 import * as decoding from 'lib0/decoding';
