@@ -505,4 +505,53 @@ export const problemRouter = trpc.router({
 
 			await db.insert(workTable).values(newWorkItems);
 		}),
+	delete: authedProcedure
+		.input(
+			z.object({
+				problemId: z.number(),
+			})
+		)
+		.mutation(async ({ ctx, input }) => {
+			const problem = await db.query.problemTable.findFirst({
+				where: eq(problemTable.problemId, input.problemId),
+				with: {
+					contest: true,
+				},
+			});
+
+			if (!problem) {
+				throw new TRPCError({
+					message: 'Problem does not exist',
+					code: 'BAD_REQUEST',
+				});
+			}
+
+			if (!problem.contest) {
+				throw new TRPCError({
+					message: 'Cannot delete problem, assigned to a series',
+					code: 'BAD_REQUEST',
+				});
+			}
+
+			if (
+				!acl.isAllowedContest(
+					ctx.aclRoles,
+					problem.contest.symbol,
+					'problem',
+					'delete'
+				)
+			) {
+				throw new TRPCError({
+					message: 'You are not permitted to delete this problem',
+					code: 'UNAUTHORIZED',
+				});
+			}
+
+			await db
+				.update(problemTable)
+				.set({
+					state: 'deleted',
+				})
+				.where(eq(problemTable.problemId, input.problemId));
+		}),
 });
