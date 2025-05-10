@@ -6,6 +6,7 @@ RUN npm install-clean
 
 
 FROM fykosak/buildtools
+COPY ./builder/texmf.cnf /usr/share/texmf/web2c/texmf.cnf
 COPY --from=deps /app/node_modules /app/node_modules
 COPY ./builder/tsconfig.json /app/builder/
 COPY ./builder/src/ /app/builder/src
