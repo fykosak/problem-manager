@@ -101,6 +101,7 @@ function RowActions({
 					{problem.state === 'active' && (
 						<Form {...deleteForm}>
 							<DropdownMenuItem
+								// eslint-disable-next-line
 								onSelect={async (event) => {
 									event.preventDefault();
 									await deleteForm.handleSubmit(() =>

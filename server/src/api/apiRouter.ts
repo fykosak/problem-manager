@@ -1,20 +1,14 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import express from 'express';
 import { type Response } from 'express';
-import * as Y from 'yjs';
 
 import { db } from '@server/db';
 import {
-	contestTable,
 	contestYearTable,
-	langEnum,
 	problemTable,
 	problemTopicTable,
 	seriesTable,
-	textTable,
-	textTypeEnum,
 	topicTable,
-	workTable,
 } from '@server/db/schema';
 import { StorageProvider } from '@server/sockets/storageProvider';
 
