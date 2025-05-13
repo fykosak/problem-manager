@@ -55,6 +55,9 @@ tak, aby se nacházel ve stejné složce, jako docker compose. Také je třeba
 změnit přístupové údaje k databázi, aby zde nezůstali výchozí hesla a přidat
 nastavení klienta přes ENV proměnné.
 
+Aby se dalo ke kontejnerům připojit, je třeba také dokonfigurovat reverse proxy
+nebo přidat port mapping.
+
 ### Keycloak auth
 
 Aplikace počítá s tím, že se do ní přihlašuje přes OIDC, přesněji Keycloak.
