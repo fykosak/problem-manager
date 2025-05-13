@@ -1,6 +1,7 @@
 import {
 	CircleCheckIcon,
 	CircleXIcon,
+	Download,
 	FileCode,
 	Minus,
 	Plus,
@@ -20,12 +21,35 @@ import 'react-pdf/dist/esm/Page/TextLayer.css';
 
 import { langEnum, textTypeEnum } from '@server/db/schema';
 
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from '@client/components/ui/tooltip';
 import { trpc } from '@client/trpc';
 
 import { Button } from '../ui/button';
 import { Loader } from '../ui/loader';
 import { BuildLog } from './buildLog';
 import PdfViewer from './pdfViewer';
+
+function ButtonTooltip({
+	tooltip,
+	children,
+}: {
+	tooltip: string;
+	children: React.ReactNode;
+}) {
+	return (
+		<TooltipProvider>
+			<Tooltip>
+				<TooltipTrigger>{children}</TooltipTrigger>
+				<TooltipContent>{tooltip}</TooltipContent>
+			</Tooltip>
+		</TooltipProvider>
+	);
+}
 
 const TaskPdf = forwardRef(
 	(
@@ -151,27 +175,48 @@ const TaskPdf = forwardRef(
 							</>
 						)}
 					</Button>
-					<Button
-						size="icon"
-						variant={showLog ? 'default' : 'secondary'}
-						onClick={() => setShowLog(!showLog)}
+					<ButtonTooltip
+						tooltip={showLog ? 'Zobrazit PDF' : 'Zobrazit Log'}
 					>
-						<FileCode />
-					</Button>
-					<Button
-						size="icon"
-						variant="secondary"
-						onClick={() => scaleUp()}
-					>
-						<Plus />
-					</Button>
-					<Button
-						size="icon"
-						variant="secondary"
-						onClick={() => scaleDown()}
-					>
-						<Minus />
-					</Button>
+						<Button
+							size="icon"
+							variant={showLog ? 'default' : 'secondary'}
+							onClick={() => setShowLog(!showLog)}
+						>
+							<FileCode />
+						</Button>
+					</ButtonTooltip>
+					<ButtonTooltip tooltip="Zvětšit PDF">
+						<Button
+							size="icon"
+							variant="secondary"
+							onClick={() => scaleUp()}
+						>
+							<Plus />
+						</Button>
+					</ButtonTooltip>
+					<ButtonTooltip tooltip="Zmenšit PDF">
+						<Button
+							size="icon"
+							variant="secondary"
+							onClick={() => scaleDown()}
+						>
+							<Minus />
+						</Button>
+					</ButtonTooltip>
+					{file && (
+						<ButtonTooltip tooltip="Stáhnout soubor">
+							<Button variant="secondary" asChild>
+								<a
+									href={file}
+									target="_blank"
+									download={`problem${problemId}-${textType}-${textLang}`}
+								>
+									<Download />
+								</a>
+							</Button>
+						</ButtonTooltip>
+					)}
 				</div>
 				{/* h-px is for the container to be able to grow the viewer, otherwise
 			the viewer will be it's full height and the container will not downsize it*/}
