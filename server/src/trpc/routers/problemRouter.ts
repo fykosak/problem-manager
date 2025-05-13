@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, notInArray } from 'drizzle-orm';
 import path from 'node:path';
 import * as Y from 'yjs';
 import { z } from 'zod';
@@ -62,6 +62,7 @@ export const problemRouter = trpc.router({
 			with: {
 				topics: true,
 				type: true,
+				authors: true,
 			},
 		});
 
@@ -76,6 +77,14 @@ export const problemRouter = trpc.router({
 			metadata: taskData.metadata,
 			topics: taskData.topics.map((topic) => topic.topicId),
 			type: taskData.type.typeId,
+			authors: {
+				task: taskData.authors
+					.filter((author) => author.type === 'task')
+					.map((author) => author.personId),
+				solution: taskData.authors
+					.filter((author) => author.type === 'solution')
+					.map((author) => author.personId),
+			},
 		};
 	}),
 
@@ -169,27 +178,71 @@ export const problemRouter = trpc.router({
 				metadata: z.object<Record<string, any>>({}).passthrough(), // eslint-disable-line
 				topics: z.number().array(),
 				type: z.number(),
+				authors: z.object({
+					task: z.number().array(),
+					solution: z.number().array(),
+				}),
 			})
 		)
-		.mutation(async (opts) => {
+		.mutation(async ({ input }) => {
 			// TODO validation
-			console.log(opts.input.metadata);
+			console.log(input.topics);
 			await db
 				.update(problemTable)
 				.set({
-					metadata: opts.input.metadata,
-					typeId: opts.input.type,
+					metadata: input.metadata,
+					typeId: input.type,
 				})
-				.where(eq(problemTable.problemId, opts.input.problemId));
+				.where(eq(problemTable.problemId, input.problemId));
+
+			// update topics
 			await db
 				.delete(problemTopicTable)
-				.where(eq(problemTopicTable.problemId, opts.input.problemId));
-			await db.insert(problemTopicTable).values(
-				opts.input.topics.map((topicId) => ({
-					problemId: opts.input.problemId,
-					topicId: topicId,
-				}))
-			);
+				.where(
+					and(
+						eq(problemTopicTable.problemId, input.problemId),
+						notInArray(problemTopicTable.topicId, input.topics)
+					)
+				);
+
+			await db
+				.insert(problemTopicTable)
+				.values(
+					input.topics.map((topicId) => ({
+						problemId: input.problemId,
+						topicId: topicId,
+					}))
+				)
+				.onConflictDoNothing();
+
+			// update authors
+			for (const type of textTypeEnum.enumValues) {
+				const personIds = input.authors[type];
+				console.log(type);
+				console.log(personIds);
+				await db
+					.delete(authorTable)
+					.where(
+						and(
+							eq(authorTable.problemId, input.problemId),
+							eq(authorTable.type, type),
+							notInArray(authorTable.personId, personIds)
+						)
+					);
+				if (personIds.length === 0) {
+					continue;
+				}
+				await db
+					.insert(authorTable)
+					.values(
+						personIds.map((personId) => ({
+							personId: personId,
+							problemId: input.problemId,
+							type: type,
+						}))
+					)
+					.onConflictDoNothing(); // prevents duplicates because of the unique key in schema
+			}
 		}),
 
 	build: authedProcedure

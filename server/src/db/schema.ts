@@ -293,7 +293,7 @@ export const authorTable = pgTable(
 			.references(() => problemTable.problemId),
 		type: textTypeEnum().notNull(),
 	},
-	(table) => [unique().on(table.authorId, table.problemId, table.type)]
+	(table) => [unique().on(table.personId, table.problemId, table.type)]
 );
 
 export const authorRelations = relations(authorTable, ({ one }) => ({
