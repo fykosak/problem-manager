@@ -13,8 +13,10 @@ import {
 	FormMessage,
 } from '@client/components/ui/form';
 import { Input } from '@client/components/ui/input';
+import { Loader } from '@client/components/ui/loader';
 import { trpc, type trpcOutputTypes } from '@client/trpc';
 
+import PersonSelect from './tasks/personSelect';
 import { Checkbox } from './ui/checkbox';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
@@ -30,6 +32,10 @@ const formSchema = z.object({
 		}),
 		points: z.coerce.number().int().min(0, 'Points must be positive'),
 	}),
+	authors: z.object({
+		task: z.number().array(),
+		solution: z.number().array(),
+	}),
 	topics: z.number().array().min(1),
 	type: z.coerce.number(),
 });
@@ -39,11 +45,13 @@ export function MetadataForm({
 	taskData,
 	availableTopics,
 	availableTypes,
+	organizers,
 }: {
 	problemId: number;
 	taskData: trpcOutputTypes['problem']['metadata'];
 	availableTopics: trpcOutputTypes['contest']['availableTopics'];
 	availableTypes: trpcOutputTypes['contest']['availableTypes'];
+	organizers: trpcOutputTypes['contest']['organizers'];
 }) {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -60,6 +68,7 @@ export function MetadataForm({
 				points: 0,
 				...taskData.metadata, // overrites with already saved values
 			},
+			authors: taskData.authors,
 			topics: taskData.topics,
 			type: taskData.type,
 		},
@@ -111,6 +120,39 @@ export function MetadataForm({
 		));
 	}
 
+	function getAuthorField(
+		fieldName: 'authors.task' | 'authors.solution',
+		label: string
+	) {
+		return (
+			<FormField
+				control={form.control}
+				name={fieldName}
+				render={({ field }) => (
+					<FormItem>
+						<FormLabel>{label}</FormLabel>
+						<PersonSelect
+							organizers={organizers}
+							selected={field.value}
+							onChange={(personId, selected) => {
+								if (selected) {
+									field.onChange([...field.value, personId]);
+								} else {
+									field.onChange(
+										field.value.filter(
+											(value) => value != personId
+										)
+									);
+								}
+							}}
+						/>
+						<FormMessage />
+					</FormItem>
+				)}
+			/>
+		);
+	}
+
 	const { formState } = form;
 	const { errors } = formState;
 
@@ -144,6 +186,7 @@ export function MetadataForm({
 						</FormItem>
 					)}
 				/>
+
 				<FormField
 					control={form.control}
 					name="metadata.name.en"
@@ -157,6 +200,7 @@ export function MetadataForm({
 						</FormItem>
 					)}
 				/>
+
 				<FormField
 					control={form.control}
 					name="metadata.origin.cs"
@@ -170,6 +214,7 @@ export function MetadataForm({
 						</FormItem>
 					)}
 				/>
+
 				<FormField
 					control={form.control}
 					name="metadata.origin.en"
@@ -183,6 +228,7 @@ export function MetadataForm({
 						</FormItem>
 					)}
 				/>
+
 				<FormField
 					control={form.control}
 					name="metadata.points"
@@ -200,6 +246,10 @@ export function MetadataForm({
 						</FormItem>
 					)}
 				/>
+
+				{getAuthorField('authors.task', 'Autoři zadání')}
+				{getAuthorField('authors.solution', 'Autoři řešení')}
+
 				<FormField
 					control={form.control}
 					name="topics"
@@ -213,6 +263,7 @@ export function MetadataForm({
 						</FormItem>
 					)}
 				/>
+
 				<FormField
 					control={form.control}
 					name="type"
@@ -246,7 +297,7 @@ export function MetadataForm({
 					)}
 				/>
 				<Button type="submit" disabled={formState.isSubmitting}>
-					Submit
+					{formState.isSubmitting && <Loader />}Uložit
 				</Button>
 			</form>
 		</Form>

@@ -116,6 +116,7 @@ const Editor = forwardRef(
 						fontSize: '14px',
 					}}
 					className="grow h-px"
+					spellCheck="true"
 					extensions={[
 						latex(),
 						linter(latexLinter),
@@ -129,7 +130,7 @@ const Editor = forwardRef(
 						),
 						EditorView.lineWrapping,
 					]}
-					basicSetup={{ foldGutter: true }}
+					basicSetup={{ foldGutter: true, dropCursor: true }}
 				/>
 			</div>
 		);

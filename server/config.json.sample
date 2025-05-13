@@ -4,7 +4,7 @@
   "fksdbApiUrl": "https://db.fykos.cz/api",
   "fksdbLogin": "",
   "fksdbPassword": "",
-  "dbConnection": "postgresql://user:password@url/db_name",
+  "dbConnection": "postgresql://pm:password@db/problem_manager",
   "contestTextLangs": {
     "fykos": ["cs", "en"],
     "fol": ["cs", "en"],

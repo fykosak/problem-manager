@@ -23,6 +23,7 @@ export const latexLanguage = LRLanguage.define({
 				InlineMath: foldInside,
 				CommandArgument: foldInside,
 				CommandArgumentOptional: foldInside,
+				MathCommandArgument: foldInside,
 			}),
 			styleTags({
 				InlineMathContent: t.string,

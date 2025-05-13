@@ -1,0 +1,7 @@
+% Allow TeX \openout/\openin on filenames starting with ‘.' (e.g., .rhosts)?
+% a (any)        : any file can be opened.
+% r (restricted) : disallow opening "dotfiles".
+% p (paranoid)   : as 'r' and disallow going to parent directories, and
+%                  restrict absolute paths to be under $TEXMFOUTPUT.
+openout_any = p
+openin_any = p

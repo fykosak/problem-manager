@@ -1,7 +1,10 @@
 import { ArrowDown } from 'lucide-react';
 import { generatePath } from 'react-router';
 
+import { acl } from '@server/acl/aclFactory';
+
 import useCurrentRoute from '@client/hooks/useCurrentRoute';
+import { usePersonRoles } from '@client/hooks/usePersonRoles';
 import { cn } from '@client/lib/utils';
 
 import { buttonVariants } from '../ui/button';
@@ -50,24 +53,30 @@ export default function ContestNavigationBar({
 		year: number;
 	};
 }) {
+	const personRoles = usePersonRoles();
 	const currentRoute = useCurrentRoute();
 	if (!currentRoute) {
 		throw new Error('No route matched');
 	}
 
-	const contestItems = contests.map((contest) => {
-		const contestYear = contest.years.at(0)?.year;
-		const path = generatePath('/' + currentRoute.route.path, {
-			...currentRoute.params,
-			contest: contest.symbol,
-			year: contestYear,
+	const contestItems = contests
+		.filter((contest) => {
+			return acl.isAllowedContest(personRoles, contest.symbol, 'contest');
+		})
+		.map((contest) => {
+			const contestYear = contest.years.at(0)?.year;
+			const path = generatePath('/' + currentRoute.route.path, {
+				...currentRoute.params,
+				contest: contest.symbol,
+				year: contestYear,
+			});
+			return (
+				<DropdownLinkItem key={contest.contestId} to={path}>
+					<ContestIcon contestSymbol={contest.symbol} />{' '}
+					{contest.name}
+				</DropdownLinkItem>
+			);
 		});
-		return (
-			<DropdownLinkItem key={contest.contestId} to={path}>
-				<ContestIcon contestSymbol={contest.symbol} /> {contest.name}
-			</DropdownLinkItem>
-		);
-	});
 	const yearItems = selectedContest.years.map((year) => {
 		const path = generatePath('/' + currentRoute.route.path, {
 			...currentRoute.params,

@@ -7,6 +7,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { TRPCClientError } from '@trpc/client';
 import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { NavLink, useRevalidator } from 'react-router';
 import { toast } from 'sonner';
 
@@ -26,6 +27,8 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@client/components/ui/dropdown-menu';
+import { Form } from '@client/components/ui/form';
+import { Loader } from '@client/components/ui/loader';
 import { trpc, trpcOutputTypes } from '@client/trpc';
 
 export interface Task {
@@ -36,6 +39,21 @@ export interface Task {
 	type: string;
 	state: string;
 	created: Date;
+}
+
+async function onDeleteProblem(problemId: number) {
+	try {
+		await trpc.problem.delete.mutate({
+			problemId: problemId,
+		});
+		toast.success('Úloha přesunuta do koše');
+	} catch (error) {
+		if (error instanceof TRPCClientError) {
+			toast.error('Error při mazání úlohy', {
+				description: error.message,
+			});
+		}
+	}
 }
 
 async function assignProblemToSeries(seriesId: number, problemId: number) {
@@ -64,6 +82,8 @@ function RowActions({
 	const [open, setOpen] = useState(false);
 	const revalidator = useRevalidator();
 
+	const deleteForm = useForm();
+
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DropdownMenu>
@@ -78,9 +98,31 @@ function RowActions({
 							Otevřit úlohu
 						</NavLink>
 					</DropdownMenuItem>
-					<DropdownMenuItem>
-						<DialogTrigger>Vybrat do série</DialogTrigger>
-					</DropdownMenuItem>
+					{problem.state === 'active' && (
+						<Form {...deleteForm}>
+							<DropdownMenuItem
+								// eslint-disable-next-line
+								onSelect={async (event) => {
+									event.preventDefault();
+									await deleteForm.handleSubmit(() =>
+										onDeleteProblem(problem.problemId)
+									)();
+									setOpen(false);
+									await revalidator.revalidate();
+								}}
+							>
+								{deleteForm.formState.isSubmitting && (
+									<Loader />
+								)}
+								Přesunout do koše
+							</DropdownMenuItem>
+						</Form>
+					)}
+					{problem.state === 'active' && (
+						<DropdownMenuItem>
+							<DialogTrigger>Vybrat do série</DialogTrigger>
+						</DropdownMenuItem>
+					)}
 				</DropdownMenuContent>
 			</DropdownMenu>
 			<DialogContent>

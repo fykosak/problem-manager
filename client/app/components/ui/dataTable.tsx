@@ -56,6 +56,8 @@ export function DataTableColumnUniqueFilter<TData, TValue>({
 		);
 	}
 
+	const filterValue = column.getFilterValue();
+
 	return (
 		<Select
 			onValueChange={(value) => {
@@ -66,7 +68,12 @@ export function DataTableColumnUniqueFilter<TData, TValue>({
 				}
 			}}
 		>
-			<SelectTrigger variant="ghost" size="icon" arrow={false}>
+			<SelectTrigger
+				variant={filterValue ? 'default' : 'ghost'}
+				size="icon"
+				arrow={false}
+				className="m-1"
+			>
 				<Filter />
 			</SelectTrigger>
 			<SelectContent side="bottom">{options}</SelectContent>

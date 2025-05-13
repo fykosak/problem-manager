@@ -11,7 +11,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const availableTypes = await trpc.contest.availableTypes.query({
 		contestSymbol: params.contest,
 	});
-	return { taskData, availableTypes, availableTopics };
+	const organizers = await trpc.contest.organizers.query({
+		contestSymbol: params.contest,
+	});
+	return { taskData, availableTypes, availableTopics, organizers };
 }
 
 export default function Metadata({ params, loaderData }: Route.ComponentProps) {
@@ -23,6 +26,7 @@ export default function Metadata({ params, loaderData }: Route.ComponentProps) {
 				taskData={loaderData.taskData}
 				availableTypes={loaderData.availableTypes}
 				availableTopics={loaderData.availableTopics}
+				organizers={loaderData.organizers}
 			/>
 		</div>
 	);

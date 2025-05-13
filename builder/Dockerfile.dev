@@ -3,5 +3,9 @@ VOLUME /app
 
 RUN apt-get update && apt-get install -y nodejs npm
 
+# install modified texmf.cnf and update the main config
+COPY ./texmf.cnf /etc/texmf/texmf.d/50pm.cnf
+RUN update-texmf
+
 WORKDIR /app/builder
 CMD ["npx", "tsx", "watch", "src/index.ts"]

@@ -33,6 +33,7 @@ export function foldEnvironment(
 			break;
 		}
 
+		// stop at end of the line, because we iterate through lines
 		if (cursor.name == 'Newline') {
 			return null;
 		}
