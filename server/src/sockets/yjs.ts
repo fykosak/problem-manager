@@ -6,6 +6,7 @@
  * is supposted to be a minimal example for other implementations.
  */
 // @ts-nocheck
+import { eq } from 'drizzle-orm';
 import * as decoding from 'lib0/decoding';
 import * as encoding from 'lib0/encoding';
 import * as map from 'lib0/map';
@@ -16,6 +17,15 @@ import * as syncProtocol from 'y-protocols/sync';
 // @ts-ignore
 import { callbackHandler, isCallbackSet } from 'y-websocket/bin/callback';
 import * as Y from 'yjs';
+
+import { acl } from '@server/acl/aclFactory';
+import {
+	getJWTFromHeader,
+	getPersonFromJWT,
+	getRolesFromJWT,
+} from '@server/auth/jwt';
+import { db } from '@server/db';
+import { textTable } from '@server/db/schema';
 
 const CALLBACK_DEBOUNCE_WAIT = parseInt(
 	process.env.CALLBACK_DEBOUNCE_WAIT || '2000'
@@ -245,11 +255,82 @@ const send = (
 
 const pingTimeout = 30000;
 
-export function setupWSConnection(
+export async function setupWSConnection(
 	conn: import('ws').WebSocket,
 	req: import('http').IncomingMessage,
 	{ docName = (req.url || '').slice(1).split('?')[0], gc = true } = {}
 ) {
+	const textId = parseInt(docName);
+	const text = await db.query.textTable.findFirst({
+		where: eq(textTable.textId, textId),
+		with: {
+			problem: {
+				with: {
+					contest: true,
+					series: {
+						with: {
+							contestYear: {
+								with: {
+									contest: true,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	});
+
+	if (!text) {
+		ws.close(4004, 'Text does not exist');
+	}
+
+	// Authenticate and authorize user
+	const url = new URL((req.headers.origin ?? 'http://localhost') + req.url);
+
+	const authorization = url.searchParams.get('auth');
+
+	if (!authorization) {
+		console.log('auth missing');
+		conn.close(3000, 'Unauthorized');
+		return;
+	}
+
+	const jwtData = await getJWTFromHeader(authorization);
+
+	if (!jwtData) {
+		console.log('jwt data missing');
+		conn.close(3000, 'Unauthorized');
+		return;
+	}
+
+	const person = await getPersonFromJWT(jwtData);
+	if (!person) {
+		console.log('jwt missing person');
+		conn.close(3000, 'Unauthorized');
+		return;
+	}
+
+	const roles = await getRolesFromJWT(jwtData);
+	if (!person) {
+		conn.close(3000, 'Unauthorized');
+		return;
+	}
+
+	if (
+		!acl.isAllowedContest(
+			roles,
+			text.problem.contest
+				? text.problem.contest.symbol
+				: text.problem.series.contestYear.contest.symbol,
+			'text',
+			'edit'
+		)
+	) {
+		conn.close(3000, 'Unauthorized');
+		return;
+	}
+
 	conn.binaryType = 'arraybuffer';
 	// get doc, initialize if it does not exist yet
 	const doc = getYDoc(docName, gc);

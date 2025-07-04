@@ -75,12 +75,12 @@ export class HtmlGenerator {
 		}
 	}
 
-	private expectAnyNodeName(nodeNames: Array<string>): void {
+	private expectAnyNodeName(nodeNames: string[]): void {
 		if (
 			nodeNames.find((value) => value === this.cursor.name) === undefined
 		) {
 			throw new Error(
-				`Wrong token received, expected any from ${nodeNames}, received ${this.cursor.name}`
+				`Wrong token received, received ${this.cursor.name}`
 			);
 		}
 	}
