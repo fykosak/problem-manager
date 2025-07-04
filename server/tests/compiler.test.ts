@@ -178,6 +178,10 @@ describe('math', () => {
 				output: '<p>$\\mathrm{e}\\textrm{Kč}^\\circ\\mskip-2mu\\mathup{C}\\upmu\\Omega\\Omega$</p>',
 			},
 			{
+				input: '$\\frac{ab}{cd}$',
+				output: '<p>$\\frac{ab}{cd}$</p>',
+			},
+			{
 				input: '$\\f{h}{x+1}$',
 				output: '<p>$h\\!\\left(x+1\\right)$</p>',
 			},

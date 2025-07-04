@@ -10,16 +10,18 @@ vyvíjet a verzovat mimo server.
 
 ```mermaid
 flowchart LR
-    A[fa:fa-server Server] -->|Data| B(fa:fa-globe Klient)
-    B --> |Request + Auth| A
-    C[(fa:fa-database PostgreSQL)] <--> A
-    E@{ shape: lin-cyl, label: "Disk storage" }
-    A --> |LaTeX data| E
-    D --> |PDF| E
-    A --> |Request o vytvoření PDF| D[fa:fa-server Builder]
-    E --> |LaTeX data| D
-    E --> |PDF| A
-    D --> |Log| A
+    C[("fa:fa-database PostgreSQL")] <--> A
+    B -- Login --> F
+    F["Keycloak"] -- JWT --> B
+    A["Server"] -- Data --> B("Klient")
+    B -- Request + Auth --> A
+    A -- LaTeX data --> E["Disk storage"]
+    D["Builder"] -- PDF --> E
+    A -- Request o vytvoření PDF --> D
+    E -- LaTeX data --> D
+    E -- PDF --> A
+    D -- Log --> A
+    E@{ shape: lin-cyl}
 ```
 
 ## Spuštění

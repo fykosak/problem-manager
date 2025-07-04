@@ -19,7 +19,7 @@ Paragraph {
 Math {
 	!character (
 		InlineMathContent |
-		Command |
+		MathCommand |
 		UnderscoreCommand |
 		MathCommandArgument |
 		QuoteMacro |
@@ -36,6 +36,10 @@ InlineMath {
 
 Command {
 	CommandIdentifier (CommandArgument | CommandArgumentOptional)*
+}
+
+MathCommand {
+	CommandIdentifier (MathCommandArgument | CommandArgumentOptional)*
 }
 
 // command argument is included to catch { } groups

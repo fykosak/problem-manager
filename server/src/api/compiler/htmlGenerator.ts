@@ -75,6 +75,16 @@ export class HtmlGenerator {
 		}
 	}
 
+	private expectAnyNodeName(nodeNames: Array<string>): void {
+		if (
+			nodeNames.find((value) => value === this.cursor.name) === undefined
+		) {
+			throw new Error(
+				`Wrong token received, expected any from ${nodeNames}, received ${this.cursor.name}`
+			);
+		}
+	}
+
 	private async generateParagraph(): Promise<string> {
 		this.expectNodeName('Paragraph');
 		const topNode = this.cursor.node;
@@ -94,7 +104,7 @@ export class HtmlGenerator {
 	 */
 	private async generateCommandArgument(): Promise<string> {
 		const topNode = this.cursor.node;
-		this.expectNodeName('CommandArgument');
+		this.expectAnyNodeName(['CommandArgument', 'MathCommandArgument']);
 		if (
 			!this.cursor.node.firstChild ||
 			this.cursor.node.firstChild.name !== '{'
@@ -224,7 +234,7 @@ export class HtmlGenerator {
 	}
 
 	private async generateCommand(): Promise<string> {
-		this.expectNodeName('Command');
+		this.expectAnyNodeName(['Command', 'MathCommand']);
 
 		const topNode = this.cursor.node;
 		this.cursor.firstChild();
@@ -332,7 +342,10 @@ export class HtmlGenerator {
 				//
 				// execute next() only if the current token is not already the last one
 				while (this.cursor.to < topNode.to && this.cursor.next()) {
-					if (this.cursor.name === 'CommandArgument') {
+					if (
+						this.cursor.name === 'CommandArgument' ||
+						this.cursor.name === 'MathCommandArgument'
+					) {
 						buffer +=
 							'{' + (await this.generateCommandArgument()) + '}';
 					}
@@ -825,6 +838,7 @@ export class HtmlGenerator {
 				return this.generateUnderscoreCommand();
 
 			case 'Command':
+			case 'MathCommand':
 				return this.generateCommand();
 
 			case 'CommandArgument':

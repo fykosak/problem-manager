@@ -33,6 +33,7 @@ export const latexLanguage = LRLanguage.define({
 				'( )': t.paren,
 				'[ ]': t.squareBracket,
 				'{ }': t.brace,
+				Number: t.number,
 				Comment: t.comment,
 			}),
 		],
