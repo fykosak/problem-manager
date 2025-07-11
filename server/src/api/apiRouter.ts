@@ -1,15 +1,23 @@
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import express from 'express';
 import { type Response } from 'express';
+import * as Y from 'yjs';
+import { ZodError, z } from 'zod';
 
 import { db } from '@server/db';
 import {
+	authorTable,
 	contestYearTable,
+	langEnum,
 	problemTable,
 	problemTopicTable,
 	seriesTable,
+	textTable,
+	textTypeEnum,
 	topicTable,
 } from '@server/db/schema';
+import { ProblemStorage } from '@server/runner/problemStorage';
+import { Runner } from '@server/runner/runner';
 import { StorageProvider } from '@server/sockets/storageProvider';
 
 import { asyncHandler } from './asyncHandler';
@@ -213,112 +221,151 @@ apiRouter.get(
 	})
 );
 
-//
-// Temporary endpoint for importing tasks. Should not be used longtime.
-//
-//apiRouter.post(
-//	'/problem/import',
-//	asyncHandler(async (req, res) => {
-//		const contest = await db.query.contestTable.findFirst({
-//			where: eq(contestTable.symbol, req.body.contest), // eslint-disable-line
-//		});
-//
-//		if (!contest) {
-//			res.status(401).send('Invalid contest');
-//			return;
-//		}
-//
-//		try {
-//			testPersonAuthorized(contest.contestId, res);
-//		} catch {
-//			res.status(403).send('Cannot access this contest');
-//			return;
-//		}
-//
-//		const contestYear = await db.query.contestYearTable.findFirst({
-//			where: and(
-//				eq(contestYearTable.contestId, contest.contestId),
-//				eq(contestYearTable.year, req.body.year) // eslint-disable-line
-//			),
-//		});
-//
-//		if (!contestYear) {
-//			res.status(401).send('Invalid contest year');
-//			return;
-//		}
-//
-//		const series = await db.query.seriesTable.findFirst({
-//			where: and(
-//				eq(seriesTable.contestYearId, contestYear.contestYearId),
-//				eq(seriesTable.label, String(req.body.series)) // eslint-disable-line
-//			),
-//		});
-//
-//		if (!series) {
-//			res.status(401).send('Invalid series');
-//			return;
-//		}
-//
-//		const probNumber = req.body.number as number; // eslint-disable-line
-//		const problem = (
-//			await db
-//				.insert(problemTable)
-//				.values({
-//					seriesId: series.seriesId,
-//					seriesOrder: probNumber,
-//					typeId:
-//						probNumber < 3 // TODO remove hardcoded text type ids
-//							? 12
-//							: probNumber == 6
-//								? 15
-//								: probNumber == 7
-//									? 14
-//									: probNumber == 8
-//										? 23
-//										: 13,
-//					metadata: {
-//						name: req.body.name, // eslint-disable-line
-//						origin: req.body.origin, // eslint-disable-line
-//						points: req.body.points, // eslint-disable-line
-//					},
-//				})
-//				.returning()
-//		)[0];
-//
-//		for (const type of textTypeEnum.enumValues) {
-//			// eslint-disable-next-line
-//			for (const lang in req.body[type]) {
-//				if (!(langEnum.enumValues as string[]).includes(lang)) {
-//					continue;
-//				}
-//				const taskYDoc = new Y.Doc();
-//				taskYDoc.getText().insert(0, req.body[type][lang]); // eslint-disable-line
-//				// @ts-expect-error Lang is check that its valid, but it's type is
-//				// not specified.
-//				await db.insert(textTable).values({
-//					problemId: problem.problemId,
-//					lang: lang,
-//					type: type,
-//					contents: Y.encodeStateAsUpdate(taskYDoc),
-//				});
-//			}
-//		}
-//
-//		for (const group of ['zadání', 'řešení']) {
-//			for (const work of [
-//				'odborná korektura',
-//				'jazyková korektura',
-//				'typografická korektura',
-//			]) {
-//				await db.insert(workTable).values({
-//					problemId: problem.problemId,
-//					label: work,
-//					group: group,
-//					state: 'done',
-//				});
-//			}
-//		}
-//
-//		res.sendStatus(200);
-//	})
-//);
+apiRouter.post(
+	'/problem/import',
+	asyncHandler(async (req, res) => {
+		// validation
+		const problemSchema = z.object({
+			contestId: z.number(),
+			year: z.number().optional(),
+			series: z.string().optional(),
+			seriesOrder: z.number().optional(),
+			metadata: z.object<Record<string, any>>({}).passthrough(), // eslint-disable-line
+			typeId: z.number(),
+			topics: z.number().array(),
+			texts: z
+				.object({
+					lang: z.enum(langEnum.enumValues),
+					type: z.enum(textTypeEnum.enumValues),
+					contents: z.string(),
+				})
+				.array(),
+			authors: z
+				.object({
+					personId: z.number(),
+					type: z.enum(textTypeEnum.enumValues),
+				})
+				.array(),
+			graphics: z
+				.object({
+					name: z.string().nonempty(),
+					contents: z.string().nonempty(),
+				})
+				.array(),
+		});
+
+		const parseResult = problemSchema.safeParse(req.body);
+		if (!parseResult.success) {
+			res.status(400).send(parseResult.error.message);
+			return;
+		}
+
+		const problemData = parseResult.data;
+
+		try {
+			testPersonAuthorized(problemData.contestId, res);
+		} catch {
+			res.status(403).send('Cannot access this contest');
+			return;
+		}
+
+		let contestYear = null;
+		let series = null;
+
+		if (problemData.year && problemData.series) {
+			contestYear = await db.query.contestYearTable.findFirst({
+				where: and(
+					eq(contestYearTable.contestId, problemData.contestId),
+					eq(contestYearTable.year, problemData.year)
+				),
+			});
+
+			if (!contestYear) {
+				contestYear = (
+					await db
+						.insert(contestYearTable)
+						.values({
+							contestId: problemData.contestId,
+							year: problemData.year,
+						})
+						.returning()
+				)[0];
+			}
+
+			series = await db.query.seriesTable.findFirst({
+				where: and(
+					eq(seriesTable.contestYearId, contestYear.contestYearId),
+					eq(seriesTable.label, problemData.series)
+				),
+			});
+
+			if (!series) {
+				series = (
+					await db
+						.insert(seriesTable)
+						.values({
+							contestYearId: contestYear.contestYearId,
+							label: problemData.series,
+						})
+						.returning()
+				)[0];
+			}
+		}
+
+		await db.transaction(async (tx) => {
+			// problem
+			const problem = (
+				await tx
+					.insert(problemTable)
+					.values({
+						contestId: series ? null : problemData.contestId,
+						seriesId: series ? series.seriesId : null,
+						seriesOrder: series ? problemData.seriesOrder : null,
+						typeId: problemData.typeId,
+						metadata: problemData.metadata,
+					})
+					.returning()
+			)[0];
+
+			// topics
+			await tx.insert(problemTopicTable).values(
+				problemData.topics.map((topicId) => ({
+					problemId: problem.problemId,
+					topicId: topicId,
+				}))
+			);
+
+			// texts
+			for (const text of problemData.texts) {
+				const taskYDoc = new Y.Doc();
+				taskYDoc.getText().insert(0, text.contents);
+				await tx.insert(textTable).values({
+					problemId: problem.problemId,
+					lang: text.lang,
+					type: text.type,
+					contents: Y.encodeStateAsUpdate(taskYDoc),
+				});
+			}
+
+			// authors
+			await tx.insert(authorTable).values(
+				problemData.authors.map((author) => ({
+					problemId: problem.problemId,
+					personId: author.personId,
+					type: author.type,
+				}))
+			);
+
+			const problemStorage = new ProblemStorage(problem.problemId);
+			const runner = new Runner(problem.problemId);
+
+			for (const file of problemData.graphics) {
+				problemStorage.saveFile(file.name, file.contents);
+				const filepath = problemStorage.getPathForFile(file.name);
+				await runner.exportFile(filepath);
+			}
+		});
+
+		res.sendStatus(200);
+	})
+);
