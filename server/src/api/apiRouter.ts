@@ -2,7 +2,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import express from 'express';
 import { type Response } from 'express';
 import * as Y from 'yjs';
-import { ZodError, z } from 'zod';
+import { z } from 'zod';
 
 import { db } from '@server/db';
 import {
@@ -360,7 +360,7 @@ apiRouter.post(
 			const runner = new Runner(problem.problemId);
 
 			for (const file of problemData.graphics) {
-				problemStorage.saveFile(file.name, file.contents);
+				await problemStorage.saveFile(file.name, file.contents);
 				const filepath = problemStorage.getPathForFile(file.name);
 				await runner.exportFile(filepath);
 			}

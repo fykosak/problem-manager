@@ -1,6 +1,5 @@
 import { Check, Cog } from 'lucide-react';
 import { useState } from 'react';
-import { useParams } from 'react-router';
 
 import { cn } from '@client/lib/utils';
 import { trpcOutputTypes } from '@client/trpc';

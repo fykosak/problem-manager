@@ -33,12 +33,12 @@ export default function Layout({ loaderData }: Route.ComponentProps) {
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		return auth.events.addUserUnloaded(() => {
+		return auth.events.addUserUnloaded(async () => {
 			toast.warning(
 				'Uživatel odhlášen z důvodu neaktivity nebo vypršení přístupu'
 			);
 			saveLoginRedirectUrl();
-			navigate('/login');
+			await navigate('/login');
 		});
 	}, [auth.events]);
 
