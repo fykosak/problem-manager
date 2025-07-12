@@ -42,7 +42,6 @@ class VersionKeeper {
 			return;
 		}
 
-		console.log('take snapshot');
 		await db.insert(textVersionTable).values({
 			textId: this.textId,
 			contents: text,
@@ -85,7 +84,7 @@ class VersionKeeper {
 			}
 		}
 
-		console.log('take periodicity snapshot');
+		//console.log('take periodicity snapshot');
 		this.takeSnapshot();
 	}
 
@@ -105,8 +104,6 @@ const keepers = new Map<number, VersionKeeper>();
 export const persistance: persistenceType = {
 	provider: null,
 	bindState: async (docName: string, ydoc: WSSharedDoc) => {
-		console.log('bind ' + docName);
-
 		/**
 		 * Sync passed ydoc and persisted ydoc by getting all updates from
 		 * passed ydoc, save them to persisted ydoc, get all updates
@@ -126,7 +123,7 @@ export const persistance: persistenceType = {
 		}
 
 		ydoc.on('update', async (update: Uint8Array) => {
-			console.log('apply update ' + ydoc.name);
+			//console.log('apply update ' + ydoc.name);
 			//await storage.storeUpdate(textId, update);
 			await storage.storeDocument(textId, ydoc);
 			keeper.registerUpdate(update);
@@ -135,10 +132,10 @@ export const persistance: persistenceType = {
 			//console.log('current contents: ' + ydoc.getText().toJSON());
 		});
 		ydoc.on('destroy', (doc: Y.Doc) => {
-			console.log('apply destroy ' + docName);
+			//console.log('apply destroy ' + docName);
 		});
 	},
 	writeState: async (_docName: string, ydoc: WSSharedDoc) => {
-		console.log('apply write ' + ydoc.name);
+		//console.log('apply write ' + ydoc.name);
 	},
 };

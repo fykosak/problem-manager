@@ -1,4 +1,5 @@
 import config from '@server/config/config';
+import type { organizerStateEnum } from '@server/db/schema';
 
 import { type User, UserAdapter } from './userAdapter';
 
@@ -17,11 +18,11 @@ export class FKSDBUserAdapter extends UserAdapter {
 			}
 		);
 		return (await response.json()) as {
-			name: string;
 			personId: number;
-			since: number;
-			until: number | null;
+			otherName: string;
+			familyName: string;
 			domainAlias: string;
+			state: (typeof organizerStateEnum.enumValues)[number];
 		}[];
 	}
 
@@ -55,28 +56,21 @@ export class FKSDBUserAdapter extends UserAdapter {
 					if (!organizer.personId) {
 						throw new Error('Missing PersonId');
 					}
-					if (!organizer.name) {
-						throw new Error('Missing name');
+
+					if (!organizer.otherName) {
+						throw new Error('Missing other name');
 					}
 
-					//if (!organizer.otherName) {
-					//	throw new Error('Missing other name');
-					//}
-					//if (!organizer.familyName) {
-					//	throw new Error('Missing family name');
-					//}
-
-					// TODO download real data instead of splitting
-					const [firstName, lastName] = organizer.name.split(' ');
+					if (!organizer.familyName) {
+						throw new Error('Missing family name');
+					}
 
 					let person = people.get(organizer.personId);
 					if (!person) {
 						person = {
 							personId: organizer.personId,
-							//firstName: organizer.otherName,
-							//lastName: organizer.familyName,
-							firstName: firstName,
-							lastName: lastName,
+							firstName: organizer.otherName,
+							lastName: organizer.familyName,
 							organizers: [],
 						};
 					}
@@ -84,8 +78,7 @@ export class FKSDBUserAdapter extends UserAdapter {
 					person.organizers.push({
 						contestSymbol: fksdbContest.symbol,
 						email: organizer.domainAlias + fksdbContest.domain,
-						since: organizer.since,
-						until: organizer.until,
+						state: organizer.state,
 					});
 
 					people.set(organizer.personId, person);

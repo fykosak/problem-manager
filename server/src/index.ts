@@ -32,6 +32,7 @@ const websocketServer = new WebSocketServer({
 	noServer: true,
 });
 
+// eslint-disable-next-line
 websocketServer.on('connection', setupWSConnection);
 
 setPersistence(persistance);

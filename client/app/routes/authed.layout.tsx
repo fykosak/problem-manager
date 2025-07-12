@@ -1,7 +1,10 @@
 import { TRPCClientError } from '@trpc/client';
+import { useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { Navigate, Outlet } from 'react-router';
 import { redirect } from 'react-router';
+import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
 
 import { PersonRolesProvider } from '@client/hooks/personRolesProvider';
 import { getUser, trpc } from '@client/trpc';
@@ -27,6 +30,17 @@ export async function clientLoader() {
 
 export default function Layout({ loaderData }: Route.ComponentProps) {
 	const auth = useAuth();
+	const navigate = useNavigate();
+
+	useEffect(() => {
+		return auth.events.addUserUnloaded(async () => {
+			toast.warning(
+				'Uživatel odhlášen z důvodu neaktivity nebo vypršení přístupu'
+			);
+			saveLoginRedirectUrl();
+			await navigate('/login');
+		});
+	}, [auth.events]);
 
 	if (auth.isLoading) {
 		return <p>Loading auth</p>;

@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs';
+import { z } from 'zod';
 
 import { ConfigError, getRequiredString } from './configUtils';
 import { getACLConfig } from './roles';
@@ -46,6 +47,20 @@ function getContestTextLangs(json: Record<string, unknown>, property: string) {
 	return contestTextLangs;
 }
 
+const organizerMappingSchema = z.record(
+	z.string().nonempty(),
+	z.string().nonempty()
+);
+
+function getOrganizerMapping(json: Record<string, unknown>, property: string) {
+	const organizerMapping = json[property];
+	if (typeof organizerMapping !== 'object') {
+		throw new ConfigError('Organizer mapping config is not an object');
+	}
+
+	return organizerMappingSchema.parse(organizerMapping);
+}
+
 /**
  * Typed config values derived from config.json
  */
@@ -58,6 +73,11 @@ const config = {
 	fksdbPassword: getRequiredString(jsonConfig, 'fksdbPassword'),
 	dbConnection: getRequiredString(jsonConfig, 'dbConnection'),
 	contestTextLangs: getContestTextLangs(jsonConfig, 'contestTextLangs'),
+	/**
+	 * Allows to map organizers of one contest to another if they're the same.
+	 * Key-value pairs of <`original contestSymbol`>: <`mapped contestSymbol`>
+	 */
+	organizerMapping: getOrganizerMapping(jsonConfig, 'organizerMapping'),
 	roleMapping: getACLConfig(jsonConfig, 'roleMapping'),
 	contestWork: getWorkConfig(jsonConfig, 'contestWork'),
 };

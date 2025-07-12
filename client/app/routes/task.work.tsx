@@ -89,7 +89,6 @@ function AddWorkForm({
 		} else {
 			newSelectedWork.add(id);
 		}
-		console.log(newSelectedWork);
 		setSelectedWork(newSelectedWork);
 	}
 

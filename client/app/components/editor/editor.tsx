@@ -31,7 +31,14 @@ const Editor = forwardRef(
 			const provider = new WebsocketProvider(
 				config.WS_URL,
 				textId.toString(),
-				ydoc
+				ydoc,
+				{
+					params: {
+						auth: auth.user
+							? 'Bearer ' + auth.user.access_token
+							: '',
+					},
+				}
 			);
 			providerRef.current = provider;
 
