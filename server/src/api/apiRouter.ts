@@ -1,12 +1,15 @@
+import { TRPCError } from '@trpc/server';
 import { and, eq, inArray } from 'drizzle-orm';
 import express from 'express';
 import { type Response } from 'express';
 import * as Y from 'yjs';
 import { z } from 'zod';
 
+import config from '@server/config/config';
 import { db } from '@server/db';
 import {
 	authorTable,
+	contestTable,
 	contestYearTable,
 	langEnum,
 	problemTable,
@@ -262,8 +265,34 @@ apiRouter.post(
 
 		const problemData = parseResult.data;
 
+		const contest = await db.query.contestTable.findFirst({
+			where: eq(contestTable.contestId, problemData.contestId),
+		});
+
+		if (!contest) {
+			throw new TRPCError({
+				message: 'Contest does not exist',
+				code: 'NOT_FOUND',
+			});
+		}
+
+		let contestId = problemData.contestId;
+		if (Object.keys(config.organizerMapping).includes(contest.symbol)) {
+			const mappedSymbol = config.organizerMapping[contest.symbol];
+			const mappedContest = await db.query.contestTable.findFirst({
+				where: eq(contestTable.symbol, mappedSymbol),
+			});
+			if (!mappedContest) {
+				throw new TRPCError({
+					message: 'Mapped contest does not exist',
+					code: 'INTERNAL_SERVER_ERROR',
+				});
+			}
+			contestId = mappedContest.contestId;
+		}
+
 		try {
-			testPersonAuthorized(problemData.contestId, res);
+			testPersonAuthorized(contestId, res);
 		} catch {
 			res.status(403).send('Cannot access this contest');
 			return;
