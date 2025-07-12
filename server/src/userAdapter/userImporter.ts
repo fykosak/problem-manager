@@ -56,8 +56,7 @@ async function processOrganizer(
 		contestId: contestId,
 		personId: personId,
 		email: importedOrganizer.email,
-		since: importedOrganizer.since,
-		until: importedOrganizer.until,
+		state: importedOrganizer.state,
 	};
 
 	if (!dbOrganizer) {

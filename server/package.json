@@ -10,6 +10,7 @@
     "prettier": "prettier . --check",
     "prettier:fix": "prettier . --write",
     "db:push": "drizzle-kit push",
+    "syncOrganizers": "npx tsx src/userAdapter/userImporter.ts",
     "test": "vitest ."
   },
   "devDependencies": {

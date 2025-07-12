@@ -1,3 +1,5 @@
+import type { organizerStateEnum } from '@server/db/schema';
+
 export interface User {
 	personId: number;
 	firstName: string;
@@ -5,8 +7,7 @@ export interface User {
 	organizers: {
 		contestSymbol: string;
 		email: string;
-		since: number;
-		until: number | null;
+		state: (typeof organizerStateEnum.enumValues)[number];
 	}[];
 }
 

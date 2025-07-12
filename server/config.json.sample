@@ -11,6 +11,10 @@
     "fof": ["cs", "en"],
     "vyfuk": ["cs"]
   },
+  "organizerMapping": {
+    "fof": "fykos",
+    "fol": "fykos"
+  },
   "roleMapping": {
     "baseRole": {
       "admin": ["role"]

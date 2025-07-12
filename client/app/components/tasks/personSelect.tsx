@@ -30,9 +30,6 @@ export default function PersonSelect({
 		new Set<number>(selected)
 	);
 
-	const params = useParams();
-	const contestYear = Number(params.year);
-
 	organizers.sort((a, b) => {
 		const aSelected = selectedValues.has(a.personId);
 		const bSelected = selectedValues.has(b.personId);
@@ -41,6 +38,24 @@ export default function PersonSelect({
 				return -1;
 			}
 			return 1;
+		}
+
+		if (a.state !== b.state) {
+			if (a.state == 'active') {
+				return -1;
+			}
+
+			if (b.state == 'active') {
+				return 1;
+			}
+
+			if (a.state == 'passive') {
+				return -1;
+			}
+
+			if (b.state == 'passive') {
+				return 1;
+			}
 		}
 
 		const firstNameA = a.person.firstName.toUpperCase(); // ignore upper and lowercase
@@ -68,14 +83,9 @@ export default function PersonSelect({
 	for (const organizer of organizers) {
 		const person = organizer.person;
 		const isSelected = selectedValues.has(person.personId);
-		if (
-			contestYear &&
-			(organizer.since > contestYear ||
-				(organizer.until !== null && organizer.until < contestYear)) &&
-			!isSelected
-		) {
-			continue;
-		}
+		//if (organizer.state == 'inactive' && !isSelected) {
+		//	continue;
+		//}
 		personOptions.push(
 			<CommandItem
 				key={person.personId}
@@ -109,7 +119,13 @@ export default function PersonSelect({
 				>
 					<Check />
 				</div>
-				<span>
+				<span
+					className={
+						organizer.state != 'active'
+							? 'text-muted-foreground'
+							: ''
+					}
+				>
 					{person.firstName} {person.lastName} (#{person.personId})
 				</span>
 			</CommandItem>

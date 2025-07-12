@@ -257,6 +257,12 @@ export const personRelations = relations(personTable, ({ many }) => ({
 	apiKeys: many(apiKeyTable),
 }));
 
+export const organizerStateEnum = pgEnum('organizer_state', [
+	'active',
+	'passive',
+	'inactive',
+]);
+
 export const organizerTable = pgTable('organizer', {
 	organizerId: serial().primaryKey(),
 	personId: integer()
@@ -266,8 +272,7 @@ export const organizerTable = pgTable('organizer', {
 		.notNull()
 		.references(() => contestTable.contestId),
 	email: varchar().notNull(),
-	since: integer().notNull(),
-	until: integer(),
+	state: organizerStateEnum().notNull(),
 });
 
 export const organizerRelations = relations(organizerTable, ({ one }) => ({
