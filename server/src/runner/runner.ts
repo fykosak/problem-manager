@@ -112,7 +112,6 @@ export class Runner {
 	}
 
 	public async exportFile(inputFile: string) {
-		console.log('export file');
 		const response = await fetch(this.getRunner() + '/export', {
 			headers: {
 				'Content-Type': 'application/json',

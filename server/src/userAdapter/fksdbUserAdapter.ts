@@ -21,7 +21,7 @@ export class FKSDBUserAdapter extends UserAdapter {
 			personId: number;
 			otherName: string;
 			familyName: string;
-			domainAlias: string;
+			domainAlias: string | null;
 			state: (typeof organizerStateEnum.enumValues)[number];
 		}[];
 	}
@@ -49,10 +49,6 @@ export class FKSDBUserAdapter extends UserAdapter {
 				);
 
 				for (const organizer of organizerData) {
-					if (!organizer.domainAlias) {
-						continue;
-					}
-
 					if (!organizer.personId) {
 						throw new Error('Missing PersonId');
 					}
@@ -77,7 +73,9 @@ export class FKSDBUserAdapter extends UserAdapter {
 
 					person.organizers.push({
 						contestSymbol: fksdbContest.symbol,
-						email: organizer.domainAlias + fksdbContest.domain,
+						email: organizer.domainAlias
+							? organizer.domainAlias + fksdbContest.domain
+							: null,
 						state: organizer.state,
 					});
 
