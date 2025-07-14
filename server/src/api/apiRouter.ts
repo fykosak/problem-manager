@@ -1,4 +1,3 @@
-import { TRPCError } from '@trpc/server';
 import { and, eq, inArray } from 'drizzle-orm';
 import express from 'express';
 import { type Response } from 'express';
@@ -270,10 +269,8 @@ apiRouter.post(
 		});
 
 		if (!contest) {
-			throw new TRPCError({
-				message: 'Contest does not exist',
-				code: 'NOT_FOUND',
-			});
+			res.status(404).send('Contest does not exist');
+			return;
 		}
 
 		let contestId = problemData.contestId;
@@ -283,10 +280,8 @@ apiRouter.post(
 				where: eq(contestTable.symbol, mappedSymbol),
 			});
 			if (!mappedContest) {
-				throw new TRPCError({
-					message: 'Mapped contest does not exist',
-					code: 'INTERNAL_SERVER_ERROR',
-				});
+				res.status(500).send('Mapped contest does not exist');
+				return;
 			}
 			contestId = mappedContest.contestId;
 		}
@@ -341,6 +336,23 @@ apiRouter.post(
 			}
 		}
 
+		// prevent accidentally importing the same problem twice
+		if (series && problemData.seriesOrder) {
+			const oldProblem = await db.query.problemTable.findFirst({
+				where: and(
+					eq(problemTable.seriesId, series.seriesId),
+					eq(problemTable.seriesOrder, problemData.seriesOrder)
+				),
+			});
+
+			if (oldProblem) {
+				res.status(409).send(
+					'Imported problem already exists in series'
+				);
+				return;
+			}
+		}
+
 		await db.transaction(async (tx) => {
 			// problem
 			const problem = (
@@ -357,12 +369,14 @@ apiRouter.post(
 			)[0];
 
 			// topics
-			await tx.insert(problemTopicTable).values(
-				problemData.topics.map((topicId) => ({
-					problemId: problem.problemId,
-					topicId: topicId,
-				}))
-			);
+			if (problemData.topics.length > 0) {
+				await tx.insert(problemTopicTable).values(
+					problemData.topics.map((topicId) => ({
+						problemId: problem.problemId,
+						topicId: topicId,
+					}))
+				);
+			}
 
 			// texts
 			for (const text of problemData.texts) {
@@ -377,13 +391,15 @@ apiRouter.post(
 			}
 
 			// authors
-			await tx.insert(authorTable).values(
-				problemData.authors.map((author) => ({
-					problemId: problem.problemId,
-					personId: author.personId,
-					type: author.type,
-				}))
-			);
+			if (problemData.authors.length > 0) {
+				await tx.insert(authorTable).values(
+					problemData.authors.map((author) => ({
+						problemId: problem.problemId,
+						personId: author.personId,
+						type: author.type,
+					}))
+				);
+			}
 
 			const problemStorage = new ProblemStorage(problem.problemId);
 			const runner = new Runner(problem.problemId);
