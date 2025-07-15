@@ -271,7 +271,7 @@ export const organizerTable = pgTable('organizer', {
 	contestId: integer()
 		.notNull()
 		.references(() => contestTable.contestId),
-	email: varchar().notNull(),
+	email: varchar(),
 	state: organizerStateEnum().notNull(),
 });
 

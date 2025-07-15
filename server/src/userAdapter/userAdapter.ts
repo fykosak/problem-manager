@@ -6,7 +6,7 @@ export interface User {
 	lastName: string;
 	organizers: {
 		contestSymbol: string;
-		email: string;
+		email: string | null;
 		state: (typeof organizerStateEnum.enumValues)[number];
 	}[];
 }
