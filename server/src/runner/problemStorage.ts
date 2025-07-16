@@ -4,7 +4,7 @@ import path from 'node:path';
 export class ProblemStorageError extends Error {
 	constructor(message: string) {
 		super(message);
-		this.name = 'ConfigError';
+		this.name = 'ProblemStorageError';
 	}
 }
 
@@ -166,16 +166,11 @@ export class ProblemStorage {
 				continue;
 			}
 
-			console.log(exportedFile);
 			if (
 				(
 					await fs.lstat(this.getPathForExportedFile(exportedFile))
 				).isSymbolicLink()
 			) {
-				console.log(exportedFile + ' is a symbolic link');
-				console.log(
-					'unlink ' + this.getPathForExportedFile(exportedFile)
-				);
 				await fs.unlink(this.getPathForExportedFile(exportedFile));
 				await fs.symlink(
 					path.relative(this.getExportedFilesDirectory(), newPath),
