@@ -13,6 +13,10 @@ export default [
 			index('routes/index.tsx'),
 			route('/user/api-keys', 'routes/user.apiKeys.tsx'),
 			route('/create-problem', 'routes/base.createProblem.tsx'),
+			...prefix('/how-to', [
+				index('routes/howTo.main.tsx'),
+				route('/:markdownFile', 'routes/howTo.file.tsx'),
+			]),
 		]),
 		route(':contest/:year', 'routes/contest.layout.tsx', [
 			layout('routes/contest.main.layout.tsx', [
