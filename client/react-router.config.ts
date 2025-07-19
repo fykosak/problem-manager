@@ -4,12 +4,13 @@ export default {
 	// Config options...
 	// Server-side render by default, to enable SPA mode set this to `false`
 	ssr: false,
-	async prerender() {
+	prerender() {
 		const markdownFiles = Object.keys(import.meta.glob('./docs/*.md'));
-		let pages = markdownFiles.map((file) => {
+		const pages = markdownFiles.map((file) => {
 			const filename = file.split('/').pop()?.replace('.md', '');
 			return `/how-to/${filename}`;
 		});
+		pages.push('/how-to');
 		console.log(pages);
 		return pages;
 	},
