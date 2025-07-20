@@ -6,6 +6,8 @@ import { Button } from '@client/components/ui/button';
 
 import { Route } from './+types/howTo.main';
 
+// HowTo is statically prerendered -> it can use loader and access files on
+// server.
 export async function loader() {
 	const files = import.meta.glob('../../docs/*.md');
 	const links = [];

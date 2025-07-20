@@ -29,6 +29,10 @@ export default function howToFile({ loaderData }: Route.ComponentProps) {
 				components={{
 					a: (props) => {
 						const { node, href, ...rest } = props; // eslint-disable-line
+
+						// Remove .md suffix from relative paths so that URL
+						// paths are without extentions but extension can be
+						// used for working links on github.
 						let transformedHref = href;
 						if (href) {
 							const match = href.match(/^(\.\/.*)\.md/);
@@ -36,6 +40,7 @@ export default function howToFile({ loaderData }: Route.ComponentProps) {
 								transformedHref = match[1];
 							}
 						}
+
 						return (
 							<a
 								className="text-blue-600 dark:text-blue-500 hover:underline"
