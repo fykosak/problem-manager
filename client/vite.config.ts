@@ -16,4 +16,5 @@ export default defineConfig({
 		// and is not needed anyway
 		noExternal: ['@uiw/react-codemirror'],
 	},
+	assetsInclude: ['./docs/*'],
 });
