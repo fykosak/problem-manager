@@ -1,6 +1,7 @@
 import { lintGutter, linter } from '@codemirror/lint';
+import { EditorView } from '@codemirror/view';
 import { material } from '@uiw/codemirror-theme-material';
-import CodeMirror, { EditorView } from '@uiw/react-codemirror';
+import CodeMirror from '@uiw/react-codemirror';
 import { latex, latexLinter } from 'lang-latex';
 import { CircleCheckIcon } from 'lucide-react';
 import { ForwardedRef, forwardRef, useEffect, useRef, useState } from 'react';
