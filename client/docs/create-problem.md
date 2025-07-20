@@ -68,5 +68,6 @@ Po vyplnění formuláře máte dvě možnosti: uložit a navrhnout další úlo
 návrh uložit a otevřít ji v editoru. V případě, že dáte navrhnout další úlohu,
 je aktuální návrh uložen (vyskočí vám hláška o uložení) a formulář se vyresetuje
 pro další úlohu. Ve druhém případě jste automaticky přesměrování do plného
-editoru úloh, ve kterém můžete zkusit zTeXaT své zadání, dále iterovat či
-přidávat obrázky k zadání.
+editoru úloh (viz [návod na editor](./editor.md)), ve kterém můžete zkusit zTeXaT
+své zadání, dále iterovat či přidávat obrázky k zadání (viz [návod soubory a
+obrázky u úloh](./files.md)).

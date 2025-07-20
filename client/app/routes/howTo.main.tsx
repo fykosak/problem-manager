@@ -2,6 +2,8 @@ import fs from 'fs/promises';
 import path from 'node:path';
 import { Link } from 'react-router';
 
+import { Button } from '@client/components/ui/button';
+
 import { Route } from './+types/howTo.main';
 
 export async function loader() {
@@ -36,14 +38,17 @@ export default function howTo({ loaderData }: Route.ComponentProps) {
 	return (
 		<div className="max-w-screen-sm mx-auto mb-8">
 			<h1>Přehled návodů</h1>
-			{loaderData.links.map((link) => (
-				<Link
-					to={'/how-to/' + link.filename.replace('.md', '')}
-					className="hover:underline"
-				>
-					{link.title}
-				</Link>
-			))}
+			<div className="flex flex-col items-start">
+				{loaderData.links.map((link) => (
+					<Button variant="ghost" asChild>
+						<Link
+							to={'/how-to/' + link.filename.replace('.md', '')}
+						>
+							{link.title}
+						</Link>
+					</Button>
+				))}
+			</div>
 		</div>
 	);
 }

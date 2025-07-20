@@ -11,7 +11,6 @@ export default {
 			return `/how-to/${filename}`;
 		});
 		pages.push('/how-to');
-		console.log(pages);
 		return pages;
 	},
 } satisfies Config;

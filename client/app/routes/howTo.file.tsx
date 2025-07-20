@@ -27,24 +27,41 @@ export default function howToFile({ loaderData }: Route.ComponentProps) {
 				remarkPlugins={[remarkGFM]}
 				rehypePlugins={[rehypeRaw]}
 				components={{
-					a(props) {
-						const { node, ...rest } = props; // eslint-disable-line
+					a: (props) => {
+						const { node, href, ...rest } = props; // eslint-disable-line
+						let transformedHref = href;
+						if (href) {
+							const match = href.match(/^(\.\/.*)\.md/);
+							if (match && match.length >= 2) {
+								transformedHref = match[1];
+							}
+						}
 						return (
 							<a
 								className="text-blue-600 dark:text-blue-500 hover:underline"
+								href={transformedHref}
 								{...rest}
 							/>
 						);
 					},
-					p(props) {
+					p: (props) => {
 						const { node, ...rest } = props; // eslint-disable-line
 						return <p className="my-4" {...rest} />;
 					},
-					ul(props) {
+					ul: (props) => {
 						const { node, ...rest } = props; // eslint-disable-line
 						return (
 							<ul
 								className="list-disc list-outside pl-5"
+								{...rest}
+							/>
+						);
+					},
+					code: (props) => {
+						const { node, ...rest } = props; // eslint-disable-line
+						return (
+							<code
+								className="bg-muted rounded-md p-1 text-sm"
 								{...rest}
 							/>
 						);
