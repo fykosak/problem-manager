@@ -1,4 +1,4 @@
-import { Menu, Moon, Sun } from 'lucide-react';
+import { FileQuestion, Menu, Moon, Sun } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { NavLink } from 'react-router';
@@ -10,6 +10,12 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@client/components/ui/dropdown-menu';
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from '@client/components/ui/tooltip';
 import { useTheme } from '@client/hooks/themeProvider';
 
 import Logo from '../ui/logo';
@@ -124,6 +130,22 @@ export default function NavigationBar({
 									</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											variant="ghost"
+											size="icon"
+											asChild
+										>
+											<NavLink to="/how-to">
+												<FileQuestion />
+											</NavLink>
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>Návody</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
 						</div>
 					</div>
 				</nav>
