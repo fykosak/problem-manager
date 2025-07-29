@@ -57,6 +57,7 @@ async function processOrganizer(
 		personId: personId,
 		email: importedOrganizer.email,
 		state: importedOrganizer.state,
+		texSignature: importedOrganizer.texSignature,
 	};
 
 	if (!dbOrganizer) {

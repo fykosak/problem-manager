@@ -248,7 +248,6 @@ export const personTable = pgTable('person', {
 	personId: serial().primaryKey(),
 	firstName: varchar({ length: 255 }).notNull(),
 	lastName: varchar({ length: 255 }).notNull(),
-	//texSignature: varchar({ length: 255 }).notNull(),
 });
 
 export const personRelations = relations(personTable, ({ many }) => ({
@@ -272,6 +271,7 @@ export const organizerTable = pgTable('organizer', {
 		.notNull()
 		.references(() => contestTable.contestId),
 	email: varchar(),
+	texSignature: varchar({ length: 255 }),
 	state: organizerStateEnum().notNull(),
 });
 
