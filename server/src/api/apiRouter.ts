@@ -227,7 +227,7 @@ apiRouter.get(
 			});
 			authorSignatures.set(
 				authorType,
-				// @ts-ignore only organizer with a signature are selected,
+				// @ts-expect-error only organizer with a signature are selected,
 				// so the correct type is string instead of string | null
 				organizers.map((organizer) => organizer.texSignature)
 			);

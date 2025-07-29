@@ -80,7 +80,7 @@ async function processOrganizer(
 		.where(eq(organizerTable.organizerId, dbOrganizer.organizerId));
 }
 
-async function importUsers() {
+export async function importUsers() {
 	const people = await adapter.getUserData();
 
 	for (const importedPerson of people) {
@@ -116,5 +116,3 @@ async function importUsers() {
 		}
 	}
 }
-
-await importUsers();

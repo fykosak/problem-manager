@@ -17,6 +17,7 @@ export default [
 				index('routes/howTo.main.tsx'),
 				route('/:markdownFile', 'routes/howTo.file.tsx'),
 			]),
+			route('/admin', 'routes/base.admin.tsx'),
 		]),
 		route(':contest/:year', 'routes/contest.layout.tsx', [
 			layout('routes/contest.main.layout.tsx', [
