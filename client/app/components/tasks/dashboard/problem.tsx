@@ -32,12 +32,16 @@ export function Problem({
 						to={'task/' + problem.problemId}
 						className="hover:underline"
 					>
-						{'name' in problem.metadata
-							? // @ts-expect-error not defined metadata type
-								'cs' in problem.metadata.name
-								? (problem.metadata.name.cs as string) // TODO
-								: ''
-							: ''}
+						{'name' in problem.metadata &&
+						// @ts-expect-error not defined metadata type}
+						'cs' in problem.metadata.name &&
+						problem.metadata.name.cs ? (
+							(problem.metadata.name.cs as string) // TODO
+						) : (
+							<span className="italic text-muted-foreground">
+								chybí název
+							</span>
+						)}
 					</Link>
 					<Badge className="bg-green-500 text-background">
 						{problem.type.label}
