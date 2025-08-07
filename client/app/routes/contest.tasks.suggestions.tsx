@@ -33,6 +33,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 		type: problem.type.label,
 		state: problem.state,
 		created: new Date(problem.created),
+		contestSymbol: params.contest,
 	}));
 
 	const series = await trpc.series.list.query({
@@ -40,7 +41,9 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 		contestYear: Number(params.year),
 	});
 
-	return { problems: transformedProblems, series };
+	const contests = await trpc.getContests.query();
+
+	return { problems: transformedProblems, series, contests };
 }
 
 export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
@@ -57,7 +60,7 @@ export default function TaskSuggestions({ loaderData }: Route.ComponentProps) {
 				</Button>
 			</div>
 			<DataTable
-				columns={getColumns(loaderData.series)}
+				columns={getColumns(loaderData.series, loaderData.contests)}
 				data={loaderData.problems}
 				getOnRowClick={(row) => () =>
 					navigate('../task/' + row.original.problemId)
