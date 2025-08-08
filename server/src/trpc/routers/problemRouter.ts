@@ -403,7 +403,7 @@ export const problemRouter = trpc.router({
 					ctx.aclRoles,
 					problem.contest.symbol,
 					'problem',
-					'delete'
+					'changeState'
 				)
 			) {
 				throw new TRPCError({

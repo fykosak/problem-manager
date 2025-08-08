@@ -22,3 +22,4 @@ acl.allow(ContestRole.manager, 'text', 'release');
 acl.allow(ContestRole.manager, 'text', 'revoke');
 
 acl.allow(ContestRole.manager, 'problem', 'changeContest');
+acl.allow(ContestRole.manager, 'problem', 'changeState');
