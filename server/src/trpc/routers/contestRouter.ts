@@ -117,6 +117,7 @@ export const contestRouter = trpc.router({
 				},
 			},
 			where: eq(problemTable.contestId, ctx.contest.contestId),
+			orderBy: desc(problemTable.problemId),
 		});
 	}),
 	availableWork: contestProcedure.query(({ ctx }) => {

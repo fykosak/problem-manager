@@ -10,50 +10,58 @@ import { trpc } from '@client/trpc';
 
 import { Task } from './columns';
 
-async function onDeleteProblem(problemId: number) {
+async function onChangeProblemState(problem: Task) {
 	try {
-		await trpc.problem.delete.mutate({
-			problemId: problemId,
+		const targetState = problem.state === 'active' ? 'deleted' : 'active';
+
+		await trpc.problem.changeState.mutate({
+			problemId: problem.problemId,
+			state: targetState,
 		});
-		toast.success('Úloha přesunuta do koše');
+		switch (problem.state) {
+			case 'active':
+				toast.success('Úloha vytáhnuta z koše');
+				break;
+			case 'deleted':
+				toast.success('Úloha přesunuta do koše');
+				break;
+		}
 	} catch (error) {
 		if (error instanceof TRPCClientError) {
-			toast.error('Error při mazání úlohy', {
+			toast.error('Error při změně stavu úlohy', {
 				description: error.message,
 			});
 		}
 	}
 }
 
-export function DeleteComponent({
+export function ChangeStateComponent({
 	problem,
 	setOpen,
 }: {
 	problem: Task;
 	setOpen: (open: boolean) => void;
 }) {
-	const deleteForm = useForm();
+	const changeStateForm = useForm();
 	const revalidator = useRevalidator();
 
-	if (problem.state !== 'active') {
-		return null;
-	}
-
 	return (
-		<Form {...deleteForm}>
+		<Form {...changeStateForm}>
 			<DropdownMenuItem
 				// eslint-disable-next-line
 				onSelect={async (event) => {
 					event.preventDefault();
-					await deleteForm.handleSubmit(() =>
-						onDeleteProblem(problem.problemId)
+					await changeStateForm.handleSubmit(() =>
+						onChangeProblemState(problem)
 					)();
 					setOpen(false);
 					await revalidator.revalidate();
 				}}
 			>
-				{deleteForm.formState.isSubmitting && <Loader />}
-				Přesunout do koše
+				{changeStateForm.formState.isSubmitting && <Loader />}
+				{problem.state === 'active'
+					? 'Přesunout do koše'
+					: 'Vytáhnout z koše'}
 			</DropdownMenuItem>
 		</Form>
 	);

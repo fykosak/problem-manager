@@ -3,6 +3,8 @@ import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink } from 'react-router';
 
+import { problemStateEnum } from '@server/db/schema';
+
 import { Button } from '@client/components/ui/button';
 import {
 	DataTableColumnSorter,
@@ -18,7 +20,7 @@ import {
 import { trpcOutputTypes } from '@client/trpc';
 
 import { ChangeContestComponent } from './changeContestComponent';
-import { DeleteComponent } from './deleteComponent';
+import { ChangeStateComponent } from './changeStateComponent';
 import { SelectSeriesComponent } from './selectSeriesComponent';
 
 export interface Task {
@@ -27,7 +29,7 @@ export interface Task {
 	authors: string[];
 	problemTopics: string[];
 	type: string;
-	state: string;
+	state: (typeof problemStateEnum.enumValues)[number];
 	created: Date;
 	contestSymbol: string;
 }
@@ -57,7 +59,7 @@ function RowActions({
 							Otevřit úlohu
 						</NavLink>
 					</DropdownMenuItem>
-					<DeleteComponent problem={problem} setOpen={setOpen} />
+					<ChangeStateComponent problem={problem} setOpen={setOpen} />
 					{problem.state === 'active' && (
 						<DropdownMenuItem>
 							<DialogTrigger>Vybrat do série</DialogTrigger>
@@ -67,6 +69,7 @@ function RowActions({
 						<ChangeContestComponent
 							problem={problem}
 							contests={contests}
+							setOpen={setOpen}
 						/>
 					)}
 				</DropdownMenuContent>
