@@ -2,10 +2,21 @@ import { AclError } from './aclError';
 import { type AssertionType, Role } from './role';
 import type { PersonRoles } from './roleTypes';
 
-export class ACL {
+/**
+ * ACL class for keeping permissions
+ *
+ * @type Perms string: string[] pairs defining all of the possible permissions,
+ * that can be allowed or asked, it they're allowed.
+ * @type Resource is a key type of Perms. It needs to filter out only string
+ * keys using Extract, because TS cannot extract the information from key type
+ * of Perms.
+ */
+export class ACL<const Perms extends Record<string, readonly string[]>> {
 	roles = new Map<string, Role>();
 
 	public static readonly All = null;
+
+	constructor(private perms: Perms) {}
 
 	private getRole(roleName: string): Role {
 		const role = this.roles.get(roleName);
@@ -37,10 +48,13 @@ export class ACL {
 		this.roles.set(roleName, new Role(inheritsFrom));
 	}
 
-	public allow(
+	public allow<
+		Resource extends Extract<keyof Perms, string>,
+		Action extends Perms[Resource][number],
+	>(
 		roleName: string,
-		resourceName: string | typeof ACL.All = ACL.All,
-		actionName: string | typeof ACL.All = ACL.All,
+		resourceName: Resource | typeof ACL.All = ACL.All,
+		actionName: Action | typeof ACL.All = ACL.All,
 		assertion: AssertionType = true
 	): void {
 		const role = this.getRole(roleName);
@@ -51,10 +65,13 @@ export class ACL {
 	 * Check if role `roleName` is allowed access to resource.
 	 * If `roleName` is a list, search if any role from the list is allowed.
 	 */
-	public isAllowed(
+	public isAllowed<
+		Resource extends Extract<keyof Perms, string>,
+		Action extends Perms[Resource][number],
+	>(
 		roleNames: string | string[],
-		resourceName: string,
-		actionName: string | typeof ACL.All = ACL.All,
+		resourceName: Resource,
+		actionName: Action | typeof ACL.All = ACL.All,
 		assertionData?: unknown
 	): boolean {
 		if (!Array.isArray(roleNames)) {
@@ -89,10 +106,13 @@ export class ACL {
 	/**
 	 * Check if any role from person's base role list is allowed the given resource.
 	 */
-	public isAllowedBase(
+	public isAllowedBase<
+		Resource extends Extract<keyof Perms, string>,
+		Action extends Perms[Resource][number],
+	>(
 		personRoles: PersonRoles,
-		resourceName: string,
-		actionName: string | typeof ACL.All = ACL.All,
+		resourceName: Resource,
+		actionName: Action | typeof ACL.All = ACL.All,
 		assertionData?: unknown
 	) {
 		return this.isAllowed(
@@ -107,11 +127,14 @@ export class ACL {
 	 * Check if person has a permission for a contest.
 	 * If not, check also for base roles.
 	 */
-	public isAllowedContest(
+	public isAllowedContest<
+		Resource extends Extract<keyof Perms, string>,
+		Action extends Perms[Resource][number],
+	>(
 		personRoles: PersonRoles,
 		contestSymbol: string,
-		resourceName: string,
-		actionName: string | typeof ACL.All = ACL.All,
+		resourceName: Resource,
+		actionName: Action | typeof ACL.All = ACL.All,
 		assertionData?: unknown
 	) {
 		const contestRoles = personRoles.contestRole.get(contestSymbol);
