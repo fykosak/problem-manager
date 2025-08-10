@@ -4,8 +4,8 @@ import { BaseRole, ContestRole } from './roleTypes';
 export const acl = new ACL({
 	organizers: ['import'],
 	contest: [],
-	series: ['edit'],
-	problem: ['assignSeries', 'delete'],
+	series: ['create', 'edit'],
+	problem: ['assignSeries', 'create', 'delete'],
 	text: ['edit', 'release', 'revoke'],
 });
 

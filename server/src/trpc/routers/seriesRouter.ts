@@ -106,13 +106,32 @@ export const seriesRouter = trpc.router({
 					eq(contestYearTable.contestId, ctx.contest.contestId),
 					eq(contestYearTable.year, input.contestYear)
 				),
+				with: {
+					contest: true,
+				},
 			});
+
 			if (!contestYear) {
 				throw new TRPCError({
 					message: 'Contest year does not exist',
 					code: 'BAD_REQUEST',
 				});
 			}
+
+			if (
+				!acl.isAllowedContest(
+					ctx.aclRoles,
+					contestYear.contest.symbol,
+					'series',
+					'create'
+				)
+			) {
+				throw new TRPCError({
+					message: 'Cannot create series for this contest',
+					code: 'FORBIDDEN',
+				});
+			}
+
 			await db.insert(seriesTable).values({
 				contestYearId: contestYear.contestYearId,
 				label: input.label,

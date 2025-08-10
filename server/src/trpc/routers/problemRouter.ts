@@ -279,8 +279,21 @@ export const problemRouter = trpc.router({
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			// TODO validate contestId for available contests of user
 			// TODO to db transaction
+
+			if (
+				!acl.isAllowedContest(
+					ctx.aclRoles,
+					ctx.contest.symbol,
+					'problem',
+					'create'
+				)
+			) {
+				throw new TRPCError({
+					code: 'FORBIDDEN',
+					message: 'Cannot create problem for this contest',
+				});
+			}
 
 			// filter topics by contest
 			const filteredTopics = await db.query.topicTable.findMany({
