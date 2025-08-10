@@ -1,7 +1,13 @@
 import { ACL } from './acl';
 import { BaseRole, ContestRole } from './roleTypes';
 
-export const acl = new ACL();
+export const acl = new ACL({
+	organizers: ['import'],
+	contest: [],
+	series: ['edit'],
+	problem: ['assignSeries', 'delete'],
+	text: ['edit', 'release', 'revoke'],
+});
 
 // base roles
 acl.addRole(BaseRole.admin);
