@@ -4,7 +4,9 @@ import { ACL } from '@server/acl/acl';
 import { AclError } from '@server/acl/aclError';
 
 test('basic resource and action', () => {
-	const acl = new ACL();
+	const acl = new ACL({
+		resource: ['action', 'otherAction'],
+	});
 
 	acl.addRole('role');
 
@@ -16,7 +18,9 @@ test('basic resource and action', () => {
 });
 
 test('not allowed action', () => {
-	const acl = new ACL();
+	const acl = new ACL({
+		resource: ['action', 'otherAction'],
+	});
 	acl.addRole('role');
 	acl.allow('role', 'resource', 'action');
 
@@ -25,7 +29,10 @@ test('not allowed action', () => {
 });
 
 test('not allowed resource', () => {
-	const acl = new ACL();
+	const acl = new ACL({
+		resource: ['action', 'superaction'],
+		otherResource: ['action'],
+	});
 	acl.addRole('role');
 	acl.allow('role', 'resource', 'action');
 
@@ -33,7 +40,10 @@ test('not allowed resource', () => {
 });
 
 test('allow all actions', () => {
-	const acl = new ACL();
+	const acl = new ACL({
+		resource: ['action', 'otherAction'],
+		otherResource: ['action'],
+	});
 	acl.addRole('role');
 	acl.allow('role', 'resource');
 
@@ -45,7 +55,9 @@ test('allow all actions', () => {
 });
 
 test('is not allowed all actions', () => {
-	const acl = new ACL();
+	const acl = new ACL({
+		resource: ['action'],
+	});
 	acl.addRole('role');
 	acl.allow('role', 'resource', 'action');
 
@@ -54,7 +66,10 @@ test('is not allowed all actions', () => {
 });
 
 test('multiple roles', () => {
-	const acl = new ACL();
+	const acl = new ACL({
+		resource: ['action', 'otherAction'],
+		otherResource: ['action', 'otherAction'],
+	});
 	acl.addRole('role');
 	acl.addRole('otherRole');
 
@@ -89,7 +104,10 @@ test('multiple roles', () => {
 });
 
 test('allow all resources', () => {
-	const acl = new ACL();
+	const acl = new ACL({
+		resource: ['action', 'otherAction'],
+		otherResource: ['action', 'otherAction'],
+	});
 	acl.addRole('role');
 
 	acl.allow('role');
@@ -104,7 +122,9 @@ test('allow all resources', () => {
 });
 
 test('assertion', () => {
-	const acl = new ACL();
+	const acl = new ACL({
+		resource: ['action'],
+	});
 	acl.addRole('role');
 
 	acl.allow('role', 'resource', 'action', (user) => {
@@ -137,7 +157,10 @@ test('assertion', () => {
 });
 
 test('role inheritance', () => {
-	const acl = new ACL();
+	const acl = new ACL({
+		resource: ['action'],
+		otherResource: ['action'],
+	});
 	acl.addRole('inheritedRole');
 
 	acl.allow('inheritedRole', 'resource', 'action');
@@ -155,7 +178,13 @@ test('role inheritance', () => {
 });
 
 test('deeper role inheritance', () => {
-	const acl = new ACL();
+	const acl = new ACL({
+		resource1: [],
+		resource2: [],
+		resource3: [],
+		resource4: [],
+		resource5: [],
+	});
 
 	// 5 -> 3 -> 2 -> 1
 	//  \      ^
@@ -204,7 +233,7 @@ test('deeper role inheritance', () => {
 });
 
 test('inherit from not existing role', () => {
-	const acl = new ACL();
+	const acl = new ACL({});
 	acl.addRole('inheritedRole');
 	expect(() => acl.addRole('role', 'otherRole')).toThrowError(AclError);
 });
