@@ -1,35 +1,27 @@
-import {
-	DialogDescription,
-	DialogTitle,
-	DialogTrigger,
-} from '@radix-ui/react-dialog';
 import { ColumnDef } from '@tanstack/react-table';
-import { TRPCClientError } from '@trpc/client';
 import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { NavLink, useRevalidator } from 'react-router';
-import { toast } from 'sonner';
+import { NavLink } from 'react-router';
+
+import { problemStateEnum } from '@server/db/schema';
 
 import { Button } from '@client/components/ui/button';
 import {
 	DataTableColumnSorter,
 	DataTableColumnUniqueFilter,
 } from '@client/components/ui/dataTable';
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-} from '@client/components/ui/dialog';
+import { Dialog, DialogTrigger } from '@client/components/ui/dialog';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@client/components/ui/dropdown-menu';
-import { Form } from '@client/components/ui/form';
-import { Loader } from '@client/components/ui/loader';
-import { trpc, trpcOutputTypes } from '@client/trpc';
+import { trpcOutputTypes } from '@client/trpc';
+
+import { ChangeContestComponent } from './changeContestComponent';
+import { ChangeStateComponent } from './changeStateComponent';
+import { SelectSeriesComponent } from './selectSeriesComponent';
 
 export interface Task {
 	problemId: number;
@@ -37,52 +29,21 @@ export interface Task {
 	authors: string[];
 	problemTopics: string[];
 	type: string;
-	state: string;
+	state: (typeof problemStateEnum.enumValues)[number];
 	created: Date;
-}
-
-async function onDeleteProblem(problemId: number) {
-	try {
-		await trpc.problem.delete.mutate({
-			problemId: problemId,
-		});
-		toast.success('Úloha přesunuta do koše');
-	} catch (error) {
-		if (error instanceof TRPCClientError) {
-			toast.error('Error při mazání úlohy', {
-				description: error.message,
-			});
-		}
-	}
-}
-
-async function assignProblemToSeries(seriesId: number, problemId: number) {
-	try {
-		await trpc.problem.assignSeries.mutate({
-			problemId,
-			seriesId,
-		});
-		toast.success('Problem assigned to series');
-	} catch (error) {
-		if (error instanceof TRPCClientError) {
-			toast.error('Failed to assign problem', {
-				description: error.message,
-			});
-		}
-	}
+	contestSymbol: string;
 }
 
 function RowActions({
 	series,
 	problem,
+	contests: contests,
 }: {
 	series: trpcOutputTypes['series']['list'];
 	problem: Task;
+	contests: trpcOutputTypes['getContests'];
 }) {
 	const [open, setOpen] = useState(false);
-	const revalidator = useRevalidator();
-
-	const deleteForm = useForm();
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -98,65 +59,34 @@ function RowActions({
 							Otevřit úlohu
 						</NavLink>
 					</DropdownMenuItem>
-					{problem.state === 'active' && (
-						<Form {...deleteForm}>
-							<DropdownMenuItem
-								// eslint-disable-next-line
-								onSelect={async (event) => {
-									event.preventDefault();
-									await deleteForm.handleSubmit(() =>
-										onDeleteProblem(problem.problemId)
-									)();
-									setOpen(false);
-									await revalidator.revalidate();
-								}}
-							>
-								{deleteForm.formState.isSubmitting && (
-									<Loader />
-								)}
-								Přesunout do koše
-							</DropdownMenuItem>
-						</Form>
-					)}
+					<ChangeStateComponent problem={problem} setOpen={setOpen} />
 					{problem.state === 'active' && (
 						<DropdownMenuItem>
 							<DialogTrigger>Vybrat do série</DialogTrigger>
 						</DropdownMenuItem>
 					)}
+					{problem.state === 'active' && (
+						<ChangeContestComponent
+							problem={problem}
+							contests={contests}
+							setOpen={setOpen}
+						/>
+					)}
 				</DropdownMenuContent>
 			</DropdownMenu>
-			<DialogContent>
-				<DialogHeader>
-					<DialogTitle>Select series</DialogTitle>
-					<DialogDescription>
-						Select series to assign the task to
-					</DialogDescription>
-				</DialogHeader>
-				<div className="grid grid-cols-3 gap-4 items-center">
-					{series.map((series) => (
-						<Button
-							key={series.seriesId}
-							variant="outline"
-							// eslint-disable-next-line
-							onClick={async () => {
-								await assignProblemToSeries(
-									series.seriesId,
-									problem.problemId
-								);
-								setOpen(false);
-								await revalidator.revalidate();
-							}}
-						>
-							{series.label}
-						</Button>
-					))}
-				</div>
-			</DialogContent>
+			<SelectSeriesComponent
+				series={series}
+				problem={problem}
+				setOpen={setOpen}
+			/>
 		</Dialog>
 	);
 }
 
-export function getColumns(series: trpcOutputTypes['series']['list']) {
+export function getColumns(
+	series: trpcOutputTypes['series']['list'],
+	contests: trpcOutputTypes['getContests']
+) {
 	const columns: ColumnDef<Task>[] = [
 		{
 			accessorKey: 'name',
@@ -241,7 +171,13 @@ export function getColumns(series: trpcOutputTypes['series']['list']) {
 		{
 			id: 'actions',
 			cell: ({ row }) => {
-				return <RowActions series={series} problem={row.original} />;
+				return (
+					<RowActions
+						series={series}
+						problem={row.original}
+						contests={contests}
+					/>
+				);
 			},
 		},
 	];
