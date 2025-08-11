@@ -14,7 +14,7 @@ if [ -z "$GUID" ]; then
 fi
 
 # change IDs of default node user/group
-groupmod --gid $GUID node
+groupmod --gid $GUID --non-unique node
 echo "Group node switched to GID $GUID."
 usermod --uid $PUID --gid $GUID node
 echo "User node switched to UID $PUID."
