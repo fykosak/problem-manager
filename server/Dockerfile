@@ -13,7 +13,7 @@ RUN npm install-clean
 
 FROM node:22-alpine
 
-RUN apk add cronie
+RUN apk add cronie shadow
 RUN echo 'cd /app/server && npx tsx tools/importUsers.ts > /dev/null' > /etc/periodic/hourly/importUsers.sh
 RUN chmod +x /etc/periodic/hourly/importUsers.sh
 
