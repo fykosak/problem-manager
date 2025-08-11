@@ -10,12 +10,20 @@ import { yCollab } from 'y-codemirror.next';
 import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
 
+import { langEnum } from '@server/db/schema';
+
+import { getSpellcheckExtension } from '@client/components/editor/spellcheck';
+import { Loader } from '@client/components/ui/loader';
 import { config } from '@client/config';
 
-import { Loader } from '../ui/loader';
-
 const Editor = forwardRef(
-	({ textId }: { textId: number }, ref: ForwardedRef<HTMLDivElement>) => {
+	(
+		{
+			textId,
+			lang,
+		}: { textId: number; lang: (typeof langEnum.enumValues)[number] },
+		ref: ForwardedRef<HTMLDivElement>
+	) => {
 		const auth = useAuth();
 		const ydocRef = useRef(new Y.Doc());
 		const providerRef = useRef<WebsocketProvider | null>(null);
@@ -124,7 +132,6 @@ const Editor = forwardRef(
 						fontSize: '14px',
 					}}
 					className="grow h-px"
-					spellCheck="true"
 					extensions={[
 						latex(),
 						linter(latexLinter),
@@ -137,6 +144,7 @@ const Editor = forwardRef(
 							}
 						),
 						EditorView.lineWrapping,
+						getSpellcheckExtension(lang),
 					]}
 					basicSetup={{ foldGutter: true, dropCursor: true }}
 				/>
