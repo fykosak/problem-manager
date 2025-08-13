@@ -18,6 +18,7 @@ import { trpc, type trpcOutputTypes } from '@client/trpc';
 
 import PersonSelect from './tasks/personSelect';
 import { Checkbox } from './ui/checkbox';
+import { FieldSetContent, FieldSetRoot, FieldSetTitle } from './ui/fielset';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 const formSchema = z.object({
@@ -31,6 +32,15 @@ const formSchema = z.object({
 			en: z.string().optional(),
 		}),
 		points: z.coerce.number().int().min(0, 'Points must be positive'),
+		result: z.object({
+			value: z.coerce.number().optional(),
+			unit: z.string().optional(),
+			precision: z.coerce.number().min(0, 'Precision should be positive'),
+			expectedPlaces: z.coerce
+				.number()
+				.int('Expected places must be a whole number')
+				.min(1, 'Should expect at least one place'),
+		}),
 	}),
 	authors: z.object({
 		task: z.number().array(),
@@ -66,6 +76,12 @@ export function MetadataForm({
 					en: '',
 				},
 				points: 0,
+				result: {
+					value: undefined,
+					unit: undefined,
+					precision: undefined,
+					expectedPlaces: undefined,
+				},
 				...taskData.metadata, // overrites with already saved values
 			},
 			authors: taskData.authors,
@@ -246,6 +262,81 @@ export function MetadataForm({
 						</FormItem>
 					)}
 				/>
+
+				<FieldSetRoot>
+					<FieldSetTitle>Výsledek úlohy</FieldSetTitle>
+					<FieldSetContent>
+						<FormField
+							control={form.control}
+							name="metadata.result.value"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Číselný výsledek</FormLabel>
+									<FormControl>
+										<Input
+											type="number"
+											placeholder="např. 1.1e-2"
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="metadata.result.unit"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Jednotky</FormLabel>
+									<FormControl>
+										<Input
+											placeholder="např. m.s^{-1}"
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="metadata.result.precision"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Tolerance</FormLabel>
+									<FormControl>
+										<Input
+											type="number"
+											placeholder="např. 0.1"
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="metadata.result.expectedPlaces"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>
+										Očekávaný počet platných cifer
+									</FormLabel>
+									<FormControl>
+										<Input
+											type="number"
+											placeholder="např. 2"
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</FieldSetContent>
+				</FieldSetRoot>
 
 				{getAuthorField('authors.task', 'Autoři zadání')}
 				{getAuthorField('authors.solution', 'Autoři řešení')}
