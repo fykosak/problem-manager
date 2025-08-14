@@ -1,0 +1,258 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
+
+import { Button } from '@client/components/ui/button';
+import {
+	FieldSetContent,
+	FieldSetRoot,
+	FieldSetTitle,
+} from '@client/components/ui/fieldset';
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '@client/components/ui/form';
+import { Loader } from '@client/components/ui/loader';
+import { RadioGroup, RadioGroupItem } from '@client/components/ui/radio-group';
+import { trpc, type trpcOutputTypes } from '@client/trpc';
+
+import { AuthorSelection } from './authorSelection';
+import { FormInput } from './formInput';
+import { TopicSelection } from './topicSelection';
+
+const formSchema = z.object({
+	metadata: z.object({
+		name: z.object({
+			cs: z.string().optional(),
+			en: z.string().optional(),
+		}),
+		origin: z.object({
+			cs: z.string().optional(),
+			en: z.string().optional(),
+		}),
+		points: z.coerce.number().int().min(0, 'Points must be positive'),
+		result: z.object({
+			value: z.coerce.number().optional(),
+			unit: z.string().optional(),
+			precision: z.coerce
+				.number()
+				.min(0, 'Precision should be positive')
+				.optional(),
+			expectedPlaces: z.coerce
+				.number()
+				.int('Expected places must be a whole number')
+				.min(1, 'Should expect at least one place')
+				.optional(),
+		}),
+	}),
+	authors: z.object({
+		task: z.number().array(),
+		solution: z.number().array(),
+	}),
+	topics: z.number().array().min(1),
+	type: z.coerce.number(),
+});
+
+export function MetadataForm({
+	problemId,
+	taskData,
+	availableTopics,
+	availableTypes,
+	organizers,
+}: {
+	problemId: number;
+	taskData: trpcOutputTypes['problem']['metadata'];
+	availableTopics: trpcOutputTypes['contest']['availableTopics'];
+	availableTypes: trpcOutputTypes['contest']['availableTypes'];
+	organizers: trpcOutputTypes['contest']['organizers'];
+}) {
+	const form = useForm<z.infer<typeof formSchema>>({
+		resolver: zodResolver(formSchema),
+		defaultValues: {
+			metadata: {
+				name: {
+					cs: '',
+					en: '',
+				},
+				origin: {
+					cs: '',
+					en: '',
+				},
+				points: 0,
+				result: {
+					value: undefined,
+					unit: undefined,
+					precision: undefined,
+					expectedPlaces: undefined,
+				},
+				...taskData.metadata, // overrites with already saved values
+			},
+			authors: taskData.authors,
+			topics: taskData.topics,
+			type: taskData.type,
+		},
+	});
+
+	async function onSubmit(values: z.infer<typeof formSchema>) {
+		await trpc.problem.updateMetadata.mutate({
+			...values,
+			problemId: problemId,
+		});
+		toast.success('Task data saved');
+	}
+
+	const { formState } = form;
+	const { errors } = formState;
+
+	return (
+		<Form {...form}>
+			<div>{errors.root?.message}</div>
+			<form
+				// eslint-disable-next-line
+				onSubmit={form.handleSubmit(async (values) => {
+					try {
+						await onSubmit(values);
+					} catch (exception) {
+						form.setError('root', {
+							message: (exception as Error).message ?? 'Error',
+							type: 'server',
+						});
+					}
+				})}
+				className="space-y-8"
+			>
+				<FormInput
+					control={form.control}
+					name="metadata.name.cs"
+					placeholder="Český název"
+					label="Název CS"
+				/>
+
+				<FormInput
+					control={form.control}
+					name="metadata.name.en"
+					placeholder="Anglický název"
+					label="Název EN"
+				/>
+
+				<FormInput
+					control={form.control}
+					name="metadata.origin.cs"
+					placeholder="Český původ"
+					label="Původ CS"
+				/>
+
+				<FormInput
+					control={form.control}
+					name="metadata.origin.en"
+					placeholder="Anglický původ"
+					label="Původ EN"
+				/>
+
+				<FormInput
+					control={form.control}
+					name="metadata.points"
+					placeholder="Počet bodů"
+					label="Body za úlohu"
+					type="number"
+				/>
+
+				<FieldSetRoot>
+					<FieldSetTitle>Výsledek úlohy</FieldSetTitle>
+					<FieldSetContent>
+						<FormInput
+							control={form.control}
+							name="metadata.result.value"
+							placeholder="např. 1.1e-2"
+							label="Číselný výsledek"
+							type="number"
+						/>
+
+						<FormInput
+							control={form.control}
+							name="metadata.result.unit"
+							placeholder="např. m.s^{-1}"
+							label="Jednotky"
+						/>
+
+						<FormInput
+							control={form.control}
+							name="metadata.result.precision"
+							placeholder="např. 0.1"
+							label="Tolerance"
+							type="number"
+						/>
+
+						<FormInput
+							control={form.control}
+							name="metadata.result.expectedPlaces"
+							placeholder="např. 2"
+							label="number"
+						/>
+					</FieldSetContent>
+				</FieldSetRoot>
+
+				<AuthorSelection
+					control={form.control}
+					name="authors.task"
+					label="Authoři zadání"
+					organizers={organizers}
+				/>
+
+				<AuthorSelection
+					control={form.control}
+					name="authors.solution"
+					label="Authoři řešení"
+					organizers={organizers}
+				/>
+
+				<TopicSelection
+					control={form.control}
+					name="topics"
+					topics={availableTopics}
+				/>
+
+				<FormField
+					control={form.control}
+					name="type"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Typ úlohy</FormLabel>
+							<FormControl>
+								<RadioGroup
+									onValueChange={field.onChange}
+									defaultValue={field.value?.toString()}
+								>
+									{availableTypes.map((type) => (
+										<FormItem
+											className="flex items-center space-x-3 space-y-0"
+											key={type.typeId}
+										>
+											<FormControl>
+												<RadioGroupItem
+													value={type.typeId.toString()}
+												/>
+											</FormControl>
+											<FormLabel className="font-normal">
+												{type.label}
+											</FormLabel>
+										</FormItem>
+									))}
+								</RadioGroup>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+				<Button type="submit" disabled={formState.isSubmitting}>
+					{formState.isSubmitting && <Loader />}Uložit
+				</Button>
+			</form>
+		</Form>
+	);
+}

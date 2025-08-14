@@ -12,7 +12,6 @@ import { usePersonRoles } from '@client/hooks/usePersonRoles';
 import { trpc, type trpcOutputTypes } from '@client/trpc';
 
 import { Button } from '../ui/button';
-import { Checkbox } from '../ui/checkbox';
 import {
 	Form,
 	FormControl,
@@ -21,7 +20,6 @@ import {
 	FormLabel,
 	FormMessage,
 } from '../ui/form';
-import { Input } from '../ui/input';
 import {
 	Select,
 	SelectContent,
@@ -30,6 +28,8 @@ import {
 	SelectValue,
 } from '../ui/select';
 import { Textarea } from '../ui/textarea';
+import { FormInput } from './formInput';
+import { TopicSelection } from './topicSelection';
 
 const formSchema = z.object({
 	contestSymbol: z.string(),
@@ -119,45 +119,6 @@ export function CreateProblemForm({
 		return lang;
 	}
 
-	function getTopicsCheckboxes() {
-		const selectableTopics = selectedContest ? selectedContest.topics : [];
-		return selectableTopics.map((topic) => (
-			<FormField
-				key={topic.topicId}
-				control={form.control}
-				name="topics"
-				render={({ field }) => (
-					<FormItem
-						key={topic.topicId}
-						className="flex flex-row items-start space-x-2 space-y-0"
-					>
-						<FormControl>
-							<Checkbox
-								checked={field.value?.includes(topic.topicId)}
-								onCheckedChange={(checked) => {
-									return checked
-										? field.onChange([
-												...field.value,
-												topic.topicId,
-											])
-										: field.onChange(
-												field.value?.filter(
-													(value) =>
-														value !== topic.topicId
-												)
-											);
-								}}
-							/>
-						</FormControl>
-						<FormLabel className="text-sm font-normal">
-							{topic.label}
-						</FormLabel>
-					</FormItem>
-				)}
-			/>
-		));
-	}
-
 	const contestSelectComponent = (
 		<FormField
 			control={form.control}
@@ -203,7 +164,6 @@ export function CreateProblemForm({
 			<div>{errors.root?.message}</div>
 			<form className="space-y-8">
 				{contestSelectComponent}
-
 				<FormField
 					control={form.control}
 					name="lang"
@@ -231,38 +191,18 @@ export function CreateProblemForm({
 						</FormItem>
 					)}
 				/>
-
-				<FormField
+				<FormInput
 					control={form.control}
 					name="name"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Název</FormLabel>
-							<FormControl>
-								<Input placeholder="Název" {...field} />
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
+					placeholder="Název úlohy"
+					label="Název"
 				/>
-
-				<FormField
+				<FormInput
 					control={form.control}
 					name="origin"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Původ úlohy</FormLabel>
-							<FormControl>
-								<Input
-									placeholder="Krátká věta o původu/vzniku úlohy"
-									{...field}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
+					placeholder="Krátká věta o původu/vzniku úlohy"
+					label="Původ úlohy"
 				/>
-
 				<FormField
 					control={form.control}
 					name="task"
@@ -281,18 +221,10 @@ export function CreateProblemForm({
 					)}
 				/>
 
-				<FormField
+				<TopicSelection
 					control={form.control}
 					name="topics"
-					render={() => (
-						<FormItem>
-							<FormLabel>Témata</FormLabel>
-							<div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-								{getTopicsCheckboxes()}
-							</div>
-							<FormMessage />
-						</FormItem>
-					)}
+					topics={selectedContest ? selectedContest.topics : []}
 				/>
 
 				<FormField
@@ -309,7 +241,7 @@ export function CreateProblemForm({
 								}
 							>
 								<SelectTrigger>
-									<SelectValue placeholder="Select type" />
+									<SelectValue placeholder="Vybrat typ" />
 								</SelectTrigger>
 								<SelectContent>
 									{selectedContest?.types.map((type) => (

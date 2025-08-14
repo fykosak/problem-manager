@@ -35,36 +35,28 @@ const FieldSetRoot = React.forwardRef<HTMLFieldSetElement, FieldSetRootProps>(
 );
 FieldSetRoot.displayName = 'FieldSetRoot';
 
-export interface FieldSetContentProps
-	extends React.HTMLAttributes<HTMLDivElement> {}
-
-const FieldSetContent = React.forwardRef<HTMLDivElement, FieldSetContentProps>(
-	({ className, ...props }, ref) => {
-		return (
-			<div
-				ref={ref}
-				className={cn('m-2 space-y-8', className)}
-				{...props}
-			/>
-		);
-	}
-);
+const FieldSetContent = React.forwardRef<
+	HTMLDivElement,
+	React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => {
+	return (
+		<div ref={ref} className={cn('m-2 space-y-8', className)} {...props} />
+	);
+});
 FieldSetContent.displayName = 'FieldSetContent';
 
-export interface FieldSetFooterProps
-	extends React.HTMLAttributes<HTMLDivElement> {}
-
-const FieldSetFooter = React.forwardRef<HTMLDivElement, FieldSetFooterProps>(
-	({ className, ...props }, ref) => {
-		return (
-			<div
-				ref={ref}
-				className={cn('border-t border-inherit px-6 py-3', className)}
-				{...props}
-			/>
-		);
-	}
-);
+const FieldSetFooter = React.forwardRef<
+	HTMLDivElement,
+	React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => {
+	return (
+		<div
+			ref={ref}
+			className={cn('border-t border-inherit px-6 py-3', className)}
+			{...props}
+		/>
+	);
+});
 FieldSetFooter.displayName = 'FieldSetFooter';
 
 export interface FieldSetTitleProps
