@@ -277,6 +277,10 @@ export const problemRouter = trpc.router({
 				task: z.string().nonempty(),
 				topics: z.number().array().min(1),
 				type: z.coerce.number(),
+				result: z.object({
+					value: z.coerce.number().optional(),
+					unit: z.string().optional(),
+				}),
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
@@ -317,12 +321,14 @@ export const problemRouter = trpc.router({
 					[input.lang]: input.name,
 				},
 				origin: {},
+				result: input.result,
 			};
 			if (input.origin) {
 				metadata['origin'] = {
 					[input.lang]: input.origin,
 				};
 			}
+
 			const problem = (
 				await db
 					.insert(problemTable)

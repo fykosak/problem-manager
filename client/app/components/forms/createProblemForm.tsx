@@ -12,6 +12,7 @@ import { usePersonRoles } from '@client/hooks/usePersonRoles';
 import { trpc, type trpcOutputTypes } from '@client/trpc';
 
 import { Button } from '../ui/button';
+import { FieldSetContent, FieldSetRoot, FieldSetTitle } from '../ui/fieldset';
 import {
 	Form,
 	FormControl,
@@ -39,6 +40,10 @@ const formSchema = z.object({
 	task: z.string().nonempty('Text zádání nemůže být prázdný'),
 	topics: z.number().array().min(1, 'Alespoň jeden topic musí být přidělen'),
 	type: z.coerce.number({ message: 'Potřeba vybrat typ úlohy' }),
+	result: z.object({
+		value: z.coerce.number().optional(),
+		unit: z.string().optional(),
+	}),
 });
 
 export function CreateProblemForm({
@@ -63,9 +68,7 @@ export function CreateProblemForm({
 	const navigate = useNavigate();
 	async function submitAndRedirect(values: z.infer<typeof formSchema>) {
 		try {
-			const problem = await trpc.problem.create.mutate({
-				...values,
-			});
+			const problem = await trpc.problem.create.mutate(values);
 			toast.success('Task created');
 			await navigate('../task/' + problem.problemId);
 		} catch (exception) {
@@ -108,6 +111,8 @@ export function CreateProblemForm({
 		(contest) => contest.symbol === contestSymbol
 	);
 	const langs = contestData.contestTextLangs[contestSymbol] ?? [];
+	const metadataFields =
+		contestData.contestMetadataFields[contestSymbol] ?? [];
 
 	function langLabel(lang: string) {
 		if (lang === 'cs') {
@@ -191,18 +196,25 @@ export function CreateProblemForm({
 						</FormItem>
 					)}
 				/>
-				<FormInput
-					control={form.control}
-					name="name"
-					placeholder="Název úlohy"
-					label="Název"
-				/>
-				<FormInput
-					control={form.control}
-					name="origin"
-					placeholder="Krátká věta o původu/vzniku úlohy"
-					label="Původ úlohy"
-				/>
+
+				{metadataFields.includes('name') && (
+					<FormInput
+						control={form.control}
+						name="name"
+						placeholder="Název úlohy"
+						label="Název"
+					/>
+				)}
+
+				{metadataFields.includes('origin') && (
+					<FormInput
+						control={form.control}
+						name="origin"
+						placeholder="Krátká věta o původu/vzniku úlohy"
+						label="Původ úlohy"
+					/>
+				)}
+
 				<FormField
 					control={form.control}
 					name="task"
@@ -220,6 +232,28 @@ export function CreateProblemForm({
 						</FormItem>
 					)}
 				/>
+
+				{metadataFields.includes('result') && (
+					<FieldSetRoot>
+						<FieldSetTitle>Výsledek úlohy</FieldSetTitle>
+						<FieldSetContent>
+							<FormInput
+								control={form.control}
+								name="result.value"
+								placeholder="např. 1.1e-2"
+								label="Číselný výsledek"
+								type="number"
+							/>
+
+							<FormInput
+								control={form.control}
+								name="result.unit"
+								placeholder="např. m.s^{-1}"
+								label="Jednotky"
+							/>
+						</FieldSetContent>
+					</FieldSetRoot>
+				)}
 
 				<TopicSelection
 					control={form.control}

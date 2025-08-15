@@ -64,12 +64,14 @@ export function MetadataForm({
 	availableTopics,
 	availableTypes,
 	organizers,
+	metadataFields,
 }: {
 	problemId: number;
 	taskData: trpcOutputTypes['problem']['metadata'];
 	availableTopics: trpcOutputTypes['contest']['availableTopics'];
 	availableTypes: trpcOutputTypes['contest']['availableTypes'];
 	organizers: trpcOutputTypes['contest']['organizers'];
+	metadataFields: trpcOutputTypes['contest']['metadataFields'];
 }) {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -126,76 +128,93 @@ export function MetadataForm({
 				})}
 				className="space-y-8"
 			>
-				<FormInput
-					control={form.control}
-					name="metadata.name.cs"
-					placeholder="Český název"
-					label="Název CS"
-				/>
+				{metadataFields.includes('name') && (
+					<FieldSetRoot>
+						<FieldSetTitle>Název úlohy</FieldSetTitle>
+						<FieldSetContent>
+							<FormInput
+								control={form.control}
+								name="metadata.name.cs"
+								placeholder="Český název"
+								label="Název CS"
+							/>
 
-				<FormInput
-					control={form.control}
-					name="metadata.name.en"
-					placeholder="Anglický název"
-					label="Název EN"
-				/>
+							<FormInput
+								control={form.control}
+								name="metadata.name.en"
+								placeholder="Anglický název"
+								label="Název EN"
+							/>
+						</FieldSetContent>
+					</FieldSetRoot>
+				)}
 
-				<FormInput
-					control={form.control}
-					name="metadata.origin.cs"
-					placeholder="Český původ"
-					label="Původ CS"
-				/>
+				{metadataFields.includes('origin') && (
+					<FieldSetRoot>
+						<FieldSetTitle>Původ úlohy</FieldSetTitle>
+						<FieldSetContent>
+							<FormInput
+								control={form.control}
+								name="metadata.origin.cs"
+								placeholder="Český původ"
+								label="Původ CS"
+							/>
+							<FormInput
+								control={form.control}
+								name="metadata.origin.en"
+								placeholder="Anglický původ"
+								label="Původ EN"
+							/>
+						</FieldSetContent>
+					</FieldSetRoot>
+				)}
 
-				<FormInput
-					control={form.control}
-					name="metadata.origin.en"
-					placeholder="Anglický původ"
-					label="Původ EN"
-				/>
+				{metadataFields.includes('points') && (
+					<FormInput
+						control={form.control}
+						name="metadata.points"
+						placeholder="Počet bodů"
+						label="Body za úlohu"
+						type="number"
+					/>
+				)}
 
-				<FormInput
-					control={form.control}
-					name="metadata.points"
-					placeholder="Počet bodů"
-					label="Body za úlohu"
-					type="number"
-				/>
+				{metadataFields.includes('result') && (
+					<FieldSetRoot>
+						<FieldSetTitle>Výsledek úlohy</FieldSetTitle>
+						<FieldSetContent>
+							<FormInput
+								control={form.control}
+								name="metadata.result.value"
+								placeholder="např. 1.1e-2"
+								label="Číselný výsledek"
+								type="number"
+							/>
 
-				<FieldSetRoot>
-					<FieldSetTitle>Výsledek úlohy</FieldSetTitle>
-					<FieldSetContent>
-						<FormInput
-							control={form.control}
-							name="metadata.result.value"
-							placeholder="např. 1.1e-2"
-							label="Číselný výsledek"
-							type="number"
-						/>
+							<FormInput
+								control={form.control}
+								name="metadata.result.unit"
+								placeholder="např. m.s^{-1}"
+								label="Jednotky"
+							/>
 
-						<FormInput
-							control={form.control}
-							name="metadata.result.unit"
-							placeholder="např. m.s^{-1}"
-							label="Jednotky"
-						/>
+							<FormInput
+								control={form.control}
+								name="metadata.result.precision"
+								placeholder="např. 0.1"
+								label="Tolerance"
+								type="number"
+							/>
 
-						<FormInput
-							control={form.control}
-							name="metadata.result.precision"
-							placeholder="např. 0.1"
-							label="Tolerance"
-							type="number"
-						/>
-
-						<FormInput
-							control={form.control}
-							name="metadata.result.expectedPlaces"
-							placeholder="např. 2"
-							label="number"
-						/>
-					</FieldSetContent>
-				</FieldSetRoot>
+							<FormInput
+								control={form.control}
+								name="metadata.result.expectedPlaces"
+								placeholder="např. 2"
+								label="number"
+							/>
+						</FieldSetContent>
+					</FieldSetRoot>
+				)}
 
 				<AuthorSelection
 					control={form.control}
