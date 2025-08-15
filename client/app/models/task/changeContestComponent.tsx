@@ -36,7 +36,7 @@ async function onChangeContest(problemId: number, contestId: number) {
 
 export function ChangeContestComponent({
 	problem,
-	contests: availableContests,
+	contests,
 	setOpen,
 }: {
 	problem: Task;
@@ -66,7 +66,7 @@ export function ChangeContestComponent({
 			</DropdownMenuSubTrigger>
 			<DropdownMenuPortal>
 				<DropdownMenuSubContent>
-					{availableContests
+					{contests
 						.filter(
 							(contest) => contest.symbol != problem.contestSymbol
 						)

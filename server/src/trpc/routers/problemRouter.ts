@@ -284,8 +284,6 @@ export const problemRouter = trpc.router({
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			// TODO to db transaction
-
 			if (
 				!acl.isAllowedContest(
 					ctx.aclRoles,
@@ -300,91 +298,94 @@ export const problemRouter = trpc.router({
 				});
 			}
 
-			// filter topics by contest
-			const filteredTopics = await db.query.topicTable.findMany({
-				where: and(
-					eq(topicTable.contestId, ctx.contest.contestId),
-					inArray(topicTable.topicId, input.topics)
-				),
-			});
-
-			if (filteredTopics.length < 1) {
-				throw new TRPCError({
-					code: 'BAD_REQUEST',
-					message: 'No topic specified within the defined contest',
+			return await db.transaction(async (tx) => {
+				// filter topics by contest
+				const filteredTopics = await tx.query.topicTable.findMany({
+					where: and(
+						eq(topicTable.contestId, ctx.contest.contestId),
+						inArray(topicTable.topicId, input.topics)
+					),
 				});
-			}
 
-			// create problem
-			const metadata = {
-				name: {
-					[input.lang]: input.name,
-				},
-				origin: {},
-				result: input.result,
-			};
-			if (input.origin) {
-				metadata['origin'] = {
-					[input.lang]: input.origin,
-				};
-			}
-
-			const problem = (
-				await db
-					.insert(problemTable)
-					.values({
-						typeId: input.type,
-						contestId: ctx.contest.contestId,
-						metadata: metadata,
-					})
-					.returning()
-			)[0];
-
-			// add text
-			const taskYDoc = new Y.Doc();
-			taskYDoc.getText().insert(0, input.task);
-
-			const langs = config.contestTextLangs.get(ctx.contest.symbol);
-			if (!langs) {
-				throw new TRPCError({
-					message: 'Could not get languages for contest',
-					code: 'INTERNAL_SERVER_ERROR',
-				});
-			}
-			for (const lang of langs) {
-				for (const type of textTypeEnum.enumValues) {
-					if (!(langEnum.enumValues as string[]).includes(lang)) {
-						continue;
-					}
-					// @ts-expect-error Lang is check that its valid, but it's type is
-					// not specified.
-					await db.insert(textTable).values({
-						problemId: problem.problemId,
-						lang: lang,
-						type: type,
-						contents:
-							type === 'task' && lang === input.lang
-								? Y.encodeStateAsUpdate(taskYDoc)
-								: null,
+				if (filteredTopics.length < 1) {
+					throw new TRPCError({
+						code: 'BAD_REQUEST',
+						message:
+							'No topic specified within the defined contest',
 					});
 				}
-			}
 
-			// add topics
-			await db.insert(problemTopicTable).values(
-				Array.from(filteredTopics, (topic) => ({
+				// create problem
+				const metadata = {
+					name: {
+						[input.lang]: input.name,
+					},
+					origin: {},
+					result: input.result,
+				};
+				if (input.origin) {
+					metadata['origin'] = {
+						[input.lang]: input.origin,
+					};
+				}
+
+				const problem = (
+					await tx
+						.insert(problemTable)
+						.values({
+							typeId: input.type,
+							contestId: ctx.contest.contestId,
+							metadata: metadata,
+						})
+						.returning()
+				)[0];
+
+				// add text
+				const taskYDoc = new Y.Doc();
+				taskYDoc.getText().insert(0, input.task);
+
+				const langs = config.contestTextLangs.get(ctx.contest.symbol);
+				if (!langs) {
+					throw new TRPCError({
+						message: 'Could not get languages for contest',
+						code: 'INTERNAL_SERVER_ERROR',
+					});
+				}
+				for (const lang of langs) {
+					for (const type of textTypeEnum.enumValues) {
+						if (!(langEnum.enumValues as string[]).includes(lang)) {
+							continue;
+						}
+						// @ts-expect-error Lang is check that its valid, but it's type is
+						// not specified.
+						await tx.insert(textTable).values({
+							problemId: problem.problemId,
+							lang: lang,
+							type: type,
+							contents:
+								type === 'task' && lang === input.lang
+									? Y.encodeStateAsUpdate(taskYDoc)
+									: null,
+						});
+					}
+				}
+
+				// add topics
+				await tx.insert(problemTopicTable).values(
+					Array.from(filteredTopics, (topic) => ({
+						problemId: problem.problemId,
+						topicId: topic.topicId,
+					}))
+				);
+
+				await tx.insert(authorTable).values({
+					personId: ctx.person.personId,
 					problemId: problem.problemId,
-					topicId: topic.topicId,
-				}))
-			);
+					type: 'task',
+				});
 
-			await db.insert(authorTable).values({
-				personId: ctx.person.personId,
-				problemId: problem.problemId,
-				type: 'task',
+				return problem;
 			});
-
-			return problem;
 		}),
 
 	changeState: authedProcedure
