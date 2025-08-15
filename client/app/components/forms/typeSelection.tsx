@@ -1,7 +1,6 @@
-import { Control, FieldPath, FieldValues } from 'react-hook-form';
+import { Control, FieldPathByValue, FieldValues } from 'react-hook-form';
 
 import {
-	FormControl,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -23,7 +22,7 @@ export function TypeSelection<T extends FieldValues>({
 	availableTypes,
 }: {
 	control: Control<T>;
-	name: FieldPath<T>;
+	name: FieldPathByValue<T, number>;
 	availableTypes: trpcOutputTypes['contest']['availableTypes'];
 }) {
 	return (
@@ -36,7 +35,11 @@ export function TypeSelection<T extends FieldValues>({
 					<Select
 						onValueChange={field.onChange}
 						// select value placeholder if field.value undefined
-						value={field.value ? field.value.toString() : ''}
+						value={
+							field.value
+								? (field.value as number).toString()
+								: ''
+						}
 					>
 						<SelectTrigger>
 							<SelectValue placeholder="Vybrat typ" />

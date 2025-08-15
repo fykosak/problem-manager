@@ -9,16 +9,8 @@ import {
 	FieldSetRoot,
 	FieldSetTitle,
 } from '@client/components/ui/fieldset';
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from '@client/components/ui/form';
+import { Form } from '@client/components/ui/form';
 import { Loader } from '@client/components/ui/loader';
-import { RadioGroup, RadioGroupItem } from '@client/components/ui/radio-group';
 import { trpc, type trpcOutputTypes } from '@client/trpc';
 
 import { AuthorSelection } from './authorSelection';
