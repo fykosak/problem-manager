@@ -61,6 +61,25 @@ function getOrganizerMapping(json: Record<string, unknown>, property: string) {
 	return organizerMappingSchema.parse(organizerMapping);
 }
 
+const contestMetadataFieldsSchema = z.record(
+	z.string().nonempty(),
+	z.enum(['name', 'origin', 'points', 'result']).array()
+);
+
+function getContestMetadataFields(
+	json: Record<string, unknown>,
+	property: string
+) {
+	const contestMetadataFields = json[property];
+	if (typeof contestMetadataFields !== 'object') {
+		throw new ConfigError(
+			'Contest metadata fields config is not an object'
+		);
+	}
+
+	return contestMetadataFieldsSchema.parse(contestMetadataFields);
+}
+
 /**
  * Typed config values derived from config.json
  */
@@ -79,6 +98,13 @@ const config = {
 	 */
 	organizerMapping: getOrganizerMapping(jsonConfig, 'organizerMapping'),
 	roleMapping: getACLConfig(jsonConfig, 'roleMapping'),
+	/**
+	 * List of metadata fields that should be accessible for given contest symbol
+	 */
+	contestMetadataFields: getContestMetadataFields(
+		jsonConfig,
+		'contestMetadataFields'
+	),
 	contestWork: getWorkConfig(jsonConfig, 'contestWork'),
 };
 

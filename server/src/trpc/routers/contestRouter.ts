@@ -25,12 +25,13 @@ export const contestRouter = trpc.router({
 				types: true,
 			},
 		});
-		const contestTextLangs = config.contestTextLangs;
 		return {
 			contests,
-			contestTextLangs: Object.fromEntries(contestTextLangs),
+			contestTextLangs: Object.fromEntries(config.contestTextLangs),
+			contestMetadataFields: config.contestMetadataFields,
 		};
 	}),
+
 	contestYear: contestProcedure
 		.input(z.object({ contestYear: z.number() }))
 		.query(async ({ ctx, input }) => {
@@ -51,6 +52,7 @@ export const contestRouter = trpc.router({
 			}
 			return contestYear;
 		}),
+
 	/**
 	 * All contests with their active contest years
 	 */
@@ -64,6 +66,7 @@ export const contestRouter = trpc.router({
 			)
 			.orderBy(contestYearTable.contestId, desc(contestYearTable.year));
 	}),
+
 	availableTopics: contestProcedure.query(async ({ ctx }) => {
 		return await db.query.topicTable.findMany({
 			where: and(
@@ -72,6 +75,7 @@ export const contestRouter = trpc.router({
 			),
 		});
 	}),
+
 	availableTypes: contestProcedure.query(async ({ ctx }) => {
 		return await db.query.typeTable.findMany({
 			where: and(
@@ -80,6 +84,11 @@ export const contestRouter = trpc.router({
 			),
 		});
 	}),
+
+	availableWork: contestProcedure.query(({ ctx }) => {
+		return config.contestWork[ctx.contest.symbol];
+	}),
+
 	organizers: contestProcedure.query(async ({ ctx }) => {
 		let contestId = ctx.contest.contestId;
 		if (Object.keys(config.organizerMapping).includes(ctx.contest.symbol)) {
@@ -101,6 +110,11 @@ export const contestRouter = trpc.router({
 			with: { person: true },
 		});
 	}),
+
+	metadataFields: contestProcedure.query(({ ctx }) => {
+		return config.contestMetadataFields[ctx.contest.symbol] ?? [];
+	}),
+
 	problemSuggestions: contestProcedure.query(async ({ ctx }) => {
 		return await db.query.problemTable.findMany({
 			with: {
@@ -119,8 +133,5 @@ export const contestRouter = trpc.router({
 			where: eq(problemTable.contestId, ctx.contest.contestId),
 			orderBy: desc(problemTable.problemId),
 		});
-	}),
-	availableWork: contestProcedure.query(({ ctx }) => {
-		return config.contestWork[ctx.contest.symbol];
 	}),
 });

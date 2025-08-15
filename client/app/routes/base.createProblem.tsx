@@ -4,8 +4,15 @@ import { trpc } from '@client/trpc';
 import { Route } from './+types/base.createProblem';
 
 export async function clientLoader() {
-	const contests = await trpc.contest.createProblemData.query();
-	return contests;
+	const data = await Promise.all([
+		await trpc.contest.createProblemData.query(),
+		await trpc.getContests.query(),
+	]);
+
+	return {
+		contestCreateProblemData: data[0],
+		availableContests: data[1],
+	};
 }
 
 export default function ContestTaskCreate({
@@ -14,7 +21,10 @@ export default function ContestTaskCreate({
 	return (
 		<div className="max-w-screen-sm mx-auto">
 			<h1>Navrhnout úlohu</h1>
-			<CreateProblemForm contestData={loaderData} />
+			<CreateProblemForm
+				contestCreateProblemData={loaderData.contestCreateProblemData}
+				availableContests={loaderData.availableContests}
+			/>
 		</div>
 	);
 }
