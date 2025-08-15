@@ -31,6 +31,7 @@ import {
 import { Textarea } from '../ui/textarea';
 import { FormInput } from './formInput';
 import { TopicSelection } from './topicSelection';
+import { TypeSelection } from './typeSelection';
 
 const formSchema = z.object({
 	contestSymbol: z.string(),
@@ -314,36 +315,12 @@ export function CreateProblemForm({
 					topics={selectedContest ? selectedContest.topics : []}
 				/>
 
-				<FormField
+				<TypeSelection
 					control={form.control}
 					name="type"
-					render={({ field }) => (
-						<FormItem className="space-x-2">
-							<FormLabel>Typ úlohy</FormLabel>
-							<Select
-								onValueChange={field.onChange}
-								// select value placeholder if field.value undefined
-								value={
-									field.value ? field.value.toString() : ''
-								}
-							>
-								<SelectTrigger>
-									<SelectValue placeholder="Vybrat typ" />
-								</SelectTrigger>
-								<SelectContent>
-									{selectedContest?.types.map((type) => (
-										<SelectItem
-											value={type.typeId.toString()}
-											key={type.typeId}
-										>
-											{type.label}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-							<FormMessage />
-						</FormItem>
-					)}
+					availableTypes={
+						selectedContest ? selectedContest.types : []
+					}
 				/>
 			</form>
 

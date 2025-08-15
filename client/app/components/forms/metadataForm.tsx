@@ -24,6 +24,7 @@ import { trpc, type trpcOutputTypes } from '@client/trpc';
 import { AuthorSelection } from './authorSelection';
 import { FormInput } from './formInput';
 import { TopicSelection } from './topicSelection';
+import { TypeSelection } from './typeSelection';
 
 const formSchema = z.object({
 	metadata: z.object({
@@ -236,38 +237,12 @@ export function MetadataForm({
 					topics={availableTopics}
 				/>
 
-				<FormField
+				<TypeSelection
 					control={form.control}
 					name="type"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Typ úlohy</FormLabel>
-							<FormControl>
-								<RadioGroup
-									onValueChange={field.onChange}
-									defaultValue={field.value?.toString()}
-								>
-									{availableTypes.map((type) => (
-										<FormItem
-											className="flex items-center space-x-3 space-y-0"
-											key={type.typeId}
-										>
-											<FormControl>
-												<RadioGroupItem
-													value={type.typeId.toString()}
-												/>
-											</FormControl>
-											<FormLabel className="font-normal">
-												{type.label}
-											</FormLabel>
-										</FormItem>
-									))}
-								</RadioGroup>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
+					availableTypes={availableTypes}
 				/>
+
 				<Button type="submit" disabled={formState.isSubmitting}>
 					{formState.isSubmitting && <Loader />}Uložit
 				</Button>

@@ -30,7 +30,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 export default function Metadata({ params, loaderData }: Route.ComponentProps) {
 	return (
-		<div className="max-w-screen-sm mx-auto px-4 sm:px-6 lg:px-8">
+		<div className="max-w-screen-sm mx-auto px-4 sm:px-6 lg:px-8 mb-4">
 			<h1>Info o úloze</h1>
 			<MetadataForm
 				problemId={parseInt(params.taskId)}
