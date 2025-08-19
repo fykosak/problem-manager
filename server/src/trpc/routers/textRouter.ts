@@ -11,6 +11,7 @@ import { StorageProvider } from '@server/sockets/storageProvider';
 
 import { authedProcedure } from '../middleware';
 import { trpc } from '../trpc';
+import { releaseText } from './text';
 
 export const textRouter = trpc.router({
 	release: authedProcedure
@@ -34,6 +35,7 @@ export const textRouter = trpc.router({
 									},
 								},
 							},
+							contest: true,
 						},
 					},
 				},
@@ -46,17 +48,20 @@ export const textRouter = trpc.router({
 				});
 			}
 
-			if (!text.problem.series) {
+			const contestSymbol = text.problem.series
+				? text.problem.series.contestYear.contest.symbol
+				: text.problem.contest?.symbol;
+			if (!contestSymbol) {
 				throw new TRPCError({
-					code: 'FORBIDDEN',
-					message: 'Problem is not assigned to series',
+					code: 'INTERNAL_SERVER_ERROR',
+					message: 'Cannot infer contest',
 				});
 			}
 
 			if (
 				!acl.isAllowedContest(
 					ctx.aclRoles,
-					text.problem.series.contestYear.contest.symbol,
+					contestSymbol,
 					'text',
 					'release'
 				)
@@ -67,26 +72,10 @@ export const textRouter = trpc.router({
 				});
 			}
 
-			const ydocStorage = new StorageProvider();
-			const ydoc = await ydocStorage.getYDoc(input.textId);
-			const contents = ydoc.getText().toJSON();
-
-			const parserInput = new ParserInput(contents);
-			const tree = latexLanguage.parser.parse(parserInput);
-
-			const generator = new HtmlGenerator(
-				tree,
-				parserInput,
-				text.problemId
-			);
-
 			try {
-				const html = await generator.generateHtml();
-				await db
-					.update(textTable)
-					.set({ html })
-					.where(eq(textTable.textId, input.textId));
-			} catch {
+				await releaseText(input.textId, text.problemId);
+			} catch (error) {
+				console.error(error);
 				throw new TRPCError({
 					code: 'INTERNAL_SERVER_ERROR',
 					message: 'Failed to generate HTML',

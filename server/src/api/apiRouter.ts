@@ -4,6 +4,7 @@ import { type Response } from 'express';
 import * as Y from 'yjs';
 import { z } from 'zod';
 
+import { acl } from '@server/acl/aclFactory';
 import config from '@server/config/config';
 import { db } from '@server/db';
 import {
@@ -22,6 +23,7 @@ import {
 import { ProblemStorage } from '@server/runner/problemStorage';
 import { Runner } from '@server/runner/runner';
 import { StorageProvider } from '@server/sockets/storageProvider';
+import { releaseText } from '@server/trpc/routers/text';
 
 import { asyncHandler } from './asyncHandler';
 import { type RequestPerson, UserAuthMiddleware } from './middleware';
@@ -439,5 +441,52 @@ apiRouter.post(
 		});
 
 		res.sendStatus(200);
+	})
+);
+
+apiRouter.post(
+	'/text/:textId/release',
+	asyncHandler(async (req, res) => {
+		const textId = Number(req.params.textId);
+		const text = await db.query.textTable.findFirst({
+			where: eq(textTable.textId, textId),
+			with: {
+				problem: {
+					with: {
+						series: {
+							with: {
+								contestYear: {
+									with: {
+										contest: true,
+									},
+								},
+							},
+						},
+						contest: true,
+					},
+				},
+			},
+		});
+
+		if (!text) {
+			res.status(404).send('Text not found');
+			return;
+		}
+
+		const contestSymbol = text.problem.series
+			? text.problem.series.contestYear.contest.symbol
+			: text.problem.contest?.symbol;
+		if (!contestSymbol) {
+			res.status(500).send('Cannot infer contest');
+			return;
+		}
+
+		try {
+			await releaseText(textId, text.problemId);
+			res.status(200).send(`Generated HTML for text ${textId}\n`);
+		} catch (error) {
+			console.error(error);
+			res.status(500).send(`Failed to generate HTML for ${textId}\n`);
+		}
 	})
 );

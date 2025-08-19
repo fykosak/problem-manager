@@ -385,6 +385,10 @@ describe('environment', () => {
 				input: '\\begin{compactitem}\\item asdf\\item qwer\\end{compactitem}',
 				output: '<ul><li>asdf</li><li>qwer</li></ul>',
 			},
+			{
+				input: '\\begin{compactitem}[a)]\\item asdf\\item qwer\\end{compactitem}',
+				output: '<ul><li>asdf</li><li>qwer</li></ul>',
+			},
 		]);
 	});
 
@@ -438,6 +442,19 @@ describe('environment', () => {
 			{
 				input: '\\begin{table}\\caption{Toto je caption}\\label{table}\\begin{tabular}{ll}sadf&asdf\\end{tabular}\\end{table}',
 				output: '<table class="table table-sm table-borderless w-auto mx-auto"><caption>Toto je caption</caption><tbody><tr><td>sadf</td><td>asdf</td></tr></tbody></table>',
+			},
+		]);
+	});
+
+	test('random', async () => {
+		await runTestStrings([
+			{
+				input: `asdf
+\\begin{compactenum}
+\\item a
+\\item b
+\\end{compactenum}`,
+				output: '',
 			},
 		]);
 	});

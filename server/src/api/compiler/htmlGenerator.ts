@@ -14,6 +14,7 @@ export class HtmlGenerator {
 		this.cursor = tree.cursor();
 		this.parserInput = parserInput;
 		this.problemStorage = new ProblemStorage(problemId);
+		this.print();
 	}
 
 	private getCursorText(): string {
@@ -37,11 +38,9 @@ export class HtmlGenerator {
 			() => {
 				depth++;
 				console.log(
-					'┆   '.repeat(depth) +
-						'┖' +
-						cursor.name +
-						': ' +
-						this.parserInput.read(cursor.from, cursor.to).trim()
+					'┆   '.repeat(depth) + '┖' + cursor.name //+
+					//': ' +
+					//this.parserInput.read(cursor.from, cursor.to).trim()
 				);
 			},
 			() => {
@@ -70,7 +69,7 @@ export class HtmlGenerator {
 	private expectNodeName(nodeName: string): void {
 		if (this.cursor.name !== nodeName) {
 			throw new Error(
-				`Wrong token received, expected ${nodeName}, received ${this.cursor.name}`
+				`Wrong token received, expected ${nodeName}, received ${this.cursor.name}, from char ${this.cursor.from} to char ${this.cursor.to}`
 			);
 		}
 	}
@@ -109,13 +108,17 @@ export class HtmlGenerator {
 			!this.cursor.node.firstChild ||
 			this.cursor.node.firstChild.name !== '{'
 		) {
-			throw new Error('Expected {');
+			throw new Error(
+				`Expected { at ${this.cursor.node.firstChild?.from}`
+			);
 		}
 		if (
 			!this.cursor.node.lastChild ||
 			this.cursor.node.lastChild.name !== '}'
 		) {
-			throw new Error('Expected }');
+			throw new Error(
+				`Expected } at ${this.cursor.node.lastChild?.from}`
+			);
 		}
 		this.cursor.firstChild();
 
@@ -379,9 +382,7 @@ export class HtmlGenerator {
 	}
 
 	private async generateInlineMath(): Promise<string> {
-		if (this.cursor.name !== 'InlineMath') {
-			throw new Error(`Expected InlineMath, ${this.cursor.name} given`);
-		}
+		this.expectNodeName('InlineMath');
 		// consume starting $
 		this.expectNext();
 		this.expectNodeName('$');
@@ -393,6 +394,17 @@ export class HtmlGenerator {
 		this.expectNodeName('$');
 
 		return '$' + mathContents + '$';
+	}
+
+	private async generateDisplayMath(): Promise<string> {
+		this.expectNodeName('DisplayMath');
+		//this.expectNext(); // move to $$
+		//this.expectNodeName('$$');
+		this.expectNext(); // move to Math
+		const contents = await this.generateMath();
+		//this.expectNext();
+		//this.expectNodeName('$$');
+		return contents;
 	}
 
 	private async generateMathArgument(): Promise<string> {
@@ -854,6 +866,9 @@ export class HtmlGenerator {
 
 			case 'InlineMath':
 				return this.generateInlineMath();
+
+			case 'DisplayMath':
+				return this.generateDisplayMath();
 
 			case 'Math':
 				return this.generateMath();

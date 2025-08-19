@@ -11,7 +11,7 @@
 }
 
 Paragraph {
-	(Text | InlineMath | Command | EqCommand | Newline | "[" | "]" |
+	(Text | InlineMath | DisplayMath | Command | EqCommand | Newline | "[" | "]" |
 	"{" | "}" | "&" | Environment )+ (ParagraphSeparator | EOF)
 }
 
@@ -34,6 +34,10 @@ InlineMath {
 	"$" Math "$"
 }
 
+DisplayMath {
+	"$$" Math "$$"
+}
+
 Command {
 	CommandIdentifier (CommandArgument | CommandArgumentOptional)*
 }
@@ -44,7 +48,7 @@ MathCommand {
 
 // command argument is included to catch { } groups
 CommandArgument {
-	!commandargument "{" (Text | InlineMath | Command | CommandArgument | Newline )* "}"
+	!commandargument "{" (Text | InlineMath | DisplayMath | Command | CommandArgument | Newline )* "}"
 }
 
 MathCommandArgument {
@@ -52,7 +56,7 @@ MathCommandArgument {
 }
 
 CommandArgumentOptional {
-	!commandargument "[" (Text | InlineMath | Command | Newline)* "]"
+	!commandargument "[" (Text | InlineMath | DisplayMath | Command | Newline)* "]"
 }
 
 EqCommandIdentifier {
@@ -95,8 +99,7 @@ BeginCommandIdentifier {
 BeginEnv<name> {
 	BeginCommandIdentifier
 	EnvironmentNameArgument<name>
-	CommandArgumentOptional?
-	CommandArgument*
+	(CommandArgumentOptional | CommandArgument)*
 }
 
 EndCommandIdentifier {
@@ -110,7 +113,7 @@ EndEnv<name> {
 
 Environment {
 	BeginEnv<EnvName>
-	(Text | InlineMath | Command | EqCommand | Newline | Environment |
+	(Text | InlineMath | DisplayMath | Command | EqCommand | Newline | Environment |
 	ListEnvironment | TabularEnvironment)*
 	EndEnv<EnvName>
 }
@@ -123,23 +126,24 @@ Environment {
 
 ListEnvironment {
 	BeginEnv<ListEnvName>
+	Newline*
 	ListItem {
 		@specialize<CommandIdentifier, "\\item">
-		(Text | InlineMath | Command | EqCommand | Newline | Environment)*
+		(Text | InlineMath | DisplayMath | Command | EqCommand | Newline | Environment)*
 	}+
 	EndEnv<ListEnvName>
 }
 
 TabularEnvironment {
 	BeginEnv<TabularEnvName>
-	(Text | InlineMath | Command | EqCommand | Newline | Environment |
+	(Text | InlineMath | DisplayMath | Command | EqCommand | Newline | Environment |
 	NewlineCommand | "&" | BooktabCommand | HlineCommand)*
 	EndEnv<TabularEnvName>
 }
 
 TableEnvironment {
 	BeginEnv<TableEnvName>
-	(Text | InlineMath | Command | EqCommand | Newline | Environment | NewlineCommand | TabularEnvironment)*
+	(Text | InlineMath | DisplayMath | Command | EqCommand | Newline | Environment | NewlineCommand | TabularEnvironment)*
 	EndEnv<TableEnvName>
 }
 
