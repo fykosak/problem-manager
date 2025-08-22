@@ -299,19 +299,17 @@ export async function setupWSConnection(
 	const jwtData = await getJWTFromHeader(authorization);
 
 	if (!jwtData) {
-		console.log('jwt data missing');
 		conn.close(3000, 'Unauthorized');
 		return;
 	}
 
 	const person = await getPersonFromJWT(jwtData);
 	if (!person) {
-		console.log('jwt missing person');
 		conn.close(3000, 'Unauthorized');
 		return;
 	}
 
-	const roles = await getRolesFromJWT(jwtData);
+	const roles = getRolesFromJWT(jwtData);
 	if (!person) {
 		conn.close(3000, 'Unauthorized');
 		return;

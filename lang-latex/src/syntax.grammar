@@ -2,7 +2,7 @@
 
 @top Document {
 	(Text | InlineMath | DisplayMath | Command | EqCommand | Newline | ParagraphSeparator |
-	"[" | "]" | "{" | "}" | "&" |
+	NewlineCommand | "[" | "]" | "{" | "}" | "&" |
 	Environment | ListEnvironment | TabularEnvironment | TableEnvironment)*
 }
 
@@ -17,6 +17,7 @@ Math {
 		"[" | "]" | "{" | "}" |
 		Whitespace |
 		Number |
+		NewlineCommand |
 		Newline
 	)*
 }
@@ -79,7 +80,7 @@ HlineCommand {
 }
 
 QuoteMacro {
-	"\"" Number ("e" Number)? (Whitespace Math)? "\""
+	"\"" (Number | MathCommand)+ ("e" Number)? (Whitespace Math)? "\""
 }
 
 // --- Environments ---
@@ -108,8 +109,8 @@ EndEnv<name> {
 
 Environment[group=EnvironmentGroup] {
 	BeginEnv<EnvName>
-	(Text | InlineMath | DisplayMath | Command | EqCommand | Newline | Environment |
-	ListEnvironment | TabularEnvironment)*
+	(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
+	Newline | Environment | ListEnvironment | TabularEnvironment)*
 	EndEnv<EnvName>
 }
 
@@ -124,7 +125,8 @@ ListEnvironment[group=EnvironmentGroup] {
 	Newline*
 	ListItem {
 		@specialize<CommandIdentifier, "\\item">
-		(Text | InlineMath | DisplayMath | Command | EqCommand | Newline | Environment)*
+		(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
+		Newline | Environment)*
 	}+
 	EndEnv<ListEnvName>
 }

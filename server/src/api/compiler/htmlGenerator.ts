@@ -1,5 +1,6 @@
 import { NodeProp, type SyntaxNode, Tree, TreeCursor } from '@lezer/common';
 import type { ParserInput } from 'lang-latex';
+import { number } from 'zod';
 
 import { ProblemStorage } from '@server/runner/problemStorage';
 
@@ -44,9 +45,11 @@ export class HtmlGenerator {
 			() => {
 				depth++;
 				console.log(
-					'┆   '.repeat(depth) + '┖' + cursor.name //+
-					//': ' +
-					//this.parserInput.read(cursor.from, cursor.to).trim()
+					'┆   '.repeat(depth) +
+						'┖' +
+						cursor.name +
+						': ' +
+						this.parserInput.read(cursor.from, cursor.to).trim()
 				);
 			},
 			() => {
@@ -529,37 +532,46 @@ export class HtmlGenerator {
 
 		this.expectNext();
 		this.expectNodeName('"');
-		this.expectNext();
-		let firstPart = await this.generateNode();
 
-		this.expectNext();
-		// exponent
-		if (this.cursor.name === 'e') {
-			this.expectNext();
-			this.expectNodeName('Number');
-			firstPart += `\\cdot 10^{${await this.generateNode()}}`;
-			this.expectNext();
+		const parts = [
+			'', // first number part
+			'', // exponensial part
+			'', // unit part
+		];
+		let currentPart = 0;
+
+		while (this.expectNext() && this.cursor.to < topNode.to) {
+			if (currentPart == 0 && this.cursor.name === 'e') {
+				currentPart = 1;
+				continue;
+			}
+
+			if (this.cursor.name === 'Whitespace') {
+				currentPart = 2;
+				continue;
+			}
+
+			parts[currentPart] += await this.generateNode();
 		}
 
-		firstPart = firstPart
+		this.expectNodeName('"');
+
+		let numberPart = parts[0];
+		if (parts[1] !== '') {
+			numberPart += `\\cdot 10^{${parts[1]}}`;
+		}
+
+		numberPart = numberPart
 			.replace(/\./g, ',')
 			.replace(/,/g, '{,}')
 			.replace(/~/g, '\\,'); // TODO , -> . for en
 
-		if (this.cursor.name === '"') {
-			return firstPart;
+		if (parts[2] === '') {
+			return numberPart;
 		}
 
-		// if it did not end by quote, it must have a Whitespace
-		this.expectNodeName('Whitespace');
-
-		let secondPart = '';
-		while (this.cursor.next() && this.cursor.to < topNode.to) {
-			secondPart += await this.generateNode();
-		}
-		this.expectNodeName('"');
-		secondPart = secondPart.replace(/\./g, '\\cdot ');
-		return firstPart + '\\,\\mathrm{' + secondPart + '}';
+		const unitPart = parts[2].replace(/\./g, '\\cdot ');
+		return numberPart + '\\,\\mathrm{' + unitPart + '}';
 	}
 
 	private async generateListItemNode(itemNode: SyntaxNode): Promise<string> {

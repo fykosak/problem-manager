@@ -286,6 +286,14 @@ describe('math', () => {
 				input: '\\jd{km.h^{-1}}',
 				output: '<p>$\\mathrm{km\\cdot h^{-1}}$</p>',
 			},
+			{
+				input: '$"5\\dg"$',
+				output: '<p>$5^\\circ$</p>',
+			},
+			{
+				input: '$"\\frac{5x}{6} m.s^{-2}"$',
+				output: '<p>$\\frac{5x}{6}\\,\\mathrm{m\\cdot s^{-2}}$</p>',
+			},
 		]);
 	});
 });
