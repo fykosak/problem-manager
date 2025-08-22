@@ -1,4 +1,4 @@
-import { type SyntaxNode, Tree, TreeCursor } from '@lezer/common';
+import { NodeProp, type SyntaxNode, Tree, TreeCursor } from '@lezer/common';
 import type { ParserInput } from 'lang-latex';
 
 import { ProblemStorage } from '@server/runner/problemStorage';
@@ -9,12 +9,18 @@ export class HtmlGenerator {
 	private cursor: TreeCursor;
 	private problemStorage: ProblemStorage;
 
+	private paragraphs: { type: 'env' | 'str'; content: string }[];
+	private currentParagraph: string;
+
 	constructor(tree: Tree, parserInput: ParserInput, problemId: number) {
 		this.tree = tree;
 		this.cursor = tree.cursor();
 		this.parserInput = parserInput;
 		this.problemStorage = new ProblemStorage(problemId);
 		this.print();
+
+		this.paragraphs = [];
+		this.currentParagraph = '';
 	}
 
 	private getCursorText(): string {
@@ -50,13 +56,63 @@ export class HtmlGenerator {
 	}
 
 	public async generateHtml(): Promise<string> {
-		let html = '';
+		this.paragraphs = [];
+		this.currentParagraph = '';
 
 		while (this.cursor.next()) {
-			html += await this.generateNode();
+			if (this.cursor.node.name == 'ParagraphSeparator') {
+				this.breakParagraph();
+			}
+
+			const nodeGroups = this.cursor.node.type.prop(NodeProp.group);
+			const isFigCommand = [
+				'\\fullfig',
+				'\\illfig',
+				'\\illfigi',
+				'\\plotfig',
+			].some((commandName) =>
+				this.getCursorText().startsWith(commandName)
+			);
+
+			if (
+				(nodeGroups && nodeGroups.includes('EnvironmentGroup')) ||
+				(this.cursor.name === 'Command' && isFigCommand)
+			) {
+				this.breakParagraph();
+				this.paragraphs.push({
+					type: 'env',
+					content: await this.generateNode(),
+				});
+				continue;
+			}
+
+			this.currentParagraph += await this.generateNode();
 		}
 
+		this.breakParagraph();
+
+		let html = '';
+		for (const paragraph of this.paragraphs) {
+			if (paragraph.type == 'str') {
+				html += '<p>' + paragraph.content.trim() + '</p>';
+				continue;
+			}
+			html += paragraph.content;
+		}
+
+		console.log(this.paragraphs);
 		return html;
+	}
+
+	private breakParagraph() {
+		if (this.currentParagraph.length > 0) {
+			this.paragraphs.push({
+				type: 'str',
+				content: this.currentParagraph,
+			});
+		}
+
+		this.currentParagraph = '';
 	}
 
 	private expectNext(): true {

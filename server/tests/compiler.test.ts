@@ -37,6 +37,16 @@ test('paragraph', async () => {
 			input: 'asdf\n\n\nqwer',
 			output: '<p>asdf</p><p>qwer</p>',
 		},
+		{
+			input: `text before
+\\begin{env}
+asdf
+\\end{env}
+text after`,
+			output: `<p>text before</p>\\begin{env}
+asdf
+\\end{env}<p>text after</p>`,
+		},
 	]);
 });
 
@@ -137,14 +147,14 @@ describe('commands', () => {
 
 	test('ignored text commands', async () => {
 		await runTestStrings([
-			{ input: '\\null', output: '<p></p>' },
-			{ input: '\\quad', output: '<p></p>' },
-			{ input: '\\qquad', output: '<p></p>' },
-			{ input: '\\centering', output: '<p></p>' },
-			{ input: '\\vspace{2cm}', output: '<p></p>' },
-			{ input: '\\hspace{1cm}', output: '<p></p>' },
-			{ input: '\\vspace*{2cm}', output: '<p></p>' },
-			{ input: '\\hspace*{1cm}', output: '<p></p>' },
+			{ input: '\\null', output: '' },
+			{ input: '\\quad', output: '' },
+			{ input: '\\qquad', output: '' },
+			{ input: '\\centering', output: '' },
+			{ input: '\\vspace{2cm}', output: '' },
+			{ input: '\\hspace{1cm}', output: '' },
+			{ input: '\\vspace*{2cm}', output: '' },
+			{ input: '\\hspace*{1cm}', output: '' },
 		]);
 	});
 });
@@ -323,27 +333,33 @@ test('figures', async () => {
 	await runTestStrings([
 		{
 			input: '\\fullfig{fig}{Figures}{fig1}[width=0.2\\textwidth]',
-			output: '<p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure></p>',
+			output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
 		},
 		{
 			input: '\\fullfig[h]{fig}{Figures}{fig1}[width=0.2\\textwidth]',
-			output: '<p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure></p>',
+			output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
 		},
 		{
 			input: '\\illfig{fig}{Figures}{fig1}{}',
-			output: '<p><figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure></p>',
+			output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
 		},
 		{
 			input: '\\illfig[O]{fig}{Figures}{fig1}{5}',
-			output: '<p><figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure></p>',
+			output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
 		},
 		{
 			input: '\\illfigi{fig}{Figures}{fig1}{}{0.15}',
-			output: '<p><figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure></p>',
+			output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
 		},
 		{
 			input: '\\illfigi[o]{fig}{Figures}{fig1}{}{0.15}',
-			output: '<p><figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure></p>',
+			output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
+		},
+		{
+			input: `text before
+\\fullfig{fig}{Figures}{fig1}
+text after`,
+			output: `<p>text before</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure><p>text after</p>`,
 		},
 	]);
 	vi.resetAllMocks();
@@ -354,15 +370,15 @@ describe('environment', () => {
 		await runTestStrings([
 			{
 				input: '\\begin{unknown}\\asdf\\end{unknown}',
-				output: '<p>\\begin{unknown}\\asdf\\end{unknown}</p>',
+				output: '\\begin{unknown}\\asdf\\end{unknown}',
 			},
 			{
 				input: '\\begin{unknown}\\textbf{text}\\end{unknown}',
-				output: '<p>\\begin{unknown}<bf>text</bf>\\end{unknown}</p>',
+				output: '\\begin{unknown}<bf>text</bf>\\end{unknown}',
 			},
 			{
 				input: '\\begin{unknown}[arg]{arg}asdf\\end{unknown}',
-				output: '<p>\\begin{unknown}[arg]{arg}asdf\\end{unknown}</p>',
+				output: '\\begin{unknown}[arg]{arg}asdf\\end{unknown}',
 			},
 		]);
 	});
@@ -442,19 +458,6 @@ describe('environment', () => {
 			{
 				input: '\\begin{table}\\caption{Toto je caption}\\label{table}\\begin{tabular}{ll}sadf&asdf\\end{tabular}\\end{table}',
 				output: '<table class="table table-sm table-borderless w-auto mx-auto"><caption>Toto je caption</caption><tbody><tr><td>sadf</td><td>asdf</td></tr></tbody></table>',
-			},
-		]);
-	});
-
-	test('random', async () => {
-		await runTestStrings([
-			{
-				input: `asdf
-\\begin{compactenum}
-\\item a
-\\item b
-\\end{compactenum}`,
-				output: '',
 			},
 		]);
 	});
