@@ -1,8 +1,12 @@
 import { NodeProp, type SyntaxNode, Tree, TreeCursor } from '@lezer/common';
 import type { ParserInput } from 'lang-latex';
-import { number } from 'zod';
 
 import { ProblemStorage } from '@server/runner/problemStorage';
+
+interface Paragraph {
+	type: 'env' | 'str';
+	content: string;
+}
 
 export class HtmlGenerator {
 	private tree: Tree;
@@ -10,18 +14,11 @@ export class HtmlGenerator {
 	private cursor: TreeCursor;
 	private problemStorage: ProblemStorage;
 
-	private paragraphs: { type: 'env' | 'str'; content: string }[];
-	private currentParagraph: string;
-
 	constructor(tree: Tree, parserInput: ParserInput, problemId: number) {
 		this.tree = tree;
 		this.cursor = tree.cursor();
 		this.parserInput = parserInput;
 		this.problemStorage = new ProblemStorage(problemId);
-		this.print();
-
-		this.paragraphs = [];
-		this.currentParagraph = '';
 	}
 
 	private getCursorText(): string {
@@ -48,7 +45,7 @@ export class HtmlGenerator {
 					'┆   '.repeat(depth) +
 						'┖' +
 						cursor.name +
-						': ' +
+						`(from: ${cursor.from}; to ${cursor.to}): ` +
 						this.parserInput.read(cursor.from, cursor.to).trim()
 				);
 			},
@@ -59,63 +56,76 @@ export class HtmlGenerator {
 	}
 
 	public async generateHtml(): Promise<string> {
-		this.paragraphs = [];
-		this.currentParagraph = '';
-
-		while (this.cursor.next()) {
-			if (this.cursor.node.name == 'ParagraphSeparator') {
-				this.breakParagraph();
-			}
-
-			const nodeGroups = this.cursor.node.type.prop(NodeProp.group);
-			const isFigCommand = [
-				'\\fullfig',
-				'\\illfig',
-				'\\illfigi',
-				'\\plotfig',
-			].some((commandName) =>
-				this.getCursorText().startsWith(commandName)
-			);
-
-			if (
-				(nodeGroups && nodeGroups.includes('EnvironmentGroup')) ||
-				(this.cursor.name === 'Command' && isFigCommand)
-			) {
-				this.breakParagraph();
-				this.paragraphs.push({
-					type: 'env',
-					content: await this.generateNode(),
-				});
-				continue;
-			}
-
-			this.currentParagraph += await this.generateNode();
-		}
-
-		this.breakParagraph();
-
-		let html = '';
-		for (const paragraph of this.paragraphs) {
-			if (paragraph.type == 'str') {
-				html += '<p>' + paragraph.content.trim() + '</p>';
-				continue;
-			}
-			html += paragraph.content;
-		}
-
-		console.log(this.paragraphs);
-		return html;
+		return await this.generateContentUntil(this.cursor.to);
 	}
 
-	private breakParagraph() {
-		if (this.currentParagraph.length > 0) {
-			this.paragraphs.push({
+	public async generateContentUntil(to: number): Promise<string> {
+		try {
+			const paragraphs: Paragraph[] = [];
+			let currentParagraph = '';
+
+			while (this.cursor.next()) {
+				if (this.cursor.node.name == 'ParagraphSeparator') {
+					this.breakParagraph(paragraphs, currentParagraph);
+					currentParagraph = '';
+				}
+
+				const nodeGroups = this.cursor.node.type.prop(NodeProp.group);
+				const isFigCommand = [
+					'\\fullfig',
+					'\\illfig',
+					'\\illfigi',
+					'\\plotfig',
+				].some((commandName) =>
+					this.getCursorText().startsWith(commandName)
+				);
+
+				if (
+					(nodeGroups && nodeGroups.includes('EnvironmentGroup')) ||
+					(this.cursor.name === 'Command' && isFigCommand)
+				) {
+					this.breakParagraph(paragraphs, currentParagraph);
+					currentParagraph = '';
+					paragraphs.push({
+						type: 'env',
+						content: await this.generateNode(),
+					});
+					continue;
+				}
+
+				currentParagraph += await this.generateNode();
+
+				if (this.cursor.to >= to) {
+					break;
+				}
+			}
+
+			this.breakParagraph(paragraphs, currentParagraph);
+			currentParagraph = '';
+
+			let html = '';
+			for (const paragraph of paragraphs) {
+				if (paragraph.type == 'str') {
+					html += '<p>' + paragraph.content.trim() + '</p>';
+					continue;
+				}
+				html += paragraph.content;
+			}
+
+			return html;
+		} catch (e) {
+			this.print();
+			throw e;
+		}
+	}
+
+	private breakParagraph(paragraphs: Paragraph[], currentParagraph: string) {
+		if (currentParagraph.length > 0) {
+			paragraphs.push({
 				type: 'str',
-				content: this.currentParagraph,
+				content: currentParagraph,
 			});
 		}
-
-		this.currentParagraph = '';
 	}
 
 	private expectNext(): true {
@@ -579,14 +589,15 @@ export class HtmlGenerator {
 		this.expectNodeName('ListItem');
 		const topNode = this.cursor.node;
 
-		let buffer = '';
-		while (this.cursor.next()) {
-			buffer += await this.generateNode();
-			if (this.cursor.to >= topNode.to) {
-				break;
-			}
-		}
-		return '<li>' + buffer.trim() + '</li>';
+		//let buffer = '';
+		//while (this.cursor.next()) {
+		//	buffer += await this.generateNode();
+		//	if (this.cursor.to >= topNode.to) {
+		//		break;
+		//	}
+		//}
+		//
+		return '<li>' + (await this.generateContentUntil(topNode.to)) + '</li>';
 	}
 
 	private async generateEnvironment(): Promise<string> {

@@ -42,7 +42,7 @@ MathCommand {
 
 // command argument is included to catch { } groups
 CommandArgument {
-	!commandargument "{" (Text | InlineMath | DisplayMath | Command | CommandArgument | Newline )* "}"
+	!commandargument "{" (Text | InlineMath | DisplayMath | Command | EqCommand | CommandArgument | Newline )* "}"
 }
 
 MathCommandArgument {
@@ -80,7 +80,7 @@ HlineCommand {
 }
 
 QuoteMacro {
-	"\"" (Number | MathCommand)+ ("e" Number)? (Whitespace Math)? "\""
+	"\"" (Number | MathCommand | QuoteMacroContent)+ ("e" Number)? (Whitespace Math)? "\""
 }
 
 // --- Environments ---
@@ -126,7 +126,7 @@ ListEnvironment[group=EnvironmentGroup] {
 	ListItem {
 		@specialize<CommandIdentifier, "\\item">
 		(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
-		Newline | Environment)*
+		Newline | ParagraphSeparator | Environment)*
 	}+
 	EndEnv<ListEnvName>
 }
@@ -150,6 +150,7 @@ TableEnvironment[group=EnvironmentGroup] {
 	Text { (![\\${}\[\]%\n&])+ }
 	CommandIdentifier { "\\" ((@asciiLetter)+"*"?|"%"|"{"|"}"|"\\"|"_"|"("|")"|",") }
 	InlineMathContent { (![\\${}\[\]\"%\n\t\r 0-9])+ }
+	QuoteMacroContent { (![\\${}\[\]\"%\n\t\re\+\- 0-9])+ }
 	Comment { "%" ![\n]* }
 	Newline { "\n" }
 	ParagraphSeparator { "\n" "\n"+ }

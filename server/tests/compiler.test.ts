@@ -218,7 +218,6 @@ describe('math', () => {
 				input: '\\eq[a]{a+b}',
 				output: '<p>\\begin{alignat*}a+b\\end{alignat*}</p>',
 			},
-
 			{
 				input: `\\eq[m]{
 	F &= G\\frac{Mm}{R^2} = ma\\,, \\\\
@@ -293,6 +292,10 @@ describe('math', () => {
 			{
 				input: '$"\\frac{5x}{6} m.s^{-2}"$',
 				output: '<p>$\\frac{5x}{6}\\,\\mathrm{m\\cdot s^{-2}}$</p>',
+			},
+			{
+				input: '$"1/50 m"$',
+				output: '<p>$1/50\\,\\mathrm{m}$</p>',
 			},
 		]);
 	});
@@ -395,23 +398,31 @@ describe('environment', () => {
 		await runTestStrings([
 			{
 				input: '\\begin{enumerate}\\item asdf\\item qwer\\end{enumerate}',
-				output: '<ol><li>asdf</li><li>qwer</li></ol>',
+				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
 			},
 			{
 				input: '\\begin{compactenum}\\item asdf\\item qwer\\end{compactenum}',
-				output: '<ol><li>asdf</li><li>qwer</li></ol>',
+				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
 			},
 			{
 				input: '\\begin{itemize}\\item asdf\\item qwer\\end{itemize}',
-				output: '<ul><li>asdf</li><li>qwer</li></ul>',
+				output: '<ul><li><p>asdf</p></li><li><p>qwer</p></li></ul>',
 			},
 			{
 				input: '\\begin{compactitem}\\item asdf\\item qwer\\end{compactitem}',
-				output: '<ul><li>asdf</li><li>qwer</li></ul>',
+				output: '<ul><li><p>asdf</p></li><li><p>qwer</p></li></ul>',
 			},
 			{
 				input: '\\begin{compactitem}[a)]\\item asdf\\item qwer\\end{compactitem}',
-				output: '<ul><li>asdf</li><li>qwer</li></ul>',
+				output: '<ul><li><p>asdf</p></li><li><p>qwer</p></li></ul>',
+			},
+			{
+				input: `\\begin{enumerate}
+\\item asdf
+
+qwer
+\\end{enumerate}`,
+				output: '<ol><li><p>asdf</p><p>qwer</p></li></ol>',
 			},
 		]);
 	});

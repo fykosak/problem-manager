@@ -80,7 +80,6 @@ export class ProblemStorage {
 	 * List exported files as basenames
 	 */
 	public async getExportedFiles() {
-		console.log(this.getExportedFilesDirectory());
 		return await this.getFilesFromDirectory(
 			this.getExportedFilesDirectory()
 		);
