@@ -19,6 +19,7 @@ export class HtmlGenerator {
 		this.cursor = tree.cursor();
 		this.parserInput = parserInput;
 		this.problemStorage = new ProblemStorage(problemId);
+		// this.print();
 	}
 
 	private getCursorText(): string {
@@ -120,10 +121,12 @@ export class HtmlGenerator {
 	}
 
 	private breakParagraph(paragraphs: Paragraph[], currentParagraph: string) {
-		if (currentParagraph.length > 0) {
+		// trim before check to prevent empty paragraphs
+		const formated = currentParagraph.trim();
+		if (formated.length > 0) {
 			paragraphs.push({
 				type: 'str',
-				content: currentParagraph,
+				content: formated,
 			});
 		}
 	}

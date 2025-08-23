@@ -416,6 +416,8 @@ describe('environment', () => {
 				input: '\\begin{compactitem}[a)]\\item asdf\\item qwer\\end{compactitem}',
 				output: '<ul><li><p>asdf</p></li><li><p>qwer</p></li></ul>',
 			},
+
+			// multiple paragraphs
 			{
 				input: `\\begin{enumerate}
 \\item asdf
@@ -423,6 +425,19 @@ describe('environment', () => {
 qwer
 \\end{enumerate}`,
 				output: '<ol><li><p>asdf</p><p>qwer</p></li></ol>',
+			},
+
+			// nested lists
+			{
+				input: `\\begin{enumerate}
+\\item asdf
+\\begin{compactenum}
+\\item asdf
+\\item qwer
+\\end{compactenum}
+\\item qwer
+\\end{enumerate}`,
+				output: '<ol><li><p>asdf</p><ol><li><p>asdf</p></li><li><p>qwer</p></li></ol></li><li><p>qwer</p></li></ol>',
 			},
 		]);
 	});

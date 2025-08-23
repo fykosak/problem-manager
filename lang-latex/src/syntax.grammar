@@ -126,7 +126,7 @@ ListEnvironment[group=EnvironmentGroup] {
 	ListItem {
 		@specialize<CommandIdentifier, "\\item">
 		(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
-		Newline | ParagraphSeparator | Environment)*
+		Newline | ParagraphSeparator | Environment | ListEnvironment | TabularEnvironment | TableEnvironment)*
 	}+
 	EndEnv<ListEnvName>
 }
