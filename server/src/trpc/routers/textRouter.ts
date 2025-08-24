@@ -1,13 +1,10 @@
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
-import { ParserInput, latexLanguage } from 'lang-latex';
 import { z } from 'zod';
 
 import { acl } from '@server/acl/aclFactory';
-import { HtmlGenerator } from '@server/api/compiler/htmlGenerator';
 import { db } from '@server/db';
 import { textTable } from '@server/db/schema';
-import { StorageProvider } from '@server/sockets/storageProvider';
 
 import { authedProcedure } from '../middleware';
 import { trpc } from '../trpc';

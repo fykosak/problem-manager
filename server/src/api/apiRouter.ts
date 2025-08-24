@@ -22,7 +22,6 @@ import {
 import { ProblemStorage } from '@server/runner/problemStorage';
 import { Runner } from '@server/runner/runner';
 import { StorageProvider } from '@server/sockets/storageProvider';
-import { releaseText } from '@server/trpc/routers/text';
 
 import { asyncHandler } from './asyncHandler';
 import { type RequestPerson, UserAuthMiddleware } from './middleware';
