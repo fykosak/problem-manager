@@ -43,7 +43,7 @@ MathCommand {
 // command argument is included to catch { } groups
 CommandArgument {
 	!commandargument "{" (Text | InlineMath | DisplayMath | Command | EqCommand
-	| CommandArgument | Newline | ParagraphSeparator)* "}"
+	| NewlineCommand | CommandArgument | Newline | ParagraphSeparator)* "}"
 }
 
 MathCommandArgument {

@@ -359,6 +359,7 @@ test('text', async () => {
 		},
 	]);
 });
+
 test('figures', async () => {
 	vi.spyOn(ProblemStorage.prototype, 'getFileForWeb').mockImplementation(
 		// eslint-disable-next-line
@@ -547,4 +548,28 @@ qwer
 			},
 		]);
 	});
+});
+
+test('footnote', async () => {
+	await runTestStrings([
+		{
+			input: 'text\\footnote{footnote}',
+			output: '<p>text<sup>1</sup></p><hr><ol><li><p>footnote</p></li></ol>',
+		},
+		{
+			input: 'text\\footnote{footnote}text\\footnote{footnote2}',
+			output: '<p>text<sup>1</sup>text<sup>2</sup></p><hr><ol><li><p>footnote</p></li><li><p>footnote2</p></li></ol>',
+		},
+		{
+			input: 'text\\footnotei{,}{footnote}',
+			output: '<p>text,<sup>1</sup></p><hr><ol><li><p>footnote</p></li></ol>',
+		},
+		{
+			input: `text\\footnote{par1
+
+	par2
+}`,
+			output: '<p>text<sup>1</sup></p><hr><ol><li><p>par1</p><p>par2</p></li></ol>',
+		},
+	]);
 });

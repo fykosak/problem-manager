@@ -13,6 +13,7 @@ export class HtmlGenerator {
 	private parserInput: ParserInput;
 	private cursor: TreeCursor;
 	private problemStorage: ProblemStorage;
+	private footnotes: string[];
 
 	constructor(tree: Tree, parserInput: ParserInput, problemId: number) {
 		this.tree = tree;
@@ -20,6 +21,8 @@ export class HtmlGenerator {
 		this.parserInput = parserInput;
 		this.problemStorage = new ProblemStorage(problemId);
 		// this.print();
+
+		this.footnotes = [];
 	}
 
 	private getCursorText(): string {
@@ -57,7 +60,19 @@ export class HtmlGenerator {
 	}
 
 	public async generateHtml(): Promise<string> {
-		return await this.generateContentUntil(this.cursor.to);
+		this.footnotes = [];
+		const content = await this.generateContentUntil(this.cursor.to);
+
+		let footnoteContent = '';
+		if (this.footnotes.length > 0) {
+			footnoteContent += '<hr><ol>';
+			for (const footnote of this.footnotes) {
+				footnoteContent += `<li>${footnote}</li>`;
+			}
+			footnoteContent += '</ol>';
+		}
+
+		return content + footnoteContent;
 	}
 
 	public async generateContentUntil(to: number): Promise<string> {
@@ -317,8 +332,8 @@ export class HtmlGenerator {
 
 		this.expectNext();
 		this.expectNodeName('CommandArgument');
-		const argumentEnd = this.cursor.to - 1;
-		this.expectNext();
+		const argumentEnd = this.cursor.to - 1; // don't take }
+		this.expectNext(); // skip {
 		let hintContent = await this.generateContentUntil(argumentEnd);
 
 		// remove starting <p> to be able to prepend the hintLabel
@@ -329,6 +344,32 @@ export class HtmlGenerator {
 		this.expectNodeName('}');
 
 		return `<p><em>${hintLabel}</em> ${hintContent}`;
+	}
+
+	private async generateFootnote(): Promise<string> {
+		this.expectNodeName('CommandIdentifier');
+		const footnoteCommand = this.getCursorText();
+
+		this.expectNext();
+		this.expectNodeName('CommandArgument');
+
+		let char = '';
+		if (footnoteCommand === '\\footnotei') {
+			char = await this.generateCommandArgument();
+			this.expectNext();
+			this.expectNodeName('CommandArgument');
+		}
+
+		const argumentEnd = this.cursor.to - 1;
+		this.expectNext();
+		const footnoteContent = await this.generateContentUntil(argumentEnd);
+		this.expectNext();
+		this.expectNodeName('}');
+
+		this.footnotes.push(footnoteContent);
+
+		const footnoteNumber = this.footnotes.length;
+		return char + `<sup>${footnoteNumber}</sup>`;
 	}
 
 	private async generateCommand(): Promise<string> {
@@ -427,6 +468,9 @@ export class HtmlGenerator {
 			case '\\illfig':
 			case '\\illfigi':
 				return await this.generateCommandIllfig();
+			case '\\footnote':
+			case '\\footnotei':
+				return await this.generateFootnote();
 			default: {
 				let buffer = commandName;
 				// Loop over whole command and extract arguments along with the
