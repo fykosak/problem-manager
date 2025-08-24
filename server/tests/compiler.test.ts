@@ -318,6 +318,10 @@ describe('math', () => {
 				input: '$"10^{-12} W.m^{-2}"$',
 				output: '<p>$10^{-12}\\,\\mathrm{W\\cdot m^{-2}}$</p>',
 			},
+			{
+				input: '$"10^{-12}\n\t  W.m^{-2}"$',
+				output: '<p>$10^{-12}\\,\\mathrm{W\\cdot m^{-2}}$</p>',
+			},
 		]);
 	});
 });

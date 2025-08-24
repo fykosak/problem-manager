@@ -84,7 +84,8 @@ ItemCommand {
 }
 
 QuoteMacro {
-	"\"" (Number | MathCommand | MathCommandArgument | QuoteMacroContent)+ ("e" Number)? (Whitespace Math)? "\""
+	"\"" (Number | MathCommand | MathCommandArgument | QuoteMacroContent)+
+	("e" Number)? ((Whitespace|Newline) Math)? "\""
 }
 
 // --- Environments ---

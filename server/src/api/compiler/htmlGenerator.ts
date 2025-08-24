@@ -577,7 +577,10 @@ export class HtmlGenerator {
 				continue;
 			}
 
-			if (this.cursor.name === 'Whitespace') {
+			if (
+				this.cursor.name === 'Whitespace' ||
+				this.cursor.name === 'Newline'
+			) {
 				currentPart = 2;
 				continue;
 			}
@@ -602,7 +605,7 @@ export class HtmlGenerator {
 		}
 
 		const unitPart = parts[2].replace(/\./g, '\\cdot ');
-		return numberPart + '\\,\\mathrm{' + unitPart + '}';
+		return numberPart + '\\,\\mathrm{' + unitPart.trim() + '}';
 	}
 
 	private async generateListItemNode(itemNode: SyntaxNode): Promise<string> {
