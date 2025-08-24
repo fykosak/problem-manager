@@ -610,14 +610,12 @@ export class HtmlGenerator {
 		this.expectNodeName('ListItem');
 		const topNode = this.cursor.node;
 
-		//let buffer = '';
-		//while (this.cursor.next()) {
-		//	buffer += await this.generateNode();
-		//	if (this.cursor.to >= topNode.to) {
-		//		break;
-		//	}
-		//}
-		//
+		this.expectNext();
+		this.expectNodeName('ItemCommand');
+
+		// move to item command end -> skip optional argument
+		this.cursor.moveTo(this.cursor.to, -1);
+
 		return '<li>' + (await this.generateContentUntil(topNode.to)) + '</li>';
 	}
 
@@ -1002,6 +1000,8 @@ export class HtmlGenerator {
 			return this.getCursorText();
 		}
 
-		throw new Error('Unhandled ' + this.cursor.name);
+		throw new Error(
+			`Unhandled ${this.cursor.name} (from: ${this.cursor.from}; to ${this.cursor.to}): `
+		);
 	}
 }

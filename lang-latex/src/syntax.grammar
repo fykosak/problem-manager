@@ -79,6 +79,10 @@ HlineCommand {
 	@specialize<CommandIdentifier, "\\hline">
 }
 
+ItemCommand {
+	@specialize<CommandIdentifier, "\\item"> CommandArgumentOptional?
+}
+
 QuoteMacro {
 	"\"" (Number | MathCommand | MathCommandArgument | QuoteMacroContent)+ ("e" Number)? (Whitespace Math)? "\""
 }
@@ -122,9 +126,9 @@ Environment[group=EnvironmentGroup] {
 
 ListEnvironment[group=EnvironmentGroup] {
 	BeginEnv<ListEnvName>
-	Newline*
+	(Newline | Command | Whitespace)*
 	ListItem {
-		@specialize<CommandIdentifier, "\\item">
+		ItemCommand
 		(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
 		Newline | ParagraphSeparator | Environment | ListEnvironment | TabularEnvironment | TableEnvironment)*
 	}+

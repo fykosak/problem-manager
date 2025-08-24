@@ -460,6 +460,33 @@ qwer
 \\end{enumerate}`,
 				output: '<ol><li><p>asdf</p><ol><li><p>asdf</p></li><li><p>qwer</p></li></ol></li><li><p>qwer</p></li></ol>',
 			},
+
+			// indentation
+			{
+				input: `\\begin{enumerate}
+	\\item asdf
+	\\item qwer
+\\end{enumerate}`,
+				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
+			},
+
+			// setting command
+			// TODO starting value is ignored
+			{
+				input: `\\begin{enumerate}
+	\\setcounter{enumi}{2}
+	\\item asdf
+	\\item qwer
+\\end{enumerate}`,
+				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
+			},
+
+			// optional label
+			// TODO label is ignored
+			{
+				input: `\\begin{enumerate}\\item[asdf] qwer\\end{enumerate}`,
+				output: '<ol><li><p>qwer</p></li></ol>',
+			},
 		]);
 	});
 
