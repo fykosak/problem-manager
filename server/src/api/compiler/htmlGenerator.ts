@@ -77,6 +77,7 @@ export class HtmlGenerator {
 					'\\illfig',
 					'\\illfigi',
 					'\\plotfig',
+					'\\taskhint',
 				].some((commandName) =>
 					this.getCursorText().startsWith(commandName)
 				);
@@ -308,6 +309,28 @@ export class HtmlGenerator {
 		return buffer;
 	}
 
+	private async generateTaskhint(): Promise<string> {
+		this.expectNodeName('CommandIdentifier');
+
+		this.expectNext();
+		const hintLabel = await this.generateCommandArgument();
+
+		this.expectNext();
+		this.expectNodeName('CommandArgument');
+		const argumentEnd = this.cursor.to - 1;
+		this.expectNext();
+		let hintContent = await this.generateContentUntil(argumentEnd);
+
+		// remove starting <p> to be able to prepend the hintLabel
+		if (hintContent.startsWith('<p>')) {
+			hintContent = hintContent.replace('<p>', '');
+		}
+		this.expectNext();
+		this.expectNodeName('}');
+
+		return `<p><em>${hintLabel}</em> ${hintContent}`;
+	}
+
 	private async generateCommand(): Promise<string> {
 		this.expectAnyNodeName(['Command', 'MathCommand']);
 
@@ -334,13 +357,8 @@ export class HtmlGenerator {
 			case '\\uv':
 				this.expectNext();
 				return '„' + (await this.generateCommandArgument()) + '“';
-			case '\\taskhint': {
-				this.expectNext();
-				const firstArgument = await this.generateCommandArgument();
-				this.expectNext();
-				const secondArgument = await this.generateCommandArgument();
-				return '<em>' + firstArgument + '</em> ' + secondArgument;
-			}
+			case '\\taskhint':
+				return this.generateTaskhint();
 			case '\\null':
 			case '\\quad':
 			case '\\qquad':

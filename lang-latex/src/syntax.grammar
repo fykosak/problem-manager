@@ -42,7 +42,8 @@ MathCommand {
 
 // command argument is included to catch { } groups
 CommandArgument {
-	!commandargument "{" (Text | InlineMath | DisplayMath | Command | EqCommand | CommandArgument | Newline )* "}"
+	!commandargument "{" (Text | InlineMath | DisplayMath | Command | EqCommand
+	| CommandArgument | Newline | ParagraphSeparator)* "}"
 }
 
 MathCommandArgument {
@@ -50,7 +51,7 @@ MathCommandArgument {
 }
 
 CommandArgumentOptional {
-	!commandargument "[" (Text | InlineMath | DisplayMath | Command | Newline)* "]"
+	!commandargument "[" (Text | InlineMath | DisplayMath | Command | Newline | ParagraphSeparator)* "]"
 }
 
 // --- Specialized command names ---
@@ -71,8 +72,7 @@ NewlineCommand {
 }
 
 BooktabCommand {
-	@specialize<CommandIdentifier, "\\toprule" | "\\midrule" | "\\bottomrule" |
-	"\\botrule">
+	@specialize<CommandIdentifier, "\\toprule" | "\\midrule" | "\\bottomrule" | "\\botrule">
 }
 
 HlineCommand {
@@ -80,7 +80,7 @@ HlineCommand {
 }
 
 QuoteMacro {
-	"\"" (Number | MathCommand | QuoteMacroContent)+ ("e" Number)? (Whitespace Math)? "\""
+	"\"" (Number | MathCommand | MathCommandArgument | QuoteMacroContent)+ ("e" Number)? (Whitespace Math)? "\""
 }
 
 // --- Environments ---

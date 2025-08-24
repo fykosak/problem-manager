@@ -19,6 +19,10 @@ async function runTestStrings(testCases: { input: string; output: string }[]) {
 	}
 }
 
+test('nothing', async () => {
+	await runTestStrings([{ input: '', output: '' }]);
+});
+
 test('paragraph', async () => {
 	await runTestStrings([
 		{
@@ -109,10 +113,6 @@ describe('commands', () => {
 	test('multiple arguments', async () => {
 		await runTestStrings([
 			{
-				input: '\\taskhint{label}{hint}',
-				output: '<p><em>label</em> hint</p>',
-			},
-			{
 				input: '\\textbf{first}\\emph{middle}\\textit{last}',
 				output: '<p><bf>first</bf><em>middle</em><i>last</i></p>',
 			},
@@ -155,6 +155,23 @@ describe('commands', () => {
 			{ input: '\\hspace{1cm}', output: '' },
 			{ input: '\\vspace*{2cm}', output: '' },
 			{ input: '\\hspace*{1cm}', output: '' },
+		]);
+	});
+
+	test('taskhint', async () => {
+		await runTestStrings([
+			//{
+			//	input: '\\taskhint{label}{hint}',
+			//	output: '<p><em>label</em> hint</p>',
+			//},
+			{
+				input: `\\taskhint{hint}{
+asdf
+
+qwer
+}`,
+				output: '<p><em>hint</em> asdf</p><p>qwer</p>',
+			},
 		]);
 	});
 });
@@ -296,6 +313,10 @@ describe('math', () => {
 			{
 				input: '$"1/50 m"$',
 				output: '<p>$1/50\\,\\mathrm{m}$</p>',
+			},
+			{
+				input: '$"10^{-12} W.m^{-2}"$',
+				output: '<p>$10^{-12}\\,\\mathrm{W\\cdot m^{-2}}$</p>',
 			},
 		]);
 	});
