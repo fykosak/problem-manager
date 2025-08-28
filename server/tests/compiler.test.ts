@@ -284,6 +284,10 @@ describe('math', () => {
 				output: '<p>$1\\,\\mathrm{km}$</p>',
 			},
 			{
+				input: '$1" km"$',
+				output: '<p>$1\\,\\mathrm{km}$</p>',
+			},
+			{
 				input: '$"20e3"$',
 				output: '<p>$20\\cdot 10^{3}$</p>',
 			},
@@ -356,6 +360,10 @@ test('comments', async () => {
 		{
 			input: `text %comment\ntext`,
 			output: '<p>text \ntext</p>',
+		},
+		{
+			input: `\\eq{%comment\nmath\n}text`,
+			output: '<p>\\begin{equation*}\nmath\n\\end{equation*}text</p>',
 		},
 	]);
 });
@@ -433,6 +441,15 @@ describe('environment', () => {
 			{
 				input: '\\begin{unknown}[arg]{arg}asdf\\end{unknown}',
 				output: '\\begin{unknown}[arg]{arg}asdf\\end{unknown}',
+			},
+		]);
+	});
+
+	test('inside command', async () => {
+		await runTestStrings([
+			{
+				input: '\\parbox{5cm}{\\begin{unknown}\\asdf\\end{unknown}}',
+				output: '<p>\\parbox{5cm}{\\begin{unknown}\\asdf\\end{unknown}}</p>',
 			},
 		]);
 	});
@@ -541,6 +558,10 @@ qwer
 			{
 				input: '\\begin{tabular}{|r||l}sadf&asdf\\\\qwer&poiu\\end{tabular}',
 				output: '<tbody><tr><td class="border-start border-end text-end">sadf</td><td class="border-start">asdf</td></tr><tr><td class="border-start border-end text-end">qwer</td><td class="border-start">poiu</td></tr></tbody>',
+			},
+			{
+				input: '\\begin{tabular}{p{2cm}p{3cm}}sadf&asdf\\end{tabular}',
+				output: '<tbody><tr><td>sadf</td><td>asdf</td></tr></tbody>',
 			},
 			{
 				input: '\\begin{tabular}{ll}\\toprule sadf&asdf\\\\\\midrule qwer&poiu\\\\\\bottomrule\\end{tabular}',

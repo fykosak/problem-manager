@@ -42,9 +42,12 @@ MathCommand {
 
 // command argument is included to catch { } groups
 CommandArgument {
-	!commandargument "{" (Text | InlineMath | DisplayMath | Command | EqCommand |
-	UnderscoreEscape | NewlineCommand | CommandArgument | Newline | ParagraphSeparator |
-	"[" | "]")* "}"
+	!commandargument "{" (
+		Text | InlineMath | DisplayMath | Command | EqCommand |
+		UnderscoreEscape | NewlineCommand | CommandArgument | Newline | ParagraphSeparator |
+		"[" | "]" |
+		Environment | ListEnvironment | TabularEnvironment | TableEnvironment
+	)* "}"
 }
 
 MathCommandArgument {
@@ -90,7 +93,7 @@ ItemCommand {
 }
 
 QuoteMacro {
-	"\"" (Number | MathCommand | MathCommandArgument | QuoteMacroContent)+
+	"\"" (Number | MathCommand | MathCommandArgument | QuoteMacroContent)*
 	("e" (Number | MathCommandArgument))? ((Whitespace|Newline) Math)? "\""
 }
 

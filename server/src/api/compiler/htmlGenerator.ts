@@ -155,6 +155,11 @@ export class HtmlGenerator {
 	}
 
 	private expectNodeName(nodeName: string): void {
+		// Comments should be skipped, but are included in syntax tree, so just
+		// skip until non-Comment node is met.
+		while (this.cursor.name === 'Comment') {
+			this.expectNext();
+		}
 		if (this.cursor.name !== nodeName) {
 			throw new Error(
 				`Wrong token received, expected ${nodeName}, received ${this.cursor.name}, from char ${this.cursor.from} to char ${this.cursor.to}`
@@ -163,11 +168,14 @@ export class HtmlGenerator {
 	}
 
 	private expectAnyNodeName(nodeNames: string[]): void {
+		while (this.cursor.name === 'Comment') {
+			this.expectNext();
+		}
 		if (
 			nodeNames.find((value) => value === this.cursor.name) === undefined
 		) {
 			throw new Error(
-				`Wrong token received, received ${this.cursor.name}`
+				`Wrong token received, expected any of ${nodeNames.join(',')}, received ${this.cursor.name}, from char ${this.cursor.from} to char ${this.cursor.to}`
 			);
 		}
 	}
@@ -192,28 +200,15 @@ export class HtmlGenerator {
 	private async generateCommandArgument(): Promise<string> {
 		const topNode = this.cursor.node;
 		this.expectAnyNodeName(['CommandArgument', 'MathCommandArgument']);
-		if (
-			!this.cursor.node.firstChild ||
-			this.cursor.node.firstChild.name !== '{'
-		) {
-			throw new Error(
-				`Expected { at ${this.cursor.node.firstChild?.from}`
-			);
-		}
-		if (
-			!this.cursor.node.lastChild ||
-			this.cursor.node.lastChild.name !== '}'
-		) {
-			throw new Error(
-				`Expected } at ${this.cursor.node.lastChild?.from}`
-			);
-		}
-		this.cursor.firstChild();
+		this.expectNext();
+		this.expectNodeName('{');
 
 		let buffer = '';
 		while (this.cursor.next() && this.cursor.to < topNode.to) {
 			buffer += await this.generateNode();
 		}
+
+		this.expectNodeName('}');
 
 		return buffer;
 	}
@@ -221,20 +216,8 @@ export class HtmlGenerator {
 	private async generateCommandArgumentOptional(): Promise<string> {
 		const topNode = this.cursor.node;
 		this.expectNodeName('CommandArgumentOptional');
-		if (
-			!this.cursor.node.firstChild ||
-			this.cursor.node.firstChild.name !== '['
-		) {
-			throw new Error('Expected [');
-		}
-		if (
-			!this.cursor.node.lastChild ||
-			this.cursor.node.lastChild.name !== ']'
-		) {
-			throw new Error('Expected ]');
-		}
-
-		this.cursor.firstChild();
+		this.expectNext();
+		this.expectNodeName('[');
 
 		let buffer = '';
 		// stops on last node (]) but before that it calls .next(), so it's
@@ -242,6 +225,8 @@ export class HtmlGenerator {
 		while (this.cursor.next() && this.cursor.to < topNode.to) {
 			buffer += await this.generateNode();
 		}
+
+		this.expectNodeName(']');
 
 		return buffer;
 	}
@@ -410,15 +395,17 @@ export class HtmlGenerator {
 				await this.generateCommandArgument(); // consume command argument
 				return ''; // ignore these commands
 
-			case '\\caption':
+			case '\\caption': {
 				this.expectNext();
 				const caption = await this.generateCommandArgument();
 				return `<caption>${caption}</caption>`;
+			}
 
-			case '\\url':
+			case '\\url': {
 				this.expectNext();
 				const url = await this.generateCommandArgument();
 				return `<a href="${url}">${url}</a>`;
+			}
 
 			// short commands
 			case '\\#':
@@ -510,10 +497,7 @@ export class HtmlGenerator {
 	}
 
 	private async generateMath(): Promise<string> {
-		if (this.cursor.name !== 'Math') {
-			throw new Error(`Expected Math, ${this.cursor.name} given`);
-		}
-
+		this.expectNodeName('Math');
 		const topNode = this.cursor.node;
 
 		let buffer = '';
@@ -799,11 +783,16 @@ export class HtmlGenerator {
 				index++;
 			}
 			if (index >= tableArgument.length) {
-				throw new Error('Table alignment definition expected');
+				throw new Error(
+					`Table alignment definition expected at ${this.cursor.from}`
+				);
 			}
 
 			switch (tableArgument[index]) {
 				case 'l':
+					currentColDefinition.align = 'start';
+					break;
+				case 'p':
 					currentColDefinition.align = 'start';
 					break;
 				case 'c':
@@ -813,9 +802,13 @@ export class HtmlGenerator {
 					currentColDefinition.align = 'end';
 					break;
 				default:
-					throw new Error('Table alignment definition expected');
+					throw new Error(
+						`Invalid table column argument ${tableArgument[index]} at ${this.cursor.from}`
+					);
 			}
 
+			// check next char for border and if not present, move index back to
+			// original position
 			index++;
 			if (index < tableArgument.length) {
 				if (tableArgument[index] === '|') {
@@ -825,7 +818,10 @@ export class HtmlGenerator {
 				}
 			}
 
+			// save current definition
 			columnDefinition.push(currentColDefinition);
+
+			// reset definition for next argument
 			currentColDefinition = { ...defaultColDefinition };
 		}
 
@@ -845,9 +841,23 @@ export class HtmlGenerator {
 		// skip the env name
 		this.cursor.moveTo(this.cursor.to, -1);
 		this.expectNext();
-		this.expectNodeName('CommandArgument'); // tabular definition
 
-		const tableArgument = await this.generateCommandArgument();
+		// const tableArgument = await this.generateCommandArgument();
+		// tabular definition
+		let tableArgument = '';
+		this.expectNodeName('CommandArgument');
+		const tableArgumentNode = this.cursor.node;
+		this.expectNext();
+		this.expectNodeName('{');
+
+		while (this.expectNext() && this.cursor.to < tableArgumentNode.to) {
+			// skip command argument ( p{3cm} -> p)
+			if (this.cursor.name === 'CommandArgument') {
+				this.cursor.enter(this.cursor.to, -1);
+				continue;
+			}
+			tableArgument += await this.generateNode();
+		}
 
 		const columnDefinition = this.getColumnDefinition(tableArgument);
 
