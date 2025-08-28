@@ -400,11 +400,6 @@ export class HtmlGenerator {
 				return '„' + (await this.generateCommandArgument()) + '“';
 			case '\\taskhint':
 				return this.generateTaskhint();
-			case '\\null':
-			case '\\quad':
-			case '\\qquad':
-			case '\\centering':
-				return ''; // ignore these commands
 
 			case '\\vspace':
 			case '\\vspace*':
@@ -414,11 +409,27 @@ export class HtmlGenerator {
 				this.expectNext();
 				await this.generateCommandArgument(); // consume command argument
 				return ''; // ignore these commands
-			case '\\caption': {
+
+			case '\\caption':
 				this.expectNext();
 				const caption = await this.generateCommandArgument();
 				return `<caption>${caption}</caption>`;
-			}
+
+			case '\\url':
+				this.expectNext();
+				const url = await this.generateCommandArgument();
+				return `<a href="${url}">${url}</a>`;
+
+			// short commands
+			case '\\#':
+				return '#';
+
+			// ignored commands
+			case '\\null':
+			case '\\quad':
+			case '\\qquad':
+			case '\\centering':
+				return '';
 
 			// math commands
 			case '\\(':
@@ -636,7 +647,12 @@ export class HtmlGenerator {
 
 		let numberPart = parts[0];
 		if (parts[1] !== '') {
-			numberPart += `\\cdot 10^{${parts[1]}}`;
+			let exponent = parts[1];
+			// always encase exponent in curly brackets
+			if (exponent.at(0) !== '{' && exponent.at(-1) !== '}') {
+				exponent = '{' + exponent + '}';
+			}
+			numberPart += `\\cdot 10^${exponent}`;
 		}
 
 		numberPart = numberPart
@@ -990,6 +1006,9 @@ export class HtmlGenerator {
 
 			case 'EqCommand':
 				return this.generateEqCommand();
+
+			case 'UnderscoreEscape':
+				return '_';
 
 			case 'UnderscoreCommand':
 				return this.generateUnderscoreCommand();

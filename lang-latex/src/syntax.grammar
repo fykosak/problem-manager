@@ -1,7 +1,7 @@
 @precedence { commandargument @left, character @left }
 
 @top Document {
-	(Text | InlineMath | DisplayMath | Command | EqCommand | Newline | ParagraphSeparator |
+	(Text | InlineMath | DisplayMath | Command | EqCommand | UnderscoreEscape | Newline | ParagraphSeparator |
 	NewlineCommand | "[" | "]" | "{" | "}" | "&" |
 	Environment | ListEnvironment | TabularEnvironment | TableEnvironment)*
 }
@@ -42,8 +42,9 @@ MathCommand {
 
 // command argument is included to catch { } groups
 CommandArgument {
-	!commandargument "{" (Text | InlineMath | DisplayMath | Command | EqCommand
-	| NewlineCommand | CommandArgument | Newline | ParagraphSeparator)* "}"
+	!commandargument "{" (Text | InlineMath | DisplayMath | Command | EqCommand |
+	UnderscoreEscape | NewlineCommand | CommandArgument | Newline | ParagraphSeparator |
+	"[" | "]")* "}"
 }
 
 MathCommandArgument {
@@ -51,7 +52,8 @@ MathCommandArgument {
 }
 
 CommandArgumentOptional {
-	!commandargument "[" (Text | InlineMath | DisplayMath | Command | Newline | ParagraphSeparator)* "]"
+	!commandargument "[" (Text | InlineMath | DisplayMath | Command |
+	UnderscoreEscape | Newline | ParagraphSeparator)* "]"
 }
 
 // --- Specialized command names ---
@@ -61,6 +63,10 @@ EqCommandIdentifier {
 
 EqCommand {
 	 EqCommandIdentifier CommandArgumentOptional? MathCommandArgument
+}
+
+UnderscoreEscape {
+	@specialize<CommandIdentifier, "\\_">
 }
 
 UnderscoreCommand {
@@ -85,7 +91,7 @@ ItemCommand {
 
 QuoteMacro {
 	"\"" (Number | MathCommand | MathCommandArgument | QuoteMacroContent)+
-	("e" Number)? ((Whitespace|Newline) Math)? "\""
+	("e" (Number | MathCommandArgument))? ((Whitespace|Newline) Math)? "\""
 }
 
 // --- Environments ---
@@ -139,7 +145,7 @@ ListEnvironment[group=EnvironmentGroup] {
 TabularEnvironment[group=EnvironmentGroup] {
 	BeginEnv<TabularEnvName>
 	(Text | InlineMath | DisplayMath | Command | EqCommand | Newline | Environment |
-	NewlineCommand | "&" | BooktabCommand | HlineCommand)*
+	NewlineCommand | "&" | "[" | "]" | BooktabCommand | HlineCommand)*
 	EndEnv<TabularEnvName>
 }
 
@@ -153,7 +159,7 @@ TableEnvironment[group=EnvironmentGroup] {
 
 @tokens {
 	Text { (![\\${}\[\]%\n&])+ }
-	CommandIdentifier { "\\" ((@asciiLetter)+"*"?|"%"|"{"|"}"|"\\"|"_"|"("|")"|",") }
+	CommandIdentifier { "\\" (((@asciiLetter)+"*"?)|"%"|"{"|"}"|"\\"|"_"|"("|")"|","|"#") }
 	InlineMathContent { (![\\${}\[\]\"%\n\t\r 0-9])+ }
 	QuoteMacroContent { (![\\${}\[\]\"%\n\t\re\+\- 0-9])+ }
 	Comment { "%" ![\n]* }

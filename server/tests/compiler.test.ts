@@ -160,10 +160,10 @@ describe('commands', () => {
 
 	test('taskhint', async () => {
 		await runTestStrings([
-			//{
-			//	input: '\\taskhint{label}{hint}',
-			//	output: '<p><em>label</em> hint</p>',
-			//},
+			{
+				input: '\\taskhint{label}{hint}',
+				output: '<p><em>label</em> hint</p>',
+			},
 			{
 				input: `\\taskhint{hint}{
 asdf
@@ -171,6 +171,19 @@ asdf
 qwer
 }`,
 				output: '<p><em>hint</em> asdf</p><p>qwer</p>',
+			},
+		]);
+	});
+
+	test('single char commands', async () => {
+		await runTestStrings([
+			{
+				input: '\\#',
+				output: '<p>#</p>',
+			},
+			{
+				input: '\\_',
+				output: '<p>_</p>',
 			},
 		]);
 	});
@@ -273,6 +286,10 @@ describe('math', () => {
 			{
 				input: '$"20e3"$',
 				output: '<p>$20\\cdot 10^{3}$</p>',
+			},
+			{
+				input: '$"20e{-3}"$',
+				output: '<p>$20\\cdot 10^{-3}$</p>',
 			},
 			{
 				input: '$"20e-3"$',
@@ -533,6 +550,10 @@ qwer
 				input: '\\begin{tabular}{ll}\\toprule sadf&asdf\\\\\\hline qwer&poiu\\\\\\hline\\end{tabular}',
 				output: '<tbody><tr class="table-group-divider"><td>sadf</td><td>asdf</td></tr><tr class="border-top"><td>qwer</td><td>poiu</td></tr><tr class="border-top"></tr></tbody>',
 			},
+			{
+				input: '\\begin{tabular}{ll}a [b]&c [d]\\end{tabular}',
+				output: '<tbody><tr><td>a [b]</td><td>c [d]</td></tr></tbody>',
+			},
 		]);
 	});
 
@@ -570,6 +591,27 @@ test('footnote', async () => {
 	par2
 }`,
 			output: '<p>text<sup>1</sup></p><hr><ol><li><p>par1</p><p>par2</p></li></ol>',
+		},
+	]);
+});
+
+test('url', async () => {
+	await runTestStrings([
+		{
+			input: '\\url{https://example.com}',
+			output: '<p><a href="https://example.com">https://example.com</a></p>',
+		},
+		{
+			input: '\\url{https://example.com/url\\_underscore}',
+			output: '<p><a href="https://example.com/url_underscore">https://example.com/url_underscore</a></p>',
+		},
+		{
+			input: '\\url{https://example.com/url\\#hashtag}',
+			output: '<p><a href="https://example.com/url#hashtag">https://example.com/url#hashtag</a></p>',
+		},
+		{
+			input: '\\url{https://example.com/url?key=value}',
+			output: '<p><a href="https://example.com/url?key=value">https://example.com/url?key=value</a></p>',
 		},
 	]);
 });
