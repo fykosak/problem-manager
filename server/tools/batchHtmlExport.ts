@@ -50,9 +50,6 @@ async function main() {
 		);
 
 	for (const text of textsToExport) {
-		console.log(
-			`Exporting text ${text.text.textId} of problem ${text.problem.problemId}`
-		);
 		try {
 			await releaseText(text.text.textId, text.problem.problemId);
 		} catch (error) {

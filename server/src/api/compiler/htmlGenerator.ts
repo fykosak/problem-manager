@@ -13,7 +13,10 @@ export class HtmlGenerator {
 	private parserInput: ParserInput;
 	private cursor: TreeCursor;
 	private problemStorage: ProblemStorage;
+
 	private footnotes: string[];
+	private eqRefs: Map<string, number>;
+	private figRefs: Map<string, number>;
 
 	constructor(tree: Tree, parserInput: ParserInput, problemId: number) {
 		this.tree = tree;
@@ -23,6 +26,8 @@ export class HtmlGenerator {
 		// this.print();
 
 		this.footnotes = [];
+		this.eqRefs = new Map();
+		this.figRefs = new Map();
 	}
 
 	private getCursorText(): string {
@@ -59,81 +64,122 @@ export class HtmlGenerator {
 		);
 	}
 
-	public async generateHtml(): Promise<string> {
-		this.footnotes = [];
-		const content = await this.generateContentUntil(this.cursor.to);
-
-		let footnoteContent = '';
-		if (this.footnotes.length > 0) {
-			footnoteContent += '<hr><ol>';
-			for (const footnote of this.footnotes) {
-				footnoteContent += `<li>${footnote}</li>`;
+	private async registerRefs(): Promise<void> {
+		this.cursor = this.tree.cursor();
+		while (this.cursor.next()) {
+			if (this.cursor.name !== 'CommandIdentifier') {
+				continue;
 			}
-			footnoteContent += '</ol>';
-		}
 
-		return content + footnoteContent;
-	}
-
-	public async generateContentUntil(to: number): Promise<string> {
-		try {
-			const paragraphs: Paragraph[] = [];
-			let currentParagraph = '';
-
-			while (this.cursor.next()) {
-				if (this.cursor.node.name == 'ParagraphSeparator') {
-					this.breakParagraph(paragraphs, currentParagraph);
-					currentParagraph = '';
-				}
-
-				const nodeGroups = this.cursor.node.type.prop(NodeProp.group);
-				const isFigCommand = [
-					'\\fullfig',
-					'\\illfig',
-					'\\illfigi',
-					'\\plotfig',
-					'\\taskhint',
-				].some((commandName) =>
-					this.getCursorText().startsWith(commandName)
-				);
-
-				if (
-					(nodeGroups && nodeGroups.includes('EnvironmentGroup')) ||
-					(this.cursor.name === 'Command' && isFigCommand)
-				) {
-					this.breakParagraph(paragraphs, currentParagraph);
-					currentParagraph = '';
-					paragraphs.push({
-						type: 'env',
-						content: await this.generateNode(),
-					});
-					continue;
-				}
-
-				currentParagraph += await this.generateNode();
-
-				if (this.cursor.to >= to) {
+			switch (this.getCursorText()) {
+				case '\\lbl': {
+					this.expectNext();
+					const label = await this.generateCommandArgument();
+					this.eqRefs.set(label, this.eqRefs.size + 1);
 					break;
 				}
-			}
-
-			this.breakParagraph(paragraphs, currentParagraph);
-			currentParagraph = '';
-
-			let html = '';
-			for (const paragraph of paragraphs) {
-				if (paragraph.type == 'str') {
-					html += '<p>' + paragraph.content.trim() + '</p>';
-					continue;
+				case '\\fullfig':
+				case '\\illfig':
+				case '\\illfigi': {
+					this.expectNext();
+					// @ts-expect-error
+					if (this.cursor.name === 'CommandArgumentOptional') {
+						await this.generateCommandArgumentOptional(); // consume
+						this.expectNext();
+					}
+					await this.generateCommandArgument(); // fig file
+					this.expectNext();
+					const caption = await this.generateCommandArgument(); // fig caption
+					if (caption === '') {
+						break;
+					}
+					this.expectNext();
+					const label = await this.generateCommandArgument();
+					if (label === '') {
+						break;
+					}
+					this.figRefs.set(label, this.figRefs.size + 1);
 				}
-				html += paragraph.content;
+			}
+		}
+	}
+
+	public async generateHtml(): Promise<string> {
+		await this.registerRefs();
+
+		try {
+			this.cursor = this.tree.cursor();
+			const content = await this.generateContentUntil(this.cursor.to);
+			let footnoteContent = '';
+			if (this.footnotes.length > 0) {
+				footnoteContent += '<hr><ol>';
+				for (const footnote of this.footnotes) {
+					footnoteContent += `<li>${footnote}</li>`;
+				}
+				footnoteContent += '</ol>';
 			}
 
-			return html;
+			return content + footnoteContent;
 		} catch (e) {
 			this.print();
 			throw e;
 		}
+	}
+
+	public async generateContentUntil(to: number): Promise<string> {
+		const paragraphs: Paragraph[] = [];
+		let currentParagraph = '';
+
+		while (this.cursor.next()) {
+			if (this.cursor.node.name == 'ParagraphSeparator') {
+				this.breakParagraph(paragraphs, currentParagraph);
+				currentParagraph = '';
+			}
+
+			const nodeGroups = this.cursor.node.type.prop(NodeProp.group);
+			const isFigCommand = [
+				'\\fullfig',
+				'\\illfig',
+				'\\illfigi',
+				'\\plotfig',
+				'\\taskhint',
+			].some((commandName) =>
+				this.getCursorText().startsWith(commandName)
+			);
+
+			if (
+				(nodeGroups && nodeGroups.includes('EnvironmentGroup')) ||
+				(this.cursor.name === 'Command' && isFigCommand)
+			) {
+				this.breakParagraph(paragraphs, currentParagraph);
+				currentParagraph = '';
+				paragraphs.push({
+					type: 'env',
+					content: await this.generateNode(),
+				});
+				continue;
+			}
+
+			currentParagraph += await this.generateNode();
+
+			if (this.cursor.to >= to) {
+				break;
+			}
+		}
+
+		this.breakParagraph(paragraphs, currentParagraph);
+		currentParagraph = '';
+
+		let html = '';
+		for (const paragraph of paragraphs) {
+			if (paragraph.type == 'str') {
+				html += '<p>' + paragraph.content.trim() + '</p>';
+				continue;
+			}
+			html += paragraph.content;
+		}
+
+		return html;
 	}
 
 	private breakParagraph(paragraphs: Paragraph[], currentParagraph: string) {
@@ -250,7 +296,7 @@ export class HtmlGenerator {
 		this.expectNext();
 		const caption = await this.generateCommandArgument();
 		this.expectNext();
-		await this.generateCommandArgument(); // consume label
+		const label = await this.generateCommandArgument(); // consume label
 
 		// label was not the last argument
 		if (this.cursor.to < commandNode.to) {
@@ -262,8 +308,13 @@ export class HtmlGenerator {
 		let buffer = '<figure class="figure w-50 text-center mx-auto d-block">';
 		buffer += `<img class="figure-img img-fluid rounded w-100" src="${fileData}">`;
 		if (caption !== '') {
+			const figNumber = this.figRefs.get(label);
 			buffer += '<figcaption class="figure-caption text-center">';
-			buffer += caption;
+			if (figNumber) {
+				buffer += `Obrázek ${figNumber}: ${caption}`; // TODO lang
+			} else {
+				buffer += caption;
+			}
 			buffer += '</figcaption>';
 		}
 		buffer += '</figure>';
@@ -288,7 +339,7 @@ export class HtmlGenerator {
 		this.expectNext();
 		const caption = await this.generateCommandArgument();
 		this.expectNext();
-		await this.generateCommandArgument(); // consume label
+		const label = await this.generateCommandArgument(); // consume label
 		this.expectNext();
 		await this.generateCommandArgument(); // consume the number of rows
 
@@ -301,8 +352,13 @@ export class HtmlGenerator {
 		let buffer = '<figure class="figure w-25 float-end m-3">';
 		buffer += `<img class="figure-img img-fluid rounded w-100" src="${fileData}">`;
 		if (caption !== '') {
+			const figNumber = this.figRefs.get(label);
 			buffer += '<figcaption class="figure-caption text-center">';
-			buffer += caption;
+			if (figNumber) {
+				buffer += `Obrázek ${figNumber}: ${caption}`; // TODO lang
+			} else {
+				buffer += caption;
+			}
 			buffer += '</figcaption>';
 		}
 		buffer += '</figure>';
@@ -407,15 +463,45 @@ export class HtmlGenerator {
 				return `<a href="${url}">${url}</a>`;
 			}
 
+			case '\\dots':
+				return '…';
+
+			case '\\fullfig':
+				return await this.generateCommandFullfig(topNode);
+			case '\\illfig':
+			case '\\illfigi':
+				return await this.generateCommandIllfig();
+			case '\\footnote':
+			case '\\footnotei':
+				return await this.generateFootnote();
+
+			case '\\ref': {
+				this.expectNext();
+				const label = await this.generateCommandArgument();
+				const tagNumber = this.figRefs.get(label);
+				if (!tagNumber) {
+					throw new Error(`Label ${label} not registered in figRefs`);
+				}
+				return tagNumber.toString();
+			}
+
 			// short commands
 			case '\\#':
 				return '#';
+			case '\\,':
+				if (this.checkMathMode(this.cursor.node)) {
+					return '\\,';
+				}
+				return '&thinsp;';
 
 			// ignored commands
 			case '\\null':
 			case '\\quad':
 			case '\\qquad':
 			case '\\centering':
+			case '\\smallskip':
+			case '\\medskip':
+			case '\\bigskip':
 				return '';
 
 			// math commands
@@ -454,21 +540,41 @@ export class HtmlGenerator {
 				this.expectNext();
 				const unit = (await this.generateCommandArgument()).replace(
 					/\./g,
-					'\\cdot '
+					'\\!\\cdot\\! '
 				);
 				if (!this.checkMathMode(node)) {
 					return '$\\mathrm{' + unit + '}$';
 				}
 				return '\\mathrm{' + unit + '}';
 			}
-			case '\\fullfig':
-				return await this.generateCommandFullfig(topNode);
-			case '\\illfig':
-			case '\\illfigi':
-				return await this.generateCommandIllfig();
-			case '\\footnote':
-			case '\\footnotei':
-				return await this.generateFootnote();
+			case '\\ce': {
+				const node = this.cursor.node;
+				this.expectNext();
+				const arg = await this.generateCommandArgument();
+				if (!this.checkMathMode(node)) {
+					return `$\\ce{${arg}}$`;
+				}
+				return `\\ce{${arg}}`;
+			}
+			case '\\bod': {
+				const node = this.cursor.node;
+				this.expectNext();
+				const arg = await this.generateCommandArgument();
+				if (!this.checkMathMode(node)) {
+					return `$\\mathit{${arg}}$`;
+				}
+				return `\\mathit{${arg}}`;
+			}
+			case '\\lbl': {
+				this.expectNext();
+				const label = await this.generateCommandArgument();
+				const tagNumber = this.eqRefs.get(label);
+				if (!tagNumber) {
+					throw new Error(`Label ${label} not registered in eqrefs`);
+				}
+				return `\\tag{${tagNumber}}\\label{${label}}`;
+			}
+
 			default: {
 				let buffer = commandName;
 				// Loop over whole command and extract arguments along with the
@@ -648,7 +754,7 @@ export class HtmlGenerator {
 			return numberPart;
 		}
 
-		const unitPart = parts[2].replace(/\./g, '\\cdot ');
+		const unitPart = parts[2].replace(/\./g, '\\!\\cdot\\! ');
 		return numberPart + '\\,\\mathrm{' + unitPart.trim() + '}';
 	}
 

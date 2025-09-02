@@ -277,7 +277,7 @@ describe('math', () => {
 			},
 			{
 				input: '$"20 km.h^{-1}"$',
-				output: '<p>$20\\,\\mathrm{km\\cdot h^{-1}}$</p>',
+				output: '<p>$20\\,\\mathrm{km\\!\\cdot\\! h^{-1}}$</p>',
 			},
 			{
 				input: '$"1  km"$',
@@ -305,7 +305,7 @@ describe('math', () => {
 			},
 			{
 				input: '$"20e3 km.s^{-1}"$',
-				output: '<p>$20\\cdot 10^{3}\\,\\mathrm{km\\cdot s^{-1}}$</p>',
+				output: '<p>$20\\cdot 10^{3}\\,\\mathrm{km\\!\\cdot\\! s^{-1}}$</p>',
 			},
 			{
 				input: '$"1~234 km"$',
@@ -317,11 +317,11 @@ describe('math', () => {
 			},
 			{
 				input: '$\\jd{km.h^{-1}}$',
-				output: '<p>$\\mathrm{km\\cdot h^{-1}}$</p>',
+				output: '<p>$\\mathrm{km\\!\\cdot\\! h^{-1}}$</p>',
 			},
 			{
 				input: '\\jd{km.h^{-1}}',
-				output: '<p>$\\mathrm{km\\cdot h^{-1}}$</p>',
+				output: '<p>$\\mathrm{km\\!\\cdot\\! h^{-1}}$</p>',
 			},
 			{
 				input: '$"5\\dg"$',
@@ -329,7 +329,7 @@ describe('math', () => {
 			},
 			{
 				input: '$"\\frac{5x}{6} m.s^{-2}"$',
-				output: '<p>$\\frac{5x}{6}\\,\\mathrm{m\\cdot s^{-2}}$</p>',
+				output: '<p>$\\frac{5x}{6}\\,\\mathrm{m\\!\\cdot\\! s^{-2}}$</p>',
 			},
 			{
 				input: '$"1/50 m"$',
@@ -337,11 +337,32 @@ describe('math', () => {
 			},
 			{
 				input: '$"10^{-12} W.m^{-2}"$',
-				output: '<p>$10^{-12}\\,\\mathrm{W\\cdot m^{-2}}$</p>',
+				output: '<p>$10^{-12}\\,\\mathrm{W\\!\\cdot\\! m^{-2}}$</p>',
 			},
 			{
 				input: '$"10^{-12}\n\t  W.m^{-2}"$',
-				output: '<p>$10^{-12}\\,\\mathrm{W\\cdot m^{-2}}$</p>',
+				output: '<p>$10^{-12}\\,\\mathrm{W\\!\\cdot\\! m^{-2}}$</p>',
+			},
+		]);
+	});
+
+	test('ensure math', async () => {
+		await runTestStrings([
+			{
+				input: '\\ce{C-C}',
+				output: '<p>$\\ce{C-C}$</p>',
+			},
+			{
+				input: '$\\ce{C-C}$',
+				output: '<p>$\\ce{C-C}$</p>',
+			},
+			{
+				input: '\\bod{A}',
+				output: '<p>$\\mathit{A}$</p>',
+			},
+			{
+				input: '$\\bod{A}$',
+				output: '<p>$\\mathit{A}$</p>',
 			},
 		]);
 	});
@@ -385,46 +406,77 @@ test('text', async () => {
 	]);
 });
 
-test('figures', async () => {
+describe('figures', async () => {
 	vi.spyOn(ProblemStorage.prototype, 'getFileForWeb').mockImplementation(
 		// eslint-disable-next-line
 		async (filename: string) => {
 			return filename;
 		}
 	);
-	await runTestStrings([
-		{
-			input: '\\fullfig{fig}{Figures}{fig1}[width=0.2\\textwidth]',
-			output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
-		},
-		{
-			input: '\\fullfig[h]{fig}{Figures}{fig1}[width=0.2\\textwidth]',
-			output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
-		},
-		{
-			input: '\\illfig{fig}{Figures}{fig1}{}',
-			output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
-		},
-		{
-			input: '\\illfig[O]{fig}{Figures}{fig1}{5}',
-			output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
-		},
-		{
-			input: '\\illfigi{fig}{Figures}{fig1}{}{0.15}',
-			output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
-		},
-		{
-			input: '\\illfigi[o]{fig}{Figures}{fig1}{}{0.15}',
-			output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure>',
-		},
-		{
-			input: `text before
+
+	test('figures', async () => {
+		await runTestStrings([
+			{
+				input: '\\fullfig{fig}{}{}',
+				output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"></figure>',
+			},
+			{
+				input: '\\fullfig{fig}{Figures}{fig1}[width=0.2\\textwidth]',
+				output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: '\\fullfig[h]{fig}{Figures}{fig1}[width=0.2\\textwidth]',
+				output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: '\\illfig{fig}{Figures}{fig1}{}',
+				output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: '\\illfig[O]{fig}{Figures}{fig1}{5}',
+				output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: '\\illfigi{fig}{Figures}{fig1}{}{0.15}',
+				output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: '\\illfigi[o]{fig}{Figures}{fig1}{}{0.15}',
+				output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: `text before
 \\fullfig{fig}{Figures}{fig1}
 text after`,
-			output: `<p>text before</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure><p>text after</p>`,
-		},
-	]);
-	vi.resetAllMocks();
+				output: `<p>text before</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure><p>text after</p>`,
+			},
+		]);
+	});
+
+	test('refs', async () => {
+		await runTestStrings([
+			{
+				input: '\\eq{a\\lbl{ref1}}',
+				output: '<p>\\begin{equation*}a\\tag{1}\\label{ref1}\\end{equation*}</p>',
+			},
+			{
+				input: '\\eqref{ref1}\\eq{a\\lbl{ref1}}',
+				output: '<p>\\eqref{ref1}\\begin{equation*}a\\tag{1}\\label{ref1}\\end{equation*}</p>',
+			},
+			{
+				input: '\\eq[m]{a\\lbl{ref1}\\\\b\\lbl{ref2}}\\eq{c\\lbl{ref3}}',
+				output: '<p>\\begin{align*}a\\tag{1}\\label{ref1}\\\\b\\tag{2}\\label{ref2}\\end{align*}\\begin{equation*}c\\tag{3}\\label{ref3}\\end{equation*}</p>',
+			},
+			{
+				input: 'text \\ref{fig1}\\fullfig{fig}{Figures}{fig1}',
+				output: '<p>text 1</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: 'text \\ref{fig1} and text \\ref{fig2}\\fullfig{fig}{Figures}{fig1}\\fullfig{fig}{Figures}{fig2}',
+				output: '<p>text 1 and text 2</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 2: Figures</figcaption></figure>',
+			},
+		]);
+	});
 });
 
 describe('environment', () => {
