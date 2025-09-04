@@ -50,7 +50,7 @@ export default function Tasks({ params, loaderData }: Route.ComponentProps) {
 					personRoles,
 					params.contest,
 					'series',
-					'edit'
+					'ordering'
 				) && (
 					<Button asChild>
 						<Link to="tasks/ordering">
