@@ -187,7 +187,6 @@ export const problemRouter = trpc.router({
 		)
 		.mutation(async ({ input }) => {
 			// TODO validation
-			console.log(input.topics);
 			await db
 				.update(problemTable)
 				.set({
@@ -219,8 +218,6 @@ export const problemRouter = trpc.router({
 			// update authors
 			for (const type of textTypeEnum.enumValues) {
 				const personIds = input.authors[type];
-				console.log(type);
-				console.log(personIds);
 				await db
 					.delete(authorTable)
 					.where(
@@ -263,8 +260,6 @@ export const problemRouter = trpc.router({
 				...returnValue,
 				file: runner.getPdfContents(input.type, input.lang),
 			};
-			//console.log(returnValue);
-			process.stdout.write(JSON.stringify(returnValue) + '\n');
 			return returnValue; // eslint-disable-line
 		}),
 

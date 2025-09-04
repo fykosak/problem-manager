@@ -14,6 +14,20 @@ export default class PltExporter extends Exporter {
 		const tmpInputFile = path.join(tmpDirectory, parsedFileName.base);
 		await fs.copyFile(this.inputFile, tmpInputFile);
 
+		// copy .dat files
+		const inputFileDirectory = path.dirname(this.inputFile);
+		const files = await fs.readdir(inputFileDirectory);
+		for (const file of files) {
+			if (!file.endsWith('.dat')) {
+				continue;
+			}
+			const filename = path.parse(file).base;
+			await fs.copyFile(
+				path.join(inputFileDirectory, filename),
+				path.join(tmpDirectory, filename)
+			);
+		}
+
 		await this.execute(
 			'gnuplot',
 			[
