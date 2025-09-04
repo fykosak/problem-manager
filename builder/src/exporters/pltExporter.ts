@@ -78,5 +78,8 @@ export default class PltExporter extends Exporter {
 			'-o',
 			this.getTargetFile('svg'),
 		]);
+
+		// cleanup
+		await fs.rm(tmpDirectory, { recursive: true, force: true });
 	}
 }

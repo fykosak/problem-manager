@@ -648,7 +648,14 @@ export const problemRouter = trpc.router({
 				for (const file of input.files) {
 					await problemStorage.saveFile(file.name, file.data);
 					const filepath = problemStorage.getPathForFile(file.name);
-					await runner.exportFile(filepath);
+					try {
+						await runner.exportFile(filepath);
+					} catch {
+						throw new TRPCError({
+							message: `Failed to export file ${file.name}`,
+							code: 'INTERNAL_SERVER_ERROR',
+						});
+					}
 				}
 			}),
 
