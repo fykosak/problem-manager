@@ -1,6 +1,7 @@
 import { NodeProp, type SyntaxNode, Tree, TreeCursor } from '@lezer/common';
 import type { ParserInput } from 'lang-latex';
 
+import type { langEnum, textTypeEnum } from '@server/db/schema';
 import { ProblemStorage } from '@server/runner/problemStorage';
 
 interface Paragraph {
@@ -11,6 +12,9 @@ interface Paragraph {
 export class HtmlGenerator {
 	private tree: Tree;
 	private parserInput: ParserInput;
+	private type: (typeof textTypeEnum.enumValues)[number];
+	private lang: (typeof langEnum.enumValues)[number];
+
 	private cursor: TreeCursor;
 	private problemStorage: ProblemStorage;
 
@@ -23,6 +27,11 @@ export class HtmlGenerator {
 		this.cursor = tree.cursor();
 		this.parserInput = parserInput;
 		this.problemStorage = new ProblemStorage(problemId);
+
+		// TODO
+		this.type = 'task';
+		this.lang = 'cs';
+
 		// this.print();
 
 		this.footnotes = [];
@@ -39,6 +48,31 @@ export class HtmlGenerator {
 		do {
 			if (cursor.name === 'Math') {
 				return true;
+			}
+		} while (cursor.parent());
+		return false;
+	}
+
+	private checkInCommand(node: SyntaxNode, commandName: string) {
+		const cursor = node.cursor();
+		do {
+			if (cursor.name === 'Command') {
+				const commandCursor = cursor.node.cursor();
+				if (!commandCursor.next()) {
+					return false;
+				}
+				if (commandCursor.node.name !== 'CommandIdentifier') {
+					continue;
+				}
+
+				if (
+					this.parserInput.read(
+						commandCursor.from,
+						commandCursor.to
+					) === commandName
+				) {
+					return true;
+				}
 			}
 		} while (cursor.parent());
 		return false;
@@ -80,7 +114,8 @@ export class HtmlGenerator {
 				}
 				case '\\fullfig':
 				case '\\illfig':
-				case '\\illfigi': {
+				case '\\illfigi':
+				case '\\plotfig': {
 					this.expectNext();
 					// @ts-expect-error
 					if (this.cursor.name === 'CommandArgumentOptional') {
@@ -493,6 +528,8 @@ export class HtmlGenerator {
 					return '\\,';
 				}
 				return '&thinsp;';
+			case '\\-':
+				return '';
 
 			// ignored commands
 			case '\\null':
@@ -806,7 +843,18 @@ export class HtmlGenerator {
 			return buffer;
 		}
 		while (this.cursor.next()) {
-			buffer += await this.generateNode();
+			this.expectAnyNodeName([
+				'CommandArgument',
+				'CommandArgumentOptional',
+			]);
+			const nodeName = this.cursor.node.name;
+			const content = await this.generateNode();
+			if (nodeName === 'CommandArgument') {
+				buffer += `{${content}}`;
+			} else {
+				buffer += content;
+			}
+
 			if (this.cursor.to >= topNode.to) {
 				break;
 			}
@@ -1111,6 +1159,58 @@ export class HtmlGenerator {
 		return buffer;
 	}
 
+	private async generateIfBranch(): Promise<string> {
+		this.expectNodeName('IfBranch');
+
+		const topNode = this.cursor.node;
+
+		// go through only if any child exists
+		if (!topNode.firstChild) {
+			return '';
+		}
+
+		let buffer = '';
+		while (this.cursor.next()) {
+			buffer += await this.generateNode();
+			if (this.cursor.to >= topNode.to) {
+				break;
+			}
+		}
+
+		return buffer;
+	}
+
+	private async generateIfBlock(): Promise<string> {
+		this.expectNodeName('IfBlock');
+		this.expectNext();
+		this.expectNodeName('IfCommandIdentifier');
+		const ifIdentifier = this.getCursorText();
+		this.expectNext();
+		const trueBranch = await this.generateIfBranch();
+
+		this.expectNext();
+		let falseBranch = '';
+		if (this.cursor.name === 'ElseCommandIdentifier') {
+			this.expectNext();
+			falseBranch = await this.generateIfBranch();
+			this.expectNext();
+		}
+
+		this.expectNodeName('IfEndCommandIdentifier');
+
+		switch (ifIdentifier) {
+			case '\\ifyearbook':
+			case '\\ifsolutionsingle':
+				return falseBranch;
+			case '\\iftask':
+				return this.type === 'task' ? trueBranch : falseBranch;
+			case '\\ifsolution':
+				return this.type === 'solution' ? trueBranch : falseBranch;
+		}
+
+		throw new Error(`Unknown if identifier ${ifIdentifier}`);
+	}
+
 	private async generateNode(): Promise<string> {
 		switch (this.cursor.name) {
 			case 'Paragraph':
@@ -1133,8 +1233,18 @@ export class HtmlGenerator {
 			case 'MathCommand':
 				return this.generateCommand();
 
+			// Do not add {} around in normal mode because if it's not match
+			// with a command as argument, than it's just a group
 			case 'CommandArgument':
-				return '{' + (await this.generateCommandArgument()) + '}';
+				const node = this.cursor.node;
+				const content = await this.generateCommandArgument();
+				if (
+					this.checkMathMode(node) ||
+					this.checkInCommand(node, '\\jd')
+				) {
+					return `{${content}}`;
+				}
+				return content;
 
 			case 'CommandArgumentOptional':
 				return (
@@ -1176,6 +1286,9 @@ export class HtmlGenerator {
 
 			case 'EndEnv':
 				return this.generateEndEnv();
+
+			case 'IfBlock':
+				return this.generateIfBlock();
 		}
 
 		if (!this.cursor.node.firstChild) {

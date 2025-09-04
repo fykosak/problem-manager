@@ -8,7 +8,6 @@ async function parse(input: string): Promise<string> {
 	const parserInput = new ParserInput(input);
 	const tree = latexLanguage.parser.parse(parserInput);
 	const generator = new HtmlGenerator(tree, parserInput, 1);
-	//generator.print();
 	return await generator.generateHtml();
 }
 
@@ -80,7 +79,7 @@ describe('commands', () => {
 		await runTestStrings([
 			{
 				input: '\\textbf{asdf}{qwer}',
-				output: '<p><bf>asdf</bf>{qwer}</p>',
+				output: '<p><bf>asdf</bf>qwer</p>',
 			},
 		]);
 	});
@@ -184,6 +183,10 @@ qwer
 			{
 				input: '\\_',
 				output: '<p>_</p>',
+			},
+			{
+				input: 'kra\\-ko\\-noš',
+				output: '<p>krakonoš</p>',
 			},
 		]);
 	});
@@ -578,6 +581,10 @@ qwer
 				input: `\\begin{enumerate}\\item[asdf] qwer\\end{enumerate}`,
 				output: '<ol><li><p>qwer</p></li></ol>',
 			},
+			{
+				input: `\\begin{enumerate}\\item asdf{} qwer\\end{enumerate}`,
+				output: '<ol><li><p>asdf qwer</p></li></ol>',
+			},
 		]);
 	});
 
@@ -685,6 +692,23 @@ test('url', async () => {
 		{
 			input: '\\url{https://example.com/url?key=value}',
 			output: '<p><a href="https://example.com/url?key=value">https://example.com/url?key=value</a></p>',
+		},
+	]);
+});
+
+test('ifs', async () => {
+	await runTestStrings([
+		{
+			input: '\\ifyearbook asdf\\fi',
+			output: '',
+		},
+		{
+			input: '\\ifyearbook\\else qwer\\fi',
+			output: '<p>qwer</p>',
+		},
+		{
+			input: '\\ifyearbook asdf\\else qwer\\fi',
+			output: '<p>qwer</p>',
 		},
 	]);
 });

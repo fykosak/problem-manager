@@ -3,7 +3,8 @@
 @top Document {
 	(Text | InlineMath | DisplayMath | Command | EqCommand | UnderscoreEscape | Newline | ParagraphSeparator |
 	NewlineCommand | "[" | "]" | "{" | "}" | "&" |
-	Environment | ListEnvironment | TabularEnvironment | TableEnvironment)*
+	Environment | ListEnvironment | TabularEnvironment | TableEnvironment |
+	IfBlock)*
 }
 
 // MathCommandArgument is included to catch { math } groups
@@ -46,7 +47,7 @@ CommandArgument {
 		Text | InlineMath | DisplayMath | Command | EqCommand |
 		UnderscoreEscape | NewlineCommand | CommandArgument | Newline | ParagraphSeparator |
 		"[" | "]" |
-		Environment | ListEnvironment | TabularEnvironment | TableEnvironment
+		Environment | ListEnvironment | TabularEnvironment | TableEnvironment | IfBlock
 	)* "}"
 }
 
@@ -56,7 +57,7 @@ MathCommandArgument {
 
 CommandArgumentOptional {
 	!commandargument "[" (Text | InlineMath | DisplayMath | Command |
-	UnderscoreEscape | Newline | ParagraphSeparator)* "]"
+	UnderscoreEscape | Newline | ParagraphSeparator | IfBlock)* "]"
 }
 
 // --- Specialized command names ---
@@ -97,6 +98,28 @@ QuoteMacro {
 	("e" (Number | MathCommandArgument))? ((Whitespace|Newline) Math)? "\""
 }
 
+// --- Ifs ---
+@external specialize {CommandIdentifier} specializeCommandIdentifier from "./tokenizer.ts" {
+	IfCommandIdentifier,
+	ElseCommandIdentifier,
+	IfEndCommandIdentifier
+}
+
+IfBranch {
+	(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
+	Newline | Environment | ListEnvironment | TabularEnvironment | IfBlock)*
+}
+
+IfBlock {
+	IfCommandIdentifier
+	IfBranch
+	(
+		ElseCommandIdentifier
+		IfBranch
+	)?
+	IfEndCommandIdentifier
+}
+
 // --- Environments ---
 EnvironmentNameArgument<name> {
 	"{" name "}"
@@ -124,7 +147,7 @@ EndEnv<name> {
 Environment[group=EnvironmentGroup] {
 	BeginEnv<EnvName>
 	(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
-	Newline | Environment | ListEnvironment | TabularEnvironment)*
+	Newline | Environment | ListEnvironment | TabularEnvironment | IfBlock)*
 	EndEnv<EnvName>
 }
 
@@ -140,7 +163,8 @@ ListEnvironment[group=EnvironmentGroup] {
 	ListItem {
 		ItemCommand
 		(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
-		Newline | ParagraphSeparator | Environment | ListEnvironment | TabularEnvironment | TableEnvironment)*
+		Newline | ParagraphSeparator | Environment | ListEnvironment |
+		TabularEnvironment | TableEnvironment | IfBlock | CommandArgument)*
 	}+
 	EndEnv<ListEnvName>
 }
@@ -148,13 +172,13 @@ ListEnvironment[group=EnvironmentGroup] {
 TabularEnvironment[group=EnvironmentGroup] {
 	BeginEnv<TabularEnvName>
 	(Text | InlineMath | DisplayMath | Command | EqCommand | Newline | Environment |
-	NewlineCommand | "&" | "[" | "]" | BooktabCommand | HlineCommand)*
+	NewlineCommand | "&" | "[" | "]" | BooktabCommand | HlineCommand | IfBlock)*
 	EndEnv<TabularEnvName>
 }
 
 TableEnvironment[group=EnvironmentGroup] {
 	BeginEnv<TableEnvName>
-	(Text | InlineMath | DisplayMath | Command | EqCommand | Newline | Environment | NewlineCommand | TabularEnvironment)*
+	(Text | InlineMath | DisplayMath | Command | EqCommand | Newline | Environment | NewlineCommand | TabularEnvironment | IfBlock)*
 	EndEnv<TableEnvName>
 }
 
@@ -162,7 +186,10 @@ TableEnvironment[group=EnvironmentGroup] {
 
 @tokens {
 	Text { (![\\${}\[\]%\n&])+ }
-	CommandIdentifier { "\\" (((@asciiLetter)+"*"?)|"%"|"{"|"}"|"\\"|"_"|"("|")"|","|"#") }
+	CommandIdentifier {
+		"\\"
+		(((@asciiLetter)+"*"?)|"%"|"{"|"}"|"\\"|"_"|"("|")"|","|"#"|"-")
+	}
 	InlineMathContent { (![\\${}\[\]\"%\n\t\r 0-9])+ }
 	QuoteMacroContent { (![\\${}\[\]\"%\n\t\re\+\- 0-9])+ }
 	Comment { "%" ![\n]* }
