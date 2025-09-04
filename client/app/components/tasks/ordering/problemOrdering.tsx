@@ -20,6 +20,7 @@ import {
 	useSensors,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { TRPCClientError } from '@trpc/client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
@@ -133,10 +134,14 @@ export function ProblemOrdering({
 			await trpc.series.ordering.mutate({
 				series: postData,
 			});
-			toast.success('Ordering saved');
+			toast.success('Řazení úloh uloženo');
 			await navigate('..');
-		} catch {
-			toast.error('Error occured');
+		} catch (error) {
+			if (error instanceof TRPCClientError) {
+				toast.error('Error při ukládání pořadí', {
+					description: error.message,
+				});
+			}
 		}
 	}
 
