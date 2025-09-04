@@ -13,6 +13,7 @@ export const acl = new ACL({
 		'changeState',
 	],
 	text: ['edit', 'release', 'revoke'],
+	file: ['upload', 'download', 'delete', 'rename'],
 });
 
 // base roles
@@ -28,6 +29,7 @@ acl.addRole(ContestRole.manager, ContestRole.organizer);
 acl.allow(ContestRole.organizer, 'problem');
 acl.allow(ContestRole.organizer, 'contest');
 acl.allow(ContestRole.organizer, 'text', 'edit');
+acl.allow(ContestRole.organizer, 'file');
 
 acl.allow(ContestRole.manager, 'series');
 acl.allow(ContestRole.manager, 'text', 'release');

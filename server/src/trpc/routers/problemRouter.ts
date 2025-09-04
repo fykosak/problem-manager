@@ -26,6 +26,42 @@ import { Runner } from '@server/runner/runner';
 import { authedProcedure, contestProcedure } from '../middleware';
 import { trpc } from '../trpc';
 
+async function getProblemContest(problemId: number) {
+	const problem = await db.query.problemTable.findFirst({
+		where: eq(problemTable.problemId, problemId),
+		with: {
+			contest: true,
+			series: {
+				with: {
+					contestYear: {
+						with: {
+							contest: true,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	if (!problem) {
+		throw new TRPCError({
+			message: 'Problem does not exist',
+			code: 'NOT_FOUND',
+		});
+	}
+
+	const contestSymbol =
+		problem.contest?.symbol ?? problem.series?.contestYear.contest.symbol;
+	if (!contestSymbol) {
+		throw new TRPCError({
+			message: 'Problem not connected to contest',
+			code: 'INTERNAL_SERVER_ERROR',
+		});
+	}
+
+	return contestSymbol;
+}
+
 export const problemRouter = trpc.router({
 	info: authedProcedure.input(z.number()).query(async ({ input }) => {
 		const problem = await db.query.problemTable.findFirst({
@@ -616,18 +652,21 @@ export const problemRouter = trpc.router({
 						.array(),
 				})
 			)
-			.mutation(async ({ input }) => {
-				const problem = await db.query.problemTable.findFirst({
-					where: eq(problemTable.problemId, input.problemId),
-				});
-				if (!problem) {
+			.mutation(async ({ input, ctx }) => {
+				const contestSymbol = await getProblemContest(input.problemId);
+				if (
+					!acl.isAllowedContest(
+						ctx.aclRoles,
+						contestSymbol,
+						'file',
+						'upload'
+					)
+				) {
 					throw new TRPCError({
-						message: 'Problem does not exist',
-						code: 'BAD_REQUEST',
+						message: 'Not allowed to upload file',
+						code: 'FORBIDDEN',
 					});
 				}
-
-				// TODO check for user permissions
 
 				// check for name collisions
 				const nameSet = new Set<string>();
@@ -659,6 +698,37 @@ export const problemRouter = trpc.router({
 				}
 			}),
 
+		/**
+		 * Exports original files as DataURI
+		 */
+		download: authedProcedure
+			.input(
+				z.object({
+					problemId: z.number(),
+					filename: z.string(),
+				})
+			)
+			.query(async ({ input, ctx }) => {
+				const contestSymbol = await getProblemContest(input.problemId);
+				if (
+					!acl.isAllowedContest(
+						ctx.aclRoles,
+						contestSymbol,
+						'file',
+						'download'
+					)
+				) {
+					throw new TRPCError({
+						message: 'Not allowed to download file',
+						code: 'FORBIDDEN',
+					});
+				}
+
+				const problemStorage = new ProblemStorage(input.problemId);
+				const filepath = problemStorage.getPathForFile(input.filename);
+				return problemStorage.getFileAsDataUri(filepath);
+			}),
+
 		delete: authedProcedure
 			.input(
 				z.object({
@@ -666,7 +736,22 @@ export const problemRouter = trpc.router({
 					filename: z.string(),
 				})
 			)
-			.mutation(async ({ input }) => {
+			.mutation(async ({ input, ctx }) => {
+				const contestSymbol = await getProblemContest(input.problemId);
+				if (
+					!acl.isAllowedContest(
+						ctx.aclRoles,
+						contestSymbol,
+						'file',
+						'delete'
+					)
+				) {
+					throw new TRPCError({
+						message: 'Not allowed to upload file',
+						code: 'FORBIDDEN',
+					});
+				}
+
 				const problemStorage = new ProblemStorage(input.problemId);
 				await problemStorage.deleteFile(input.filename);
 			}),
@@ -679,7 +764,22 @@ export const problemRouter = trpc.router({
 					newName: z.string(),
 				})
 			)
-			.mutation(async ({ input }) => {
+			.mutation(async ({ input, ctx }) => {
+				const contestSymbol = await getProblemContest(input.problemId);
+				if (
+					!acl.isAllowedContest(
+						ctx.aclRoles,
+						contestSymbol,
+						'file',
+						'rename'
+					)
+				) {
+					throw new TRPCError({
+						message: 'Not allowed to upload file',
+						code: 'FORBIDDEN',
+					});
+				}
+
 				const problemStorage = new ProblemStorage(input.problemId);
 				await problemStorage.renameFile(input.oldName, input.newName);
 			}),

@@ -187,19 +187,24 @@ export class ProblemStorage {
 		}
 	}
 
-	private async getExportedFileAsDataUri(filename: string) {
-		const filepath = this.getPathForExportedFile(filename);
-		const ext = path.parse(filename).ext;
-		let buffer = 'data:image/';
+	public async getFileAsDataUri(filepath: string) {
+		const ext = path.parse(filepath).ext;
+		let buffer = '';
 		switch (ext) {
 			case '.svg':
-				buffer += 'svg+xml';
+				buffer += 'data:image/svg+xml';
 				break;
 			case '.png':
-				buffer += 'png';
+				buffer += 'data:image/png';
 				break;
 			case '.jpg':
-				buffer += 'jpeg';
+				buffer += 'data:image/jpeg';
+				break;
+			case '.dat':
+			case '.plt':
+			case '.ipe':
+			case '.mp':
+				buffer += 'data:text/plain;charset=UTF-8';
 				break;
 			default:
 				throw new Error('Unsupported extension');
@@ -224,7 +229,10 @@ export class ProblemStorage {
 		const exportedFiles = new Set(await this.getExportedFiles());
 		for (const ext of ['.svg', '.png', '.jpg']) {
 			if (exportedFiles.has(baseFilename + ext)) {
-				return await this.getExportedFileAsDataUri(baseFilename + ext);
+				const filepath = this.getPathForExportedFile(
+					baseFilename + ext
+				);
+				return this.getFileAsDataUri(filepath);
 			}
 		}
 
