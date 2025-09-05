@@ -583,6 +583,15 @@ qwer
 				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
 			},
 
+			{
+				input: `\\begin{enumerate}
+	\\ifyearbook\\setcounter{enumi}{2}\\fi
+	\\item asdf
+	\\item qwer
+\\end{enumerate}`,
+				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
+			},
+
 			// optional label
 			// TODO label is ignored
 			{
@@ -717,6 +726,14 @@ test('ifs', async () => {
 		{
 			input: '\\ifyearbook asdf\\else qwer\\fi',
 			output: '<p>qwer</p>',
+		},
+		{
+			input: '\\iftask asdf\\fi',
+			output: '<p>asdf</p>',
+		},
+		{
+			input: '\\iftask{asdf}\\fi text',
+			output: '<p>asdf text</p>',
 		},
 	]);
 });

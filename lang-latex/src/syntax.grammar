@@ -106,7 +106,7 @@ QuoteMacro {
 }
 
 IfBranch {
-	(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
+	(Text | InlineMath | DisplayMath | Command | CommandArgument | EqCommand | NewlineCommand |
 	Newline | Environment | ListEnvironment | TabularEnvironment | IfBlock)*
 }
 
@@ -159,7 +159,7 @@ Environment[group=EnvironmentGroup] {
 
 ListEnvironment[group=EnvironmentGroup] {
 	BeginEnv<ListEnvName>
-	(Newline | Command | Whitespace)*
+	(Newline | Command | Whitespace | IfBlock)*
 	ListItem {
 		ItemCommand
 		(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
