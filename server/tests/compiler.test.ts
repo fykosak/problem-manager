@@ -72,6 +72,10 @@ describe('commands', () => {
 				input: '\\uv{asdf}',
 				output: '<p>„asdf“</p>',
 			},
+			{
+				input: '\\mbox{asdf}',
+				output: '<p>asdf</p>',
+			},
 		]);
 	});
 
@@ -317,6 +321,10 @@ describe('math', () => {
 			{
 				input: '$"0.123~4 mm"$',
 				output: '<p>$0{,}123\\,4\\,\\mathrm{mm}$</p>',
+			},
+			{
+				input: '$"1\\,500 mAh"$',
+				output: '<p>$1\\,500\\,\\mathrm{mAh}$</p>',
 			},
 			{
 				input: '$\\jd{km.h^{-1}}$',

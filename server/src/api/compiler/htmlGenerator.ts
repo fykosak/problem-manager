@@ -477,14 +477,11 @@ export class HtmlGenerator {
 			case '\\taskhint':
 				return this.generateTaskhint();
 
-			case '\\vspace':
-			case '\\vspace*':
-			case '\\hspace':
-			case '\\hspace*':
-			case '\\label':
+			case '\\dots':
+				return '…';
+			case '\\mbox':
 				this.expectNext();
-				await this.generateCommandArgument(); // consume command argument
-				return ''; // ignore these commands
+				return await this.generateCommandArgument();
 
 			case '\\caption': {
 				this.expectNext();
@@ -497,9 +494,6 @@ export class HtmlGenerator {
 				const url = await this.generateCommandArgument();
 				return `<a href="${url}">${url}</a>`;
 			}
-
-			case '\\dots':
-				return '…';
 
 			case '\\fullfig':
 				return await this.generateCommandFullfig(topNode);
@@ -539,7 +533,28 @@ export class HtmlGenerator {
 			case '\\smallskip':
 			case '\\medskip':
 			case '\\bigskip':
+			case '\\noindent':
+
+			case '\\Huge':
+			case '\\huge':
+			case '\\LARGE':
+			case '\\Large':
+			case '\\large':
+			case '\\normalsize':
+			case '\\small':
+			case '\\footnotesize':
+			case '\\scriptsize':
+			case '\\tiny':
 				return '';
+
+			case '\\vspace':
+			case '\\vspace*':
+			case '\\hspace':
+			case '\\hspace*':
+			case '\\label':
+				this.expectNext();
+				await this.generateCommandArgument(); // consume command argument
+				return ''; // ignore
 
 			// math commands
 			case '\\(':
@@ -565,6 +580,8 @@ export class HtmlGenerator {
 			case '\\ohm':
 			case '\\Ohm':
 				return '\\Omega';
+			case '\\const':
+				return '\\mathrm{konst}'; // TODO lang
 			case '\\f': {
 				this.expectNext();
 				const functionName = await this.generateCommandArgument();
@@ -783,9 +800,9 @@ export class HtmlGenerator {
 		}
 
 		numberPart = numberPart
-			.replace(/\./g, ',')
-			.replace(/,/g, '{,}')
-			.replace(/~/g, '\\,'); // TODO , -> . for en
+			.replace(/\./g, ',') // TODO lang , -> . for en
+			.replace(/(?<!\\),/g, '{,}') // negative lookbehind to ignore \,
+			.replace(/~/g, '\\,');
 
 		if (parts[2] === '') {
 			return numberPart;
