@@ -11,18 +11,25 @@ async function parse(input: string): Promise<string> {
 	return await generator.generateHtml();
 }
 
-async function runTestStrings(testCases: { input: string; output: string }[]) {
+async function runTestStrings(
+	testCases: { name?: string; input: string; output: string }[]
+) {
 	for (const testCase of testCases) {
-		const output = await parse(testCase.input);
-		expect(output).toBe(testCase.output);
+		test(
+			testCase.name ?? testCase.input.replace(/\n/g, '\\n'),
+			async () => {
+				const output = await parse(testCase.input);
+				expect(output).toBe(testCase.output);
+			}
+		);
 	}
 }
 
-test('nothing', async () => {
+describe('nothing', async () => {
 	await runTestStrings([{ input: '', output: '' }]);
 });
 
-test('paragraph', async () => {
+describe('paragraph', async () => {
 	await runTestStrings([
 		{
 			input: 'asdf',
@@ -41,6 +48,7 @@ test('paragraph', async () => {
 			output: '<p>asdf</p><p>qwer</p>',
 		},
 		{
+			name: 'ended by env',
 			input: `text before
 \\begin{env}
 asdf
@@ -54,7 +62,7 @@ asdf
 });
 
 describe('commands', () => {
-	test('basic formatting', async () => {
+	describe('basic formatting', async () => {
 		await runTestStrings([
 			{
 				input: '\\textbf{asdf}',
@@ -79,7 +87,7 @@ describe('commands', () => {
 		]);
 	});
 
-	test('too many arguments', async () => {
+	describe('too many arguments', async () => {
 		await runTestStrings([
 			{
 				input: '\\textbf{asdf}{qwer}',
@@ -88,11 +96,15 @@ describe('commands', () => {
 		]);
 	});
 
-	test('unknown commands', async () => {
+	describe('unknown commands', async () => {
 		await runTestStrings([
 			{
 				input: '\\withoutargument',
 				output: '<p>\\withoutargument</p>',
+			},
+			{
+				input: '\\emptyargument{}',
+				output: '<p>\\emptyargument{}</p>',
 			},
 			{
 				input: '\\unrecognized{asdf}',
@@ -113,7 +125,7 @@ describe('commands', () => {
 		]);
 	});
 
-	test('multiple arguments', async () => {
+	describe('multiple arguments', async () => {
 		await runTestStrings([
 			{
 				input: '\\textbf{first}\\emph{middle}\\textit{last}',
@@ -122,7 +134,7 @@ describe('commands', () => {
 		]);
 	});
 
-	test('multiple commands', async () => {
+	describe('multiple commands', async () => {
 		await runTestStrings([
 			{
 				input: '\\textbf{asdf}\\emph{asdf}',
@@ -135,7 +147,7 @@ describe('commands', () => {
 		]);
 	});
 
-	test('nested commands', async () => {
+	describe('nested commands', async () => {
 		await runTestStrings([
 			{
 				input: '\\textbf{before\\emph{inner}after}',
@@ -148,7 +160,7 @@ describe('commands', () => {
 		]);
 	});
 
-	test('ignored text commands', async () => {
+	describe('ignored text commands', async () => {
 		await runTestStrings([
 			{ input: '\\null', output: '' },
 			{ input: '\\quad', output: '' },
@@ -161,7 +173,7 @@ describe('commands', () => {
 		]);
 	});
 
-	test('taskhint', async () => {
+	describe('taskhint', async () => {
 		await runTestStrings([
 			{
 				input: '\\taskhint{label}{hint}',
@@ -178,7 +190,7 @@ qwer
 		]);
 	});
 
-	test('single char commands', async () => {
+	describe('single char commands', async () => {
 		await runTestStrings([
 			{
 				input: '\\#',
@@ -197,15 +209,29 @@ qwer
 });
 
 describe('math', () => {
-	test('inline math and commands', async () => {
+	describe('inline math and commands', async () => {
 		await runTestStrings([
-			{ input: '$a$', output: '<p>$a$</p>' },
-			{ input: 'text $math$ text', output: '<p>text $math$ text</p>' },
+			{
+				input: '$a$',
+				output: '<p>$a$</p>',
+			},
+			{
+				name: 'empty math argument',
+				input: '${}$',
+				output: '<p>${}$</p>',
+			},
+			{
+				input: 'text $math$ text',
+				output: '<p>text $math$ text</p>',
+			},
 			{
 				input: '$math$ text $math$',
 				output: '<p>$math$ text $math$</p>',
 			},
-			{ input: '$\\(a+b\\)$', output: '<p>$\\left(a+b\\right)$</p>' },
+			{
+				input: '$\\(a+b\\)$',
+				output: '<p>$\\left(a+b\\right)$</p>',
+			},
 			{
 				input: '$\\( a + b \\)$',
 				output: '<p>$\\left( a + b \\right)$</p>',
@@ -241,21 +267,25 @@ describe('math', () => {
 		]);
 	});
 
-	test('eq command', async () => {
+	describe('eq command', async () => {
 		await runTestStrings([
 			{
+				name: 'basic',
 				input: '\\eq{a+b}',
 				output: '<p>\\begin{equation*}a+b\\end{equation*}</p>',
 			},
 			{
+				name: 'align',
 				input: '\\eq[m]{a+b}',
 				output: '<p>\\begin{align*}a+b\\end{align*}</p>',
 			},
 			{
+				name: 'alignat',
 				input: '\\eq[a]{a+b}',
 				output: '<p>\\begin{alignat*}a+b\\end{alignat*}</p>',
 			},
 			{
+				name: 'multiline',
 				input: `\\eq[m]{
 	F &= G\\frac{Mm}{R^2} = ma\\,, \\\\
 	a &= G\\frac{M}{R^2}\\,,
@@ -268,7 +298,7 @@ describe('math', () => {
 		]);
 	});
 
-	test('quote macro', async () => {
+	describe('quote macro', async () => {
 		await runTestStrings([
 			{
 				input: '$"20"$',
@@ -354,10 +384,14 @@ describe('math', () => {
 				input: '$"10^{-12}\n\t  W.m^{-2}"$',
 				output: '<p>$10^{-12}\\,\\mathrm{W\\!\\cdot\\! m^{-2}}$</p>',
 			},
+			{
+				input: '$"700 \\micro{}F"$',
+				output: '<p>$700\\,\\mathrm{\\upmu{}F}$</p>',
+			},
 		]);
 	});
 
-	test('ensure math', async () => {
+	describe('ensure math', async () => {
 		await runTestStrings([
 			{
 				input: '\\ce{C-C}',
@@ -379,7 +413,7 @@ describe('math', () => {
 	});
 });
 
-test('comments', async () => {
+describe('comments', async () => {
 	await runTestStrings([
 		{
 			input: '%comment',
@@ -400,7 +434,7 @@ test('comments', async () => {
 	]);
 });
 
-test('text', async () => {
+describe('text', async () => {
 	await runTestStrings([
 		{
 			input: 'a~-- b',
@@ -425,7 +459,7 @@ describe('figures', () => {
 		}
 	);
 
-	test('figures', async () => {
+	describe('figures', async () => {
 		await runTestStrings([
 			{
 				input: '\\fullfig{fig}{}{}',
@@ -464,45 +498,65 @@ text after`,
 		]);
 	});
 
-	test('refs', async () => {
+	describe('refs', async () => {
 		await runTestStrings([
 			{
+				name: 'lbl',
 				input: '\\eq{a\\lbl{ref1}}',
 				output: '<p>\\begin{equation*}a\\tag{1}\\label{ref1}\\end{equation*}</p>',
 			},
 			{
+				name: 'eqref',
 				input: '\\eqref{ref1}\\eq{a\\lbl{ref1}}',
 				output: '<p>\\eqref{ref1}\\begin{equation*}a\\tag{1}\\label{ref1}\\end{equation*}</p>',
 			},
 			{
+				name: 'ref lbl',
+				input: 'eq \\ref{ref1}\\eq{a\\lbl{ref1}}',
+				output: '<p>eq 1\\begin{equation*}a\\tag{1}\\label{ref1}\\end{equation*}</p>',
+			},
+			{
+				name: 'multi lbl ref',
+				input: 'eq \\ref{ref2}\\eq{a\\lbl{ref1}\\\\b\\lbl{ref2}}',
+				output: '<p>eq 2\\begin{equation*}a\\tag{1}\\label{ref1}\\\\b\\tag{2}\\label{ref2}\\end{equation*}</p>',
+			},
+			{
+				name: 'multi lbl',
 				input: '\\eq[m]{a\\lbl{ref1}\\\\b\\lbl{ref2}}\\eq{c\\lbl{ref3}}',
 				output: '<p>\\begin{align*}a\\tag{1}\\label{ref1}\\\\b\\tag{2}\\label{ref2}\\end{align*}\\begin{equation*}c\\tag{3}\\label{ref3}\\end{equation*}</p>',
 			},
 			{
+				name: 'fullfig ref',
 				input: 'text \\ref{fig1}\\fullfig{fig}{Figures}{fig1}',
 				output: '<p>text 1</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
 			},
 			{
+				name: 'illfig ref',
 				input: 'text \\ref{fig1}\\illfig{fig}{Figures}{fig1}{}',
 				output: '<p>text 1</p><figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
 			},
 			{
+				name: 'multiple fullfig refs',
 				input: 'text \\ref{fig1} and text \\ref{fig2}\\fullfig{fig}{Figures}{fig1}\\fullfig{fig}{Figures}{fig2}',
 				output: '<p>text 1 and text 2</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 2: Figures</figcaption></figure>',
 			},
 			{
+				name: 'multiple fullfig refs',
 				input: 'text \\ref{fig2}\\fullfig{fig}{Figures}{}\\fullfig{fig}{Figures}{fig2}',
 				output: '<p>text 2</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 2: Figures</figcaption></figure>',
 			},
 			{
+				name: 'table ref',
 				input: 'text \\ref{table1}\\begin{table}\\caption{caption}\\label{table1}\\end{table}',
 				output: '<p>text 1</p><table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: caption</caption></table>',
 			},
 			{
+				name: 'multi table ref',
 				input: 'text \\ref{table2}\\begin{table}\\caption{caption 1}\\label{table1}\\end{table}\\begin{table}\\caption{caption 2}\\label{table2}\\end{table}',
 				output: '<p>text 2</p><table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: caption 1</caption></table><table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 2: caption 2</caption></table>',
 			},
 			{
+				name: 'table & fullfig ref',
 				input: 'table \\ref{table1} fig \\ref{fig1}\\begin{table}\\caption{caption}\\label{table1}\\end{table}\\fullfig{fig}{Figures}{fig1}',
 				output: '<p>table 1 fig 1</p><table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: caption</caption></table><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
 			},
@@ -511,7 +565,7 @@ text after`,
 });
 
 describe('environment', () => {
-	test('unknown environment', async () => {
+	describe('unknown environment', async () => {
 		await runTestStrings([
 			{
 				input: '\\begin{unknown}\\asdf\\end{unknown}',
@@ -528,7 +582,7 @@ describe('environment', () => {
 		]);
 	});
 
-	test('inside command', async () => {
+	describe('inside command', async () => {
 		await runTestStrings([
 			{
 				input: '\\parbox{5cm}{\\begin{unknown}\\asdf\\end{unknown}}',
@@ -537,7 +591,7 @@ describe('environment', () => {
 		]);
 	});
 
-	test('list', async () => {
+	describe('list', async () => {
 		await runTestStrings([
 			{
 				input: '\\begin{enumerate}\\item asdf\\item qwer\\end{enumerate}',
@@ -560,8 +614,8 @@ describe('environment', () => {
 				output: '<ul><li><p>asdf</p></li><li><p>qwer</p></li></ul>',
 			},
 
-			// multiple paragraphs
 			{
+				name: 'multiple paragraphs',
 				input: `\\begin{enumerate}
 \\item asdf
 
@@ -570,8 +624,8 @@ qwer
 				output: '<ol><li><p>asdf</p><p>qwer</p></li></ol>',
 			},
 
-			// nested lists
 			{
+				name: 'nested lists',
 				input: `\\begin{enumerate}
 \\item asdf
 \\begin{compactenum}
@@ -583,8 +637,8 @@ qwer
 				output: '<ol><li><p>asdf</p><ol><li><p>asdf</p></li><li><p>qwer</p></li></ol></li><li><p>qwer</p></li></ol>',
 			},
 
-			// indentation
 			{
+				name: 'indentation',
 				input: `\\begin{enumerate}
 	\\item asdf
 	\\item qwer
@@ -592,9 +646,9 @@ qwer
 				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
 			},
 
-			// setting command
 			// TODO starting value is ignored
 			{
+				name: 'setcounter command',
 				input: `\\begin{enumerate}
 	\\setcounter{enumi}{2}
 	\\item asdf
@@ -602,8 +656,8 @@ qwer
 \\end{enumerate}`,
 				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
 			},
-
 			{
+				name: 'if before item',
 				input: `\\begin{enumerate}
 	\\ifyearbook\\setcounter{enumi}{2}\\fi
 	\\item asdf
@@ -612,9 +666,9 @@ qwer
 				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
 			},
 
-			// optional label
 			// TODO label is ignored
 			{
+				name: 'item label',
 				input: `\\begin{enumerate}\\item[asdf] qwer\\end{enumerate}`,
 				output: '<ol><li><p>qwer</p></li></ol>',
 			},
@@ -625,62 +679,75 @@ qwer
 		]);
 	});
 
-	test('tabular', async () => {
+	describe('tabular', async () => {
 		await runTestStrings([
 			{
+				name: 'empty',
 				input: '\\begin{tabular}{ll}\\end{tabular}',
 				output: '<tbody></tbody>',
 			},
 			{
+				name: 'basic content',
 				input: '\\begin{tabular}{ll}sadf&asdf\\end{tabular}',
 				output: '<tbody><tr><td>sadf</td><td>asdf</td></tr></tbody>',
 			},
 			{
+				name: 'multiple lines',
 				input: '\\begin{tabular}{ll}sadf&asdf\\\\qwer&poiu\\end{tabular}',
 				output: '<tbody><tr><td>sadf</td><td>asdf</td></tr><tr><td>qwer</td><td>poiu</td></tr></tbody>',
 			},
 			{
+				name: 'different column alignment',
 				input: '\\begin{tabular}{rlc}sadf&asdf&ldkf\\\\qwer&poiu&dnnf\\end{tabular}',
 				output: '<tbody><tr><td class="text-end">sadf</td><td>asdf</td><td class="text-center">ldkf</td></tr><tr><td class="text-end">qwer</td><td>poiu</td><td class="text-center">dnnf</td></tr></tbody>',
 			},
 			{
+				name: 'column border',
 				input: '\\begin{tabular}{r|l}sadf&asdf\\\\qwer&poiu\\end{tabular}',
 				output: '<tbody><tr><td class="border-end text-end">sadf</td><td>asdf</td></tr><tr><td class="border-end text-end">qwer</td><td>poiu</td></tr></tbody>',
 			},
 			{
+				name: 'outside border',
 				input: '\\begin{tabular}{|r|l|}sadf&asdf\\\\qwer&poiu\\end{tabular}',
 				output: '<tbody><tr><td class="border-start border-end text-end">sadf</td><td class="border-end">asdf</td></tr><tr><td class="border-start border-end text-end">qwer</td><td class="border-end">poiu</td></tr></tbody>',
 			},
 			{
+				name: 'double border',
 				input: '\\begin{tabular}{|r||l}sadf&asdf\\\\qwer&poiu\\end{tabular}',
 				output: '<tbody><tr><td class="border-start border-end text-end">sadf</td><td class="border-start">asdf</td></tr><tr><td class="border-start border-end text-end">qwer</td><td class="border-start">poiu</td></tr></tbody>',
 			},
 			{
+				name: 'p column',
 				input: '\\begin{tabular}{p{2cm}p{3cm}}sadf&asdf\\end{tabular}',
 				output: '<tbody><tr><td>sadf</td><td>asdf</td></tr></tbody>',
 			},
 			{
+				name: 'booktabs',
 				input: '\\begin{tabular}{ll}\\toprule sadf&asdf\\\\\\midrule qwer&poiu\\\\\\bottomrule\\end{tabular}',
 				output: '<tbody><tr class="table-group-divider"><td>sadf</td><td>asdf</td></tr><tr class="table-group-divider"><td>qwer</td><td>poiu</td></tr><tr class="table-group-divider"></tr></tbody>',
 			},
 			{
-				input: '\\begin{tabular}{ll}\\toprule sadf&asdf\\\\\\hline qwer&poiu\\\\\\hline\\end{tabular}',
-				output: '<tbody><tr class="table-group-divider"><td>sadf</td><td>asdf</td></tr><tr class="border-top"><td>qwer</td><td>poiu</td></tr><tr class="border-top"></tr></tbody>',
+				name: 'hline',
+				input: '\\begin{tabular}{ll}\\hline sadf&asdf\\\\\\hline qwer&poiu\\\\\\hline\\end{tabular}',
+				output: '<tbody><tr class="border-top"><td>sadf</td><td>asdf</td></tr><tr class="border-top"><td>qwer</td><td>poiu</td></tr><tr class="border-top"></tr></tbody>',
 			},
 			{
+				name: 'square brackets in content',
 				input: '\\begin{tabular}{ll}a [b]&c [d]\\end{tabular}',
 				output: '<tbody><tr><td>a [b]</td><td>c [d]</td></tr></tbody>',
 			},
 		]);
 	});
 
-	test('table', async () => {
+	describe('table', async () => {
 		await runTestStrings([
 			{
+				name: 'empty table',
 				input: '\\begin{table}\\end{table}',
 				output: '<table class="table table-sm table-borderless w-auto mx-auto"></table>',
 			},
 			{
+				name: 'captioned table',
 				input: '\\begin{table}\\caption{Toto je caption}\\label{table}\\begin{tabular}{ll}sadf&asdf\\end{tabular}\\end{table}',
 				output: '<table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: Toto je caption</caption><tbody><tr><td>sadf</td><td>asdf</td></tr></tbody></table>',
 			},
@@ -688,7 +755,7 @@ qwer
 	});
 });
 
-test('footnote', async () => {
+describe('footnote', async () => {
 	await runTestStrings([
 		{
 			input: 'text\\footnote{footnote}',
@@ -712,7 +779,7 @@ test('footnote', async () => {
 	]);
 });
 
-test('url', async () => {
+describe('url', async () => {
 	await runTestStrings([
 		{
 			input: '\\url{https://example.com}',
@@ -733,7 +800,7 @@ test('url', async () => {
 	]);
 });
 
-test('ifs', async () => {
+describe('ifs', async () => {
 	await runTestStrings([
 		{
 			input: '\\ifyearbook asdf\\fi',
