@@ -794,6 +794,10 @@ export class HtmlGenerator {
 		this.expectNodeName('Math');
 		const topNode = this.cursor.node;
 
+		if (this.getCursorText().length === 0) {
+			return '';
+		}
+
 		let buffer = '';
 		while (this.cursor.next()) {
 			buffer += await this.generateNode();
@@ -801,6 +805,7 @@ export class HtmlGenerator {
 				break;
 			}
 		}
+
 		return buffer;
 	}
 
