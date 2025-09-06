@@ -107,7 +107,8 @@ QuoteMacro {
 
 IfBranch {
 	(Text | InlineMath | DisplayMath | Command | CommandArgument | EqCommand | NewlineCommand |
-	Newline | Environment | ListEnvironment | TabularEnvironment | IfBlock)*
+	Newline | Environment | ListEnvironment | TableEnvironment | TabularEnvironment | IfBlock |
+	ParagraphSeparator)*
 }
 
 IfBlock {

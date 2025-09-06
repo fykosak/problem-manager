@@ -151,12 +151,10 @@ apiRouter.get(
 		}
 
 		const modifiedProblems = [];
-		for (let i = 0; i < series.problems.length; i++) {
-			const topicIds = series.problems[i].topics.map(
-				(topic) => topic.topicId
-			);
+		for (const problem of series.problems) {
+			const topicIds = problem.topics.map((topic) => topic.topicId);
 			modifiedProblems.push({
-				...series.problems[i],
+				...problem,
 				topics: topicIds,
 			});
 		}

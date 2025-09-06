@@ -417,7 +417,7 @@ test('text', async () => {
 	]);
 });
 
-describe('figures', async () => {
+describe('figures', () => {
 	vi.spyOn(ProblemStorage.prototype, 'getFileForWeb').mockImplementation(
 		// eslint-disable-next-line
 		async (filename: string) => {
@@ -483,8 +483,28 @@ text after`,
 				output: '<p>text 1</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
 			},
 			{
+				input: 'text \\ref{fig1}\\illfig{fig}{Figures}{fig1}{}',
+				output: '<p>text 1</p><figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
 				input: 'text \\ref{fig1} and text \\ref{fig2}\\fullfig{fig}{Figures}{fig1}\\fullfig{fig}{Figures}{fig2}',
 				output: '<p>text 1 and text 2</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 2: Figures</figcaption></figure>',
+			},
+			{
+				input: 'text \\ref{fig2}\\fullfig{fig}{Figures}{}\\fullfig{fig}{Figures}{fig2}',
+				output: '<p>text 2</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 2: Figures</figcaption></figure>',
+			},
+			{
+				input: 'text \\ref{table1}\\begin{table}\\caption{caption}\\label{table1}\\end{table}',
+				output: '<p>text 1</p><table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: caption</caption></table>',
+			},
+			{
+				input: 'text \\ref{table2}\\begin{table}\\caption{caption 1}\\label{table1}\\end{table}\\begin{table}\\caption{caption 2}\\label{table2}\\end{table}',
+				output: '<p>text 2</p><table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: caption 1</caption></table><table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 2: caption 2</caption></table>',
+			},
+			{
+				input: 'table \\ref{table1} fig \\ref{fig1}\\begin{table}\\caption{caption}\\label{table1}\\end{table}\\fullfig{fig}{Figures}{fig1}',
+				output: '<p>table 1 fig 1</p><table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: caption</caption></table><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
 			},
 		]);
 	});
@@ -662,7 +682,7 @@ qwer
 			},
 			{
 				input: '\\begin{table}\\caption{Toto je caption}\\label{table}\\begin{tabular}{ll}sadf&asdf\\end{tabular}\\end{table}',
-				output: '<table class="table table-sm table-borderless w-auto mx-auto"><caption>Toto je caption</caption><tbody><tr><td>sadf</td><td>asdf</td></tr></tbody></table>',
+				output: '<table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: Toto je caption</caption><tbody><tr><td>sadf</td><td>asdf</td></tr></tbody></table>',
 			},
 		]);
 	});

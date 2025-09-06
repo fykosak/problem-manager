@@ -9,6 +9,8 @@ interface Paragraph {
 	content: string;
 }
 
+type RefType = 'figure' | 'equation' | 'table';
+
 export class HtmlGenerator {
 	private tree: Tree;
 	private parserInput: ParserInput;
@@ -18,9 +20,11 @@ export class HtmlGenerator {
 	private cursor: TreeCursor;
 	private problemStorage: ProblemStorage;
 
-	private footnotes: string[];
-	private eqRefs: Map<string, number>;
-	private figRefs: Map<string, number>;
+	private footnotes: string[] = [];
+
+	private refCounters = new Map<string, number>();
+	private refs = new Map<string, number>();
+	private lastIncrementedRefCounter: RefType | null = null;
 
 	constructor(tree: Tree, parserInput: ParserInput, problemId: number) {
 		this.tree = tree;
@@ -33,10 +37,6 @@ export class HtmlGenerator {
 		this.lang = 'cs';
 
 		// this.print();
-
-		this.footnotes = [];
-		this.eqRefs = new Map();
-		this.figRefs = new Map();
 	}
 
 	private getCursorText(): string {
@@ -56,23 +56,68 @@ export class HtmlGenerator {
 	private checkInCommand(node: SyntaxNode, commandName: string) {
 		const cursor = node.cursor();
 		do {
-			if (cursor.name === 'Command') {
-				const commandCursor = cursor.node.cursor();
-				if (!commandCursor.next()) {
-					return false;
-				}
-				if (commandCursor.node.name !== 'CommandIdentifier') {
-					continue;
-				}
+			if (cursor.name !== 'Command') {
+				continue;
+			}
 
-				if (
-					this.parserInput.read(
-						commandCursor.from,
-						commandCursor.to
-					) === commandName
-				) {
-					return true;
-				}
+			const commandCursor = cursor.node.cursor();
+			if (!commandCursor.next()) {
+				return false;
+			}
+
+			if (commandCursor.node.name !== 'CommandIdentifier') {
+				continue;
+			}
+
+			if (
+				this.parserInput.read(commandCursor.from, commandCursor.to) ===
+				commandName
+			) {
+				return true;
+			}
+		} while (cursor.parent());
+		return false;
+	}
+
+	private checkInEnvironment(node: SyntaxNode, environmentName: string) {
+		const cursor = node.cursor();
+		do {
+			const nodeGroups = cursor.node.type.prop(NodeProp.group);
+			if (!nodeGroups || !nodeGroups.includes('EnvironmentGroup')) {
+				continue;
+			}
+
+			const commandCursor = cursor.node.cursor();
+			if (!commandCursor.next()) {
+				return false;
+			}
+
+			if (commandCursor.node.name !== 'BeginEnv') {
+				continue;
+			}
+
+			if (!commandCursor.next()) {
+				return false;
+			}
+
+			// @ts-expect-error TS does not include the change with .next()
+			if (commandCursor.node.name !== 'BeginCommandIdentifier') {
+				continue;
+			}
+
+			if (!commandCursor.next()) {
+				return false;
+			}
+
+			if (commandCursor.node.name !== 'EnvironmentNameArgument') {
+				continue;
+			}
+
+			if (
+				this.parserInput.read(commandCursor.from, commandCursor.to) ===
+				'{' + environmentName + '}'
+			) {
+				return true;
 			}
 		} while (cursor.parent());
 		return false;
@@ -98,6 +143,61 @@ export class HtmlGenerator {
 		);
 	}
 
+	private incrementRefCounter(type: RefType) {
+		let value = this.refCounters.get(type);
+		if (!value) {
+			value = 1;
+		} else {
+			value++;
+		}
+		this.refCounters.set(type, value);
+		this.lastIncrementedRefCounter = type;
+		return value;
+	}
+
+	private getRefCounter(type: RefType): number {
+		const value = this.refCounters.get(type);
+		if (!value) {
+			throw new Error(`Ref counter ${type} does not have a value`);
+		}
+		return value;
+	}
+
+	private getLastIncrementedCounter(): number {
+		if (!this.lastIncrementedRefCounter) {
+			throw new Error('No last counter referenced');
+		}
+
+		return this.getRefCounter(this.lastIncrementedRefCounter);
+	}
+
+	private getCaptionType(): RefType {
+		if (this.checkInEnvironment(this.cursor.node, 'table')) {
+			return 'table';
+		}
+
+		if (this.checkInEnvironment(this.cursor.node, 'figure')) {
+			return 'figure';
+		}
+
+		throw new Error(
+			`Cannot infer caption type from ${this.cursor.from} to ${this.cursor.to}`
+		);
+	}
+
+	private registerCaption(): number {
+		const type = this.getCaptionType();
+		return this.incrementRefCounter(type);
+	}
+
+	private async registerLabel() {
+		this.expectNodeName('CommandIdentifier');
+		this.expectNext();
+		const label = await this.generateCommandArgument();
+		const value = this.getLastIncrementedCounter();
+		this.refs.set(label, value);
+	}
+
 	private async registerRefs(): Promise<void> {
 		this.cursor = this.tree.cursor();
 		while (this.cursor.next()) {
@@ -109,15 +209,17 @@ export class HtmlGenerator {
 				case '\\lbl': {
 					this.expectNext();
 					const label = await this.generateCommandArgument();
-					this.eqRefs.set(label, this.eqRefs.size + 1);
+					this.incrementRefCounter('equation');
+					this.refs.set(label, this.getRefCounter('equation'));
 					break;
 				}
+
 				case '\\fullfig':
 				case '\\illfig':
 				case '\\illfigi':
 				case '\\plotfig': {
 					this.expectNext();
-					// @ts-expect-error
+					// @ts-expect-error TS does not include the change with .next()
 					if (this.cursor.name === 'CommandArgumentOptional') {
 						await this.generateCommandArgumentOptional(); // consume
 						this.expectNext();
@@ -128,21 +230,37 @@ export class HtmlGenerator {
 					if (caption === '') {
 						break;
 					}
+					this.incrementRefCounter('figure');
 					this.expectNext();
 					const label = await this.generateCommandArgument();
 					if (label === '') {
 						break;
 					}
-					this.figRefs.set(label, this.figRefs.size + 1);
+
+					this.refs.set(label, this.getRefCounter('figure'));
+					break;
+				}
+
+				case '\\caption': {
+					this.registerCaption();
+					break;
+				}
+
+				case '\\label': {
+					await this.registerLabel();
+					break;
 				}
 			}
 		}
 	}
 
 	public async generateHtml(): Promise<string> {
-		await this.registerRefs();
-
 		try {
+			await this.registerRefs();
+
+			// Captions are recounted in generation, reset the counters
+			this.refCounters = new Map();
+
 			this.cursor = this.tree.cursor();
 			const content = await this.generateContentUntil(this.cursor.to);
 			let footnoteContent = '';
@@ -331,7 +449,7 @@ export class HtmlGenerator {
 		this.expectNext();
 		const caption = await this.generateCommandArgument();
 		this.expectNext();
-		const label = await this.generateCommandArgument(); // consume label
+		await this.generateCommandArgument(); // consume label
 
 		// label was not the last argument
 		if (this.cursor.to < commandNode.to) {
@@ -343,13 +461,9 @@ export class HtmlGenerator {
 		let buffer = '<figure class="figure w-50 text-center mx-auto d-block">';
 		buffer += `<img class="figure-img img-fluid rounded w-100" src="${fileData}">`;
 		if (caption !== '') {
-			const figNumber = this.figRefs.get(label);
+			const figNumber = this.incrementRefCounter('figure');
 			buffer += '<figcaption class="figure-caption text-center">';
-			if (figNumber) {
-				buffer += `Obrázek ${figNumber}: ${caption}`; // TODO lang
-			} else {
-				buffer += caption;
-			}
+			buffer += `Obrázek ${figNumber}: ${caption}`; // TODO lang
 			buffer += '</figcaption>';
 		}
 		buffer += '</figure>';
@@ -374,7 +488,7 @@ export class HtmlGenerator {
 		this.expectNext();
 		const caption = await this.generateCommandArgument();
 		this.expectNext();
-		const label = await this.generateCommandArgument(); // consume label
+		await this.generateCommandArgument(); // consume label
 		this.expectNext();
 		await this.generateCommandArgument(); // consume the number of rows
 
@@ -387,13 +501,9 @@ export class HtmlGenerator {
 		let buffer = '<figure class="figure w-25 float-end m-3">';
 		buffer += `<img class="figure-img img-fluid rounded w-100" src="${fileData}">`;
 		if (caption !== '') {
-			const figNumber = this.figRefs.get(label);
+			const figNumber = this.incrementRefCounter('figure');
 			buffer += '<figcaption class="figure-caption text-center">';
-			if (figNumber) {
-				buffer += `Obrázek ${figNumber}: ${caption}`; // TODO lang
-			} else {
-				buffer += caption;
-			}
+			buffer += `Obrázek ${figNumber}: ${caption}`; // TODO lang
 			buffer += '</figcaption>';
 		}
 		buffer += '</figure>';
@@ -484,9 +594,31 @@ export class HtmlGenerator {
 				return await this.generateCommandArgument();
 
 			case '\\caption': {
+				const captionNumber = this.registerCaption();
+				const captionType = this.getCaptionType();
+				let captionLabel = '';
+
+				// TODO lang
+				switch (captionType) {
+					case 'equation':
+						captionLabel += `Rovnice ${captionNumber}:`;
+						break;
+					case 'figure':
+						captionLabel += `Obrázek ${captionNumber}:`;
+						break;
+					case 'table':
+						captionLabel += `Tabulka ${captionNumber}:`;
+						break;
+				}
+
 				this.expectNext();
 				const caption = await this.generateCommandArgument();
-				return `<caption>${caption}</caption>`;
+				return `<caption>${captionLabel} ${caption}</caption>`;
+			}
+
+			case '\\label': {
+				await this.registerLabel();
+				return '';
 			}
 
 			case '\\url': {
@@ -507,9 +639,9 @@ export class HtmlGenerator {
 			case '\\ref': {
 				this.expectNext();
 				const label = await this.generateCommandArgument();
-				const tagNumber = this.figRefs.get(label);
+				const tagNumber = this.refs.get(label);
 				if (!tagNumber) {
-					throw new Error(`Label ${label} not registered in figRefs`);
+					throw new Error(`Label ${label} not registered in refs`);
 				}
 				return tagNumber.toString();
 			}
@@ -534,7 +666,10 @@ export class HtmlGenerator {
 			case '\\medskip':
 			case '\\bigskip':
 			case '\\noindent':
-
+			case '\\newpage':
+			case '\\pagebreak':
+			case '\\linebreak':
+			case '\\par':
 			case '\\Huge':
 			case '\\huge':
 			case '\\LARGE':
@@ -551,7 +686,6 @@ export class HtmlGenerator {
 			case '\\vspace*':
 			case '\\hspace':
 			case '\\hspace*':
-			case '\\label':
 				this.expectNext();
 				await this.generateCommandArgument(); // consume command argument
 				return ''; // ignore
@@ -622,9 +756,9 @@ export class HtmlGenerator {
 			case '\\lbl': {
 				this.expectNext();
 				const label = await this.generateCommandArgument();
-				const tagNumber = this.eqRefs.get(label);
+				const tagNumber = this.refs.get(label);
 				if (!tagNumber) {
-					throw new Error(`Label ${label} not registered in eqrefs`);
+					throw new Error(`Label ${label} not registered in refs`);
 				}
 				return `\\tag{${tagNumber}}\\label{${label}}`;
 			}
@@ -1252,7 +1386,7 @@ export class HtmlGenerator {
 
 			// Do not add {} around in normal mode because if it's not match
 			// with a command as argument, than it's just a group
-			case 'CommandArgument':
+			case 'CommandArgument': {
 				const node = this.cursor.node;
 				const content = await this.generateCommandArgument();
 				if (
@@ -1262,6 +1396,7 @@ export class HtmlGenerator {
 					return `{${content}}`;
 				}
 				return content;
+			}
 
 			case 'CommandArgumentOptional':
 				return (
