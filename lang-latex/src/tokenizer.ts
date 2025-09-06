@@ -1,4 +1,11 @@
-import { ListEnvName, TableEnvName, TabularEnvName } from './parser.terms.js';
+import {
+	ElseCommandIdentifier,
+	IfCommandIdentifier,
+	IfEndCommandIdentifier,
+	ListEnvName,
+	TableEnvName,
+	TabularEnvName,
+} from './parser.terms.js';
 
 const listEnvNames = new Set([
 	'itemize',
@@ -22,6 +29,22 @@ export function specializeEnvName(name: string) {
 
 	if (name === 'table') {
 		return TableEnvName;
+	}
+
+	return -1;
+}
+
+export function specializeCommandIdentifier(name: string) {
+	if (name.startsWith('\\if')) {
+		return IfCommandIdentifier;
+	}
+
+	if (name === '\\else') {
+		return ElseCommandIdentifier;
+	}
+
+	if (name === '\\fi') {
+		return IfEndCommandIdentifier;
 	}
 
 	return -1;

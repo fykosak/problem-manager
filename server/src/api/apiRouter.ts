@@ -131,6 +131,7 @@ apiRouter.get(
 								contents: false,
 							},
 						},
+						topics: true,
 					},
 				},
 				contestYear: true,
@@ -149,7 +150,16 @@ apiRouter.get(
 			return;
 		}
 
-		res.json(series);
+		const modifiedProblems = [];
+		for (const problem of series.problems) {
+			const topicIds = problem.topics.map((topic) => topic.topicId);
+			modifiedProblems.push({
+				...problem,
+				topics: topicIds,
+			});
+		}
+
+		res.json({ ...series, problems: modifiedProblems });
 	})
 );
 

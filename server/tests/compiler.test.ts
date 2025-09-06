@@ -8,7 +8,6 @@ async function parse(input: string): Promise<string> {
 	const parserInput = new ParserInput(input);
 	const tree = latexLanguage.parser.parse(parserInput);
 	const generator = new HtmlGenerator(tree, parserInput, 1);
-	//generator.print();
 	return await generator.generateHtml();
 }
 
@@ -18,6 +17,10 @@ async function runTestStrings(testCases: { input: string; output: string }[]) {
 		expect(output).toBe(testCase.output);
 	}
 }
+
+test('nothing', async () => {
+	await runTestStrings([{ input: '', output: '' }]);
+});
 
 test('paragraph', async () => {
 	await runTestStrings([
@@ -36,6 +39,16 @@ test('paragraph', async () => {
 		{
 			input: 'asdf\n\n\nqwer',
 			output: '<p>asdf</p><p>qwer</p>',
+		},
+		{
+			input: `text before
+\\begin{env}
+asdf
+\\end{env}
+text after`,
+			output: `<p>text before</p>\\begin{env}
+asdf
+\\end{env}<p>text after</p>`,
 		},
 	]);
 });
@@ -59,6 +72,10 @@ describe('commands', () => {
 				input: '\\uv{asdf}',
 				output: '<p>„asdf“</p>',
 			},
+			{
+				input: '\\mbox{asdf}',
+				output: '<p>asdf</p>',
+			},
 		]);
 	});
 
@@ -66,7 +83,7 @@ describe('commands', () => {
 		await runTestStrings([
 			{
 				input: '\\textbf{asdf}{qwer}',
-				output: '<p><bf>asdf</bf>{qwer}</p>',
+				output: '<p><bf>asdf</bf>qwer</p>',
 			},
 		]);
 	});
@@ -98,10 +115,6 @@ describe('commands', () => {
 
 	test('multiple arguments', async () => {
 		await runTestStrings([
-			{
-				input: '\\taskhint{label}{hint}',
-				output: '<p><em>label</em> hint</p>',
-			},
 			{
 				input: '\\textbf{first}\\emph{middle}\\textit{last}',
 				output: '<p><bf>first</bf><em>middle</em><i>last</i></p>',
@@ -137,14 +150,48 @@ describe('commands', () => {
 
 	test('ignored text commands', async () => {
 		await runTestStrings([
-			{ input: '\\null', output: '<p></p>' },
-			{ input: '\\quad', output: '<p></p>' },
-			{ input: '\\qquad', output: '<p></p>' },
-			{ input: '\\centering', output: '<p></p>' },
-			{ input: '\\vspace{2cm}', output: '<p></p>' },
-			{ input: '\\hspace{1cm}', output: '<p></p>' },
-			{ input: '\\vspace*{2cm}', output: '<p></p>' },
-			{ input: '\\hspace*{1cm}', output: '<p></p>' },
+			{ input: '\\null', output: '' },
+			{ input: '\\quad', output: '' },
+			{ input: '\\qquad', output: '' },
+			{ input: '\\centering', output: '' },
+			{ input: '\\vspace{2cm}', output: '' },
+			{ input: '\\hspace{1cm}', output: '' },
+			{ input: '\\vspace*{2cm}', output: '' },
+			{ input: '\\hspace*{1cm}', output: '' },
+		]);
+	});
+
+	test('taskhint', async () => {
+		await runTestStrings([
+			{
+				input: '\\taskhint{label}{hint}',
+				output: '<p><em>label</em> hint</p>',
+			},
+			{
+				input: `\\taskhint{hint}{
+asdf
+
+qwer
+}`,
+				output: '<p><em>hint</em> asdf</p><p>qwer</p>',
+			},
+		]);
+	});
+
+	test('single char commands', async () => {
+		await runTestStrings([
+			{
+				input: '\\#',
+				output: '<p>#</p>',
+			},
+			{
+				input: '\\_',
+				output: '<p>_</p>',
+			},
+			{
+				input: 'kra\\-ko\\-noš',
+				output: '<p>krakonoš</p>',
+			},
 		]);
 	});
 });
@@ -208,7 +255,6 @@ describe('math', () => {
 				input: '\\eq[a]{a+b}',
 				output: '<p>\\begin{alignat*}a+b\\end{alignat*}</p>',
 			},
-
 			{
 				input: `\\eq[m]{
 	F &= G\\frac{Mm}{R^2} = ma\\,, \\\\
@@ -238,15 +284,23 @@ describe('math', () => {
 			},
 			{
 				input: '$"20 km.h^{-1}"$',
-				output: '<p>$20\\,\\mathrm{km\\cdot h^{-1}}$</p>',
+				output: '<p>$20\\,\\mathrm{km\\!\\cdot\\! h^{-1}}$</p>',
 			},
 			{
 				input: '$"1  km"$',
 				output: '<p>$1\\,\\mathrm{km}$</p>',
 			},
 			{
+				input: '$1" km"$',
+				output: '<p>$1\\,\\mathrm{km}$</p>',
+			},
+			{
 				input: '$"20e3"$',
 				output: '<p>$20\\cdot 10^{3}$</p>',
+			},
+			{
+				input: '$"20e{-3}"$',
+				output: '<p>$20\\cdot 10^{-3}$</p>',
 			},
 			{
 				input: '$"20e-3"$',
@@ -258,7 +312,7 @@ describe('math', () => {
 			},
 			{
 				input: '$"20e3 km.s^{-1}"$',
-				output: '<p>$20\\cdot 10^{3}\\,\\mathrm{km\\cdot s^{-1}}$</p>',
+				output: '<p>$20\\cdot 10^{3}\\,\\mathrm{km\\!\\cdot\\! s^{-1}}$</p>',
 			},
 			{
 				input: '$"1~234 km"$',
@@ -269,12 +323,57 @@ describe('math', () => {
 				output: '<p>$0{,}123\\,4\\,\\mathrm{mm}$</p>',
 			},
 			{
+				input: '$"1\\,500 mAh"$',
+				output: '<p>$1\\,500\\,\\mathrm{mAh}$</p>',
+			},
+			{
 				input: '$\\jd{km.h^{-1}}$',
-				output: '<p>$\\mathrm{km\\cdot h^{-1}}$</p>',
+				output: '<p>$\\mathrm{km\\!\\cdot\\! h^{-1}}$</p>',
 			},
 			{
 				input: '\\jd{km.h^{-1}}',
-				output: '<p>$\\mathrm{km\\cdot h^{-1}}$</p>',
+				output: '<p>$\\mathrm{km\\!\\cdot\\! h^{-1}}$</p>',
+			},
+			{
+				input: '$"5\\dg"$',
+				output: '<p>$5^\\circ$</p>',
+			},
+			{
+				input: '$"\\frac{5x}{6} m.s^{-2}"$',
+				output: '<p>$\\frac{5x}{6}\\,\\mathrm{m\\!\\cdot\\! s^{-2}}$</p>',
+			},
+			{
+				input: '$"1/50 m"$',
+				output: '<p>$1/50\\,\\mathrm{m}$</p>',
+			},
+			{
+				input: '$"10^{-12} W.m^{-2}"$',
+				output: '<p>$10^{-12}\\,\\mathrm{W\\!\\cdot\\! m^{-2}}$</p>',
+			},
+			{
+				input: '$"10^{-12}\n\t  W.m^{-2}"$',
+				output: '<p>$10^{-12}\\,\\mathrm{W\\!\\cdot\\! m^{-2}}$</p>',
+			},
+		]);
+	});
+
+	test('ensure math', async () => {
+		await runTestStrings([
+			{
+				input: '\\ce{C-C}',
+				output: '<p>$\\ce{C-C}$</p>',
+			},
+			{
+				input: '$\\ce{C-C}$',
+				output: '<p>$\\ce{C-C}$</p>',
+			},
+			{
+				input: '\\bod{A}',
+				output: '<p>$\\mathit{A}$</p>',
+			},
+			{
+				input: '$\\bod{A}$',
+				output: '<p>$\\mathit{A}$</p>',
 			},
 		]);
 	});
@@ -293,6 +392,10 @@ test('comments', async () => {
 		{
 			input: `text %comment\ntext`,
 			output: '<p>text \ntext</p>',
+		},
+		{
+			input: `\\eq{%comment\nmath\n}text`,
+			output: '<p>\\begin{equation*}\nmath\n\\end{equation*}text</p>',
 		},
 	]);
 });
@@ -313,40 +416,98 @@ test('text', async () => {
 		},
 	]);
 });
-test('figures', async () => {
+
+describe('figures', () => {
 	vi.spyOn(ProblemStorage.prototype, 'getFileForWeb').mockImplementation(
 		// eslint-disable-next-line
 		async (filename: string) => {
 			return filename;
 		}
 	);
-	await runTestStrings([
-		{
-			input: '\\fullfig{fig}{Figures}{fig1}[width=0.2\\textwidth]',
-			output: '<p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure></p>',
-		},
-		{
-			input: '\\fullfig[h]{fig}{Figures}{fig1}[width=0.2\\textwidth]',
-			output: '<p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure></p>',
-		},
-		{
-			input: '\\illfig{fig}{Figures}{fig1}{}',
-			output: '<p><figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure></p>',
-		},
-		{
-			input: '\\illfig[O]{fig}{Figures}{fig1}{5}',
-			output: '<p><figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure></p>',
-		},
-		{
-			input: '\\illfigi{fig}{Figures}{fig1}{}{0.15}',
-			output: '<p><figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure></p>',
-		},
-		{
-			input: '\\illfigi[o]{fig}{Figures}{fig1}{}{0.15}',
-			output: '<p><figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figures</figcaption></figure></p>',
-		},
-	]);
-	vi.resetAllMocks();
+
+	test('figures', async () => {
+		await runTestStrings([
+			{
+				input: '\\fullfig{fig}{}{}',
+				output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"></figure>',
+			},
+			{
+				input: '\\fullfig{fig}{Figures}{fig1}[width=0.2\\textwidth]',
+				output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: '\\fullfig[h]{fig}{Figures}{fig1}[width=0.2\\textwidth]',
+				output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: '\\illfig{fig}{Figures}{fig1}{}',
+				output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: '\\illfig[O]{fig}{Figures}{fig1}{5}',
+				output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: '\\illfigi{fig}{Figures}{fig1}{}{0.15}',
+				output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: '\\illfigi[o]{fig}{Figures}{fig1}{}{0.15}',
+				output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: `text before
+\\fullfig{fig}{Figures}{fig1}
+text after`,
+				output: `<p>text before</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure><p>text after</p>`,
+			},
+		]);
+	});
+
+	test('refs', async () => {
+		await runTestStrings([
+			{
+				input: '\\eq{a\\lbl{ref1}}',
+				output: '<p>\\begin{equation*}a\\tag{1}\\label{ref1}\\end{equation*}</p>',
+			},
+			{
+				input: '\\eqref{ref1}\\eq{a\\lbl{ref1}}',
+				output: '<p>\\eqref{ref1}\\begin{equation*}a\\tag{1}\\label{ref1}\\end{equation*}</p>',
+			},
+			{
+				input: '\\eq[m]{a\\lbl{ref1}\\\\b\\lbl{ref2}}\\eq{c\\lbl{ref3}}',
+				output: '<p>\\begin{align*}a\\tag{1}\\label{ref1}\\\\b\\tag{2}\\label{ref2}\\end{align*}\\begin{equation*}c\\tag{3}\\label{ref3}\\end{equation*}</p>',
+			},
+			{
+				input: 'text \\ref{fig1}\\fullfig{fig}{Figures}{fig1}',
+				output: '<p>text 1</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: 'text \\ref{fig1}\\illfig{fig}{Figures}{fig1}{}',
+				output: '<p>text 1</p><figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: 'text \\ref{fig1} and text \\ref{fig2}\\fullfig{fig}{Figures}{fig1}\\fullfig{fig}{Figures}{fig2}',
+				output: '<p>text 1 and text 2</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 2: Figures</figcaption></figure>',
+			},
+			{
+				input: 'text \\ref{fig2}\\fullfig{fig}{Figures}{}\\fullfig{fig}{Figures}{fig2}',
+				output: '<p>text 2</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 2: Figures</figcaption></figure>',
+			},
+			{
+				input: 'text \\ref{table1}\\begin{table}\\caption{caption}\\label{table1}\\end{table}',
+				output: '<p>text 1</p><table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: caption</caption></table>',
+			},
+			{
+				input: 'text \\ref{table2}\\begin{table}\\caption{caption 1}\\label{table1}\\end{table}\\begin{table}\\caption{caption 2}\\label{table2}\\end{table}',
+				output: '<p>text 2</p><table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: caption 1</caption></table><table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 2: caption 2</caption></table>',
+			},
+			{
+				input: 'table \\ref{table1} fig \\ref{fig1}\\begin{table}\\caption{caption}\\label{table1}\\end{table}\\fullfig{fig}{Figures}{fig1}',
+				output: '<p>table 1 fig 1</p><table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: caption</caption></table><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+		]);
+	});
 });
 
 describe('environment', () => {
@@ -354,15 +515,24 @@ describe('environment', () => {
 		await runTestStrings([
 			{
 				input: '\\begin{unknown}\\asdf\\end{unknown}',
-				output: '<p>\\begin{unknown}\\asdf\\end{unknown}</p>',
+				output: '\\begin{unknown}\\asdf\\end{unknown}',
 			},
 			{
 				input: '\\begin{unknown}\\textbf{text}\\end{unknown}',
-				output: '<p>\\begin{unknown}<bf>text</bf>\\end{unknown}</p>',
+				output: '\\begin{unknown}<bf>text</bf>\\end{unknown}',
 			},
 			{
 				input: '\\begin{unknown}[arg]{arg}asdf\\end{unknown}',
-				output: '<p>\\begin{unknown}[arg]{arg}asdf\\end{unknown}</p>',
+				output: '\\begin{unknown}[arg]{arg}asdf\\end{unknown}',
+			},
+		]);
+	});
+
+	test('inside command', async () => {
+		await runTestStrings([
+			{
+				input: '\\parbox{5cm}{\\begin{unknown}\\asdf\\end{unknown}}',
+				output: '<p>\\parbox{5cm}{\\begin{unknown}\\asdf\\end{unknown}}</p>',
 			},
 		]);
 	});
@@ -371,19 +541,86 @@ describe('environment', () => {
 		await runTestStrings([
 			{
 				input: '\\begin{enumerate}\\item asdf\\item qwer\\end{enumerate}',
-				output: '<ol><li>asdf</li><li>qwer</li></ol>',
+				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
 			},
 			{
 				input: '\\begin{compactenum}\\item asdf\\item qwer\\end{compactenum}',
-				output: '<ol><li>asdf</li><li>qwer</li></ol>',
+				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
 			},
 			{
 				input: '\\begin{itemize}\\item asdf\\item qwer\\end{itemize}',
-				output: '<ul><li>asdf</li><li>qwer</li></ul>',
+				output: '<ul><li><p>asdf</p></li><li><p>qwer</p></li></ul>',
 			},
 			{
 				input: '\\begin{compactitem}\\item asdf\\item qwer\\end{compactitem}',
-				output: '<ul><li>asdf</li><li>qwer</li></ul>',
+				output: '<ul><li><p>asdf</p></li><li><p>qwer</p></li></ul>',
+			},
+			{
+				input: '\\begin{compactitem}[a)]\\item asdf\\item qwer\\end{compactitem}',
+				output: '<ul><li><p>asdf</p></li><li><p>qwer</p></li></ul>',
+			},
+
+			// multiple paragraphs
+			{
+				input: `\\begin{enumerate}
+\\item asdf
+
+qwer
+\\end{enumerate}`,
+				output: '<ol><li><p>asdf</p><p>qwer</p></li></ol>',
+			},
+
+			// nested lists
+			{
+				input: `\\begin{enumerate}
+\\item asdf
+\\begin{compactenum}
+\\item asdf
+\\item qwer
+\\end{compactenum}
+\\item qwer
+\\end{enumerate}`,
+				output: '<ol><li><p>asdf</p><ol><li><p>asdf</p></li><li><p>qwer</p></li></ol></li><li><p>qwer</p></li></ol>',
+			},
+
+			// indentation
+			{
+				input: `\\begin{enumerate}
+	\\item asdf
+	\\item qwer
+\\end{enumerate}`,
+				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
+			},
+
+			// setting command
+			// TODO starting value is ignored
+			{
+				input: `\\begin{enumerate}
+	\\setcounter{enumi}{2}
+	\\item asdf
+	\\item qwer
+\\end{enumerate}`,
+				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
+			},
+
+			{
+				input: `\\begin{enumerate}
+	\\ifyearbook\\setcounter{enumi}{2}\\fi
+	\\item asdf
+	\\item qwer
+\\end{enumerate}`,
+				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
+			},
+
+			// optional label
+			// TODO label is ignored
+			{
+				input: `\\begin{enumerate}\\item[asdf] qwer\\end{enumerate}`,
+				output: '<ol><li><p>qwer</p></li></ol>',
+			},
+			{
+				input: `\\begin{enumerate}\\item asdf{} qwer\\end{enumerate}`,
+				output: '<ol><li><p>asdf qwer</p></li></ol>',
 			},
 		]);
 	});
@@ -419,12 +656,20 @@ describe('environment', () => {
 				output: '<tbody><tr><td class="border-start border-end text-end">sadf</td><td class="border-start">asdf</td></tr><tr><td class="border-start border-end text-end">qwer</td><td class="border-start">poiu</td></tr></tbody>',
 			},
 			{
+				input: '\\begin{tabular}{p{2cm}p{3cm}}sadf&asdf\\end{tabular}',
+				output: '<tbody><tr><td>sadf</td><td>asdf</td></tr></tbody>',
+			},
+			{
 				input: '\\begin{tabular}{ll}\\toprule sadf&asdf\\\\\\midrule qwer&poiu\\\\\\bottomrule\\end{tabular}',
 				output: '<tbody><tr class="table-group-divider"><td>sadf</td><td>asdf</td></tr><tr class="table-group-divider"><td>qwer</td><td>poiu</td></tr><tr class="table-group-divider"></tr></tbody>',
 			},
 			{
 				input: '\\begin{tabular}{ll}\\toprule sadf&asdf\\\\\\hline qwer&poiu\\\\\\hline\\end{tabular}',
 				output: '<tbody><tr class="table-group-divider"><td>sadf</td><td>asdf</td></tr><tr class="border-top"><td>qwer</td><td>poiu</td></tr><tr class="border-top"></tr></tbody>',
+			},
+			{
+				input: '\\begin{tabular}{ll}a [b]&c [d]\\end{tabular}',
+				output: '<tbody><tr><td>a [b]</td><td>c [d]</td></tr></tbody>',
 			},
 		]);
 	});
@@ -437,8 +682,78 @@ describe('environment', () => {
 			},
 			{
 				input: '\\begin{table}\\caption{Toto je caption}\\label{table}\\begin{tabular}{ll}sadf&asdf\\end{tabular}\\end{table}',
-				output: '<table class="table table-sm table-borderless w-auto mx-auto"><caption>Toto je caption</caption><tbody><tr><td>sadf</td><td>asdf</td></tr></tbody></table>',
+				output: '<table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: Toto je caption</caption><tbody><tr><td>sadf</td><td>asdf</td></tr></tbody></table>',
 			},
 		]);
 	});
+});
+
+test('footnote', async () => {
+	await runTestStrings([
+		{
+			input: 'text\\footnote{footnote}',
+			output: '<p>text<sup>1</sup></p><hr><ol><li><p>footnote</p></li></ol>',
+		},
+		{
+			input: 'text\\footnote{footnote}text\\footnote{footnote2}',
+			output: '<p>text<sup>1</sup>text<sup>2</sup></p><hr><ol><li><p>footnote</p></li><li><p>footnote2</p></li></ol>',
+		},
+		{
+			input: 'text\\footnotei{,}{footnote}',
+			output: '<p>text,<sup>1</sup></p><hr><ol><li><p>footnote</p></li></ol>',
+		},
+		{
+			input: `text\\footnote{par1
+
+	par2
+}`,
+			output: '<p>text<sup>1</sup></p><hr><ol><li><p>par1</p><p>par2</p></li></ol>',
+		},
+	]);
+});
+
+test('url', async () => {
+	await runTestStrings([
+		{
+			input: '\\url{https://example.com}',
+			output: '<p><a href="https://example.com">https://example.com</a></p>',
+		},
+		{
+			input: '\\url{https://example.com/url\\_underscore}',
+			output: '<p><a href="https://example.com/url_underscore">https://example.com/url_underscore</a></p>',
+		},
+		{
+			input: '\\url{https://example.com/url\\#hashtag}',
+			output: '<p><a href="https://example.com/url#hashtag">https://example.com/url#hashtag</a></p>',
+		},
+		{
+			input: '\\url{https://example.com/url?key=value}',
+			output: '<p><a href="https://example.com/url?key=value">https://example.com/url?key=value</a></p>',
+		},
+	]);
+});
+
+test('ifs', async () => {
+	await runTestStrings([
+		{
+			input: '\\ifyearbook asdf\\fi',
+			output: '',
+		},
+		{
+			input: '\\ifyearbook\\else qwer\\fi',
+			output: '<p>qwer</p>',
+		},
+		{
+			input: '\\ifyearbook asdf\\else qwer\\fi',
+			output: '<p>qwer</p>',
+		},
+		{
+			input: '\\iftask asdf\\fi',
+			output: '<p>asdf</p>',
+		},
+		{
+			input: '\\iftask{asdf}\\fi text',
+			output: '<p>asdf text</p>',
+		},
+	]);
 });

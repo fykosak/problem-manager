@@ -308,7 +308,7 @@ export async function setupWSConnection(
 		return;
 	}
 
-	const roles = await getRolesFromJWT(jwtData);
+	const roles = getRolesFromJWT(jwtData);
 	if (!person) {
 		conn.close(3000, 'Unauthorized');
 		return;
