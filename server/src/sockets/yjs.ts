@@ -291,7 +291,6 @@ export async function setupWSConnection(
 	const authorization = url.searchParams.get('auth');
 
 	if (!authorization) {
-		console.log('auth missing');
 		conn.close(3000, 'Unauthorized');
 		return;
 	}

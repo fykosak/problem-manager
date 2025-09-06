@@ -14,7 +14,6 @@ export class TaskBuilder {
 	}
 
 	private prepare() {
-		console.log('create dir');
 		fs.mkdirSync(path.join(this.getDirectoryPath(), 'build'), {
 			recursive: true,
 		});

@@ -123,7 +123,8 @@ export class Runner {
 			}),
 		});
 		if (!response.ok) {
-			console.log(await response.json());
+			const jsonResponse = (await response.json()) as { message: string };
+			throw new Error(jsonResponse.message);
 		}
 	}
 }

@@ -1,24 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertDialogDescription } from '@radix-ui/react-alert-dialog';
 import { TRPCClientError } from '@trpc/client';
-import { Pen, Trash } from 'lucide-react';
+import { Pen } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRevalidator } from 'react-router';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from '@client/components/ui/alert-dialog';
-import { Button, buttonVariants } from '@client/components/ui/button';
+import { Button } from '@client/components/ui/button';
 import { Form, FormField, FormItem } from '@client/components/ui/form';
 import { Input } from '@client/components/ui/input';
 import { Loader } from '@client/components/ui/loader';
@@ -30,68 +19,8 @@ import {
 } from '@client/components/ui/tooltip';
 import { trpc } from '@client/trpc';
 
-function DeleteFileButton({
-	file,
-	problemId,
-}: {
-	file: string;
-	problemId: number;
-}) {
-	const revalidator = useRevalidator();
-
-	async function deleteFile(filename: string) {
-		try {
-			await trpc.problem.files.delete.mutate({ problemId, filename });
-			toast.success(`File ${filename} deleted`);
-		} catch (error) {
-			if (error instanceof TRPCClientError) {
-				toast.error(`Error occured while deleting file ${filename}`, {
-					description: error.message,
-				});
-			}
-		} finally {
-			await revalidator.revalidate();
-		}
-	}
-
-	return (
-		<AlertDialog>
-			<AlertDialogTrigger
-				className={buttonVariants({
-					variant: 'destructive',
-					size: 'icon',
-				})}
-			>
-				<TooltipProvider>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Trash />
-						</TooltipTrigger>
-						<TooltipContent>Delete</TooltipContent>
-					</Tooltip>
-				</TooltipProvider>
-			</AlertDialogTrigger>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>Delete file</AlertDialogTitle>
-					<AlertDialogDescription>
-						Are you sure you want to delete the file {file}?
-					</AlertDialogDescription>
-				</AlertDialogHeader>
-				<AlertDialogFooter>
-					<AlertDialogCancel>Cancel</AlertDialogCancel>
-					<AlertDialogAction
-						variant="destructive"
-						// eslint-disable-next-line
-						onClick={async () => await deleteFile(file)}
-					>
-						Delete
-					</AlertDialogAction>
-				</AlertDialogFooter>
-			</AlertDialogContent>
-		</AlertDialog>
-	);
-}
+import { DeleteFileButton } from './deleteFileButton';
+import { DownloadButton } from './downloadButton';
 
 const formSchema = z.object({
 	filename: z.string(),
@@ -187,6 +116,7 @@ export function FileListItem({
 							<TooltipContent>Rename</TooltipContent>
 						</Tooltip>
 					</TooltipProvider>
+					<DownloadButton problemId={problemId} filename={filename} />
 					<DeleteFileButton problemId={problemId} file={filename} />
 				</span>
 			</div>
