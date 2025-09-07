@@ -1,4 +1,4 @@
-name: Typecheck
+name: Vitest
 on: [push, pull_request]
 
 jobs:

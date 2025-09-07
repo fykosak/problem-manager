@@ -11,7 +11,7 @@ async function parse(input: string): Promise<string> {
 	return await generator.generateHtml();
 }
 
-async function runTestStrings(
+function runTestStrings(
 	testCases: { name?: string; input: string; output: string }[]
 ) {
 	for (const testCase of testCases) {
@@ -25,12 +25,12 @@ async function runTestStrings(
 	}
 }
 
-describe('nothing', async () => {
-	await runTestStrings([{ input: '', output: '' }]);
+describe('nothing', () => {
+	runTestStrings([{ input: '', output: '' }]);
 });
 
-describe('paragraph', async () => {
-	await runTestStrings([
+describe('paragraph', () => {
+	runTestStrings([
 		{
 			input: 'asdf',
 			output: '<p>asdf</p>',
@@ -62,8 +62,8 @@ asdf
 });
 
 describe('commands', () => {
-	describe('basic formatting', async () => {
-		await runTestStrings([
+	describe('basic formatting', () => {
+		runTestStrings([
 			{
 				input: '\\textbf{asdf}',
 				output: '<p><bf>asdf</bf></p>',
@@ -87,8 +87,8 @@ describe('commands', () => {
 		]);
 	});
 
-	describe('too many arguments', async () => {
-		await runTestStrings([
+	describe('too many arguments', () => {
+		runTestStrings([
 			{
 				input: '\\textbf{asdf}{qwer}',
 				output: '<p><bf>asdf</bf>qwer</p>',
@@ -96,8 +96,8 @@ describe('commands', () => {
 		]);
 	});
 
-	describe('unknown commands', async () => {
-		await runTestStrings([
+	describe('unknown commands', () => {
+		runTestStrings([
 			{
 				input: '\\withoutargument',
 				output: '<p>\\withoutargument</p>',
@@ -125,8 +125,8 @@ describe('commands', () => {
 		]);
 	});
 
-	describe('multiple arguments', async () => {
-		await runTestStrings([
+	describe('multiple arguments', () => {
+		runTestStrings([
 			{
 				input: '\\textbf{first}\\emph{middle}\\textit{last}',
 				output: '<p><bf>first</bf><em>middle</em><i>last</i></p>',
@@ -134,8 +134,8 @@ describe('commands', () => {
 		]);
 	});
 
-	describe('multiple commands', async () => {
-		await runTestStrings([
+	describe('multiple commands', () => {
+		runTestStrings([
 			{
 				input: '\\textbf{asdf}\\emph{asdf}',
 				output: '<p><bf>asdf</bf><em>asdf</em></p>',
@@ -147,8 +147,8 @@ describe('commands', () => {
 		]);
 	});
 
-	describe('nested commands', async () => {
-		await runTestStrings([
+	describe('nested commands', () => {
+		runTestStrings([
 			{
 				input: '\\textbf{before\\emph{inner}after}',
 				output: '<p><bf>before<em>inner</em>after</bf></p>',
@@ -160,8 +160,8 @@ describe('commands', () => {
 		]);
 	});
 
-	describe('ignored text commands', async () => {
-		await runTestStrings([
+	describe('ignored text commands', () => {
+		runTestStrings([
 			{ input: '\\null', output: '' },
 			{ input: '\\quad', output: '' },
 			{ input: '\\qquad', output: '' },
@@ -173,8 +173,8 @@ describe('commands', () => {
 		]);
 	});
 
-	describe('taskhint', async () => {
-		await runTestStrings([
+	describe('taskhint', () => {
+		runTestStrings([
 			{
 				input: '\\taskhint{label}{hint}',
 				output: '<p><em>label</em> hint</p>',
@@ -190,8 +190,8 @@ qwer
 		]);
 	});
 
-	describe('single char commands', async () => {
-		await runTestStrings([
+	describe('single char commands', () => {
+		runTestStrings([
 			{
 				input: '\\#',
 				output: '<p>#</p>',
@@ -209,8 +209,8 @@ qwer
 });
 
 describe('math', () => {
-	describe('inline math and commands', async () => {
-		await runTestStrings([
+	describe('inline math and commands', () => {
+		runTestStrings([
 			{
 				input: '$a$',
 				output: '<p>$a$</p>',
@@ -267,8 +267,8 @@ describe('math', () => {
 		]);
 	});
 
-	describe('eq command', async () => {
-		await runTestStrings([
+	describe('eq command', () => {
+		runTestStrings([
 			{
 				name: 'basic',
 				input: '\\eq{a+b}',
@@ -298,8 +298,8 @@ describe('math', () => {
 		]);
 	});
 
-	describe('quote macro', async () => {
-		await runTestStrings([
+	describe('quote macro', () => {
+		runTestStrings([
 			{
 				input: '$"20"$',
 				output: '<p>$20$</p>',
@@ -391,8 +391,8 @@ describe('math', () => {
 		]);
 	});
 
-	describe('ensure math', async () => {
-		await runTestStrings([
+	describe('ensure math', () => {
+		runTestStrings([
 			{
 				input: '\\ce{C-C}',
 				output: '<p>$\\ce{C-C}$</p>',
@@ -413,8 +413,8 @@ describe('math', () => {
 	});
 });
 
-describe('comments', async () => {
-	await runTestStrings([
+describe('comments', () => {
+	runTestStrings([
 		{
 			input: '%comment',
 			output: '',
@@ -434,8 +434,8 @@ describe('comments', async () => {
 	]);
 });
 
-describe('text', async () => {
-	await runTestStrings([
+describe('text', () => {
+	runTestStrings([
 		{
 			input: 'a~-- b',
 			output: '<p>a&nbsp;&ndash; b</p>',
@@ -459,8 +459,8 @@ describe('figures', () => {
 		}
 	);
 
-	describe('figures', async () => {
-		await runTestStrings([
+	describe('figures', () => {
+		runTestStrings([
 			{
 				input: '\\fullfig{fig}{}{}',
 				output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"></figure>',
@@ -498,8 +498,8 @@ text after`,
 		]);
 	});
 
-	describe('refs', async () => {
-		await runTestStrings([
+	describe('refs', () => {
+		runTestStrings([
 			{
 				name: 'lbl',
 				input: '\\eq{a\\lbl{ref1}}',
@@ -565,8 +565,8 @@ text after`,
 });
 
 describe('environment', () => {
-	describe('unknown environment', async () => {
-		await runTestStrings([
+	describe('unknown environment', () => {
+		runTestStrings([
 			{
 				input: '\\begin{unknown}\\asdf\\end{unknown}',
 				output: '\\begin{unknown}\\asdf\\end{unknown}',
@@ -582,8 +582,8 @@ describe('environment', () => {
 		]);
 	});
 
-	describe('inside command', async () => {
-		await runTestStrings([
+	describe('inside command', () => {
+		runTestStrings([
 			{
 				input: '\\parbox{5cm}{\\begin{unknown}\\asdf\\end{unknown}}',
 				output: '<p>\\parbox{5cm}{\\begin{unknown}\\asdf\\end{unknown}}</p>',
@@ -591,8 +591,8 @@ describe('environment', () => {
 		]);
 	});
 
-	describe('list', async () => {
-		await runTestStrings([
+	describe('list', () => {
+		runTestStrings([
 			{
 				input: '\\begin{enumerate}\\item asdf\\item qwer\\end{enumerate}',
 				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
@@ -679,8 +679,8 @@ qwer
 		]);
 	});
 
-	describe('tabular', async () => {
-		await runTestStrings([
+	describe('tabular', () => {
+		runTestStrings([
 			{
 				name: 'empty',
 				input: '\\begin{tabular}{ll}\\end{tabular}',
@@ -739,8 +739,8 @@ qwer
 		]);
 	});
 
-	describe('table', async () => {
-		await runTestStrings([
+	describe('table', () => {
+		runTestStrings([
 			{
 				name: 'empty table',
 				input: '\\begin{table}\\end{table}',
@@ -753,10 +753,25 @@ qwer
 			},
 		]);
 	});
+
+	describe('math environment', () => {
+		runTestStrings([
+			{
+				name: 'empty pmatrix',
+				input: `$\\begin{pmatrix}\\end{pmatrix}$`,
+				output: '<p>$\\begin{pmatrix}\\end{pmatrix}$</p>',
+			},
+			{
+				name: 'pmatrix with content',
+				input: `\\eq{\\begin{pmatrix} 0 & 1\\\\ 2 & 3\\end{pmatrix}}`,
+				output: '<p>\\begin{equation*}\\begin{pmatrix} 0 & 1\\\\ 2 & 3\\end{pmatrix}\\end{equation*}</p>',
+			},
+		]);
+	});
 });
 
-describe('footnote', async () => {
-	await runTestStrings([
+describe('footnote', () => {
+	runTestStrings([
 		{
 			input: 'text\\footnote{footnote}',
 			output: '<p>text<sup>1</sup></p><hr><ol><li><p>footnote</p></li></ol>',
@@ -779,8 +794,8 @@ describe('footnote', async () => {
 	]);
 });
 
-describe('url', async () => {
-	await runTestStrings([
+describe('url', () => {
+	runTestStrings([
 		{
 			input: '\\url{https://example.com}',
 			output: '<p><a href="https://example.com">https://example.com</a></p>',
@@ -800,8 +815,8 @@ describe('url', async () => {
 	]);
 });
 
-describe('ifs', async () => {
-	await runTestStrings([
+describe('ifs', () => {
+	runTestStrings([
 		{
 			input: '\\ifyearbook asdf\\fi',
 			output: '',
