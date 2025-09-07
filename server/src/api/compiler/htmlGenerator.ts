@@ -978,6 +978,20 @@ export class HtmlGenerator {
 		return buffer;
 	}
 
+	private async generateMathEnvironment(): Promise<string> {
+		this.expectNodeName('MathEnvironment');
+
+		let buffer = '';
+		this.expectNext();
+		buffer += await this.generateBeginEnv();
+		this.expectNext();
+		buffer += await this.generateMath();
+		this.expectNext();
+		buffer += this.generateEndEnv();
+
+		return buffer;
+	}
+
 	private async generateBeginEnv(): Promise<string> {
 		this.expectNodeName('BeginEnv');
 		const topNode = this.cursor.node;
@@ -1428,6 +1442,9 @@ export class HtmlGenerator {
 
 			case 'Environment':
 				return this.generateEnvironment();
+
+			case 'MathEnvironment':
+				return this.generateMathEnvironment();
 
 			case 'ListEnvironment':
 				return this.generateListEnvironment();

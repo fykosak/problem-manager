@@ -19,7 +19,8 @@ Math {
 		Whitespace |
 		Number |
 		NewlineCommand |
-		Newline
+		Newline |
+		MathEnvironment
 	)*
 }
 
@@ -149,6 +150,12 @@ Environment[group=EnvironmentGroup] {
 	BeginEnv<EnvName>
 	(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
 	Newline | Environment | ListEnvironment | TabularEnvironment | IfBlock)*
+	EndEnv<EnvName>
+}
+
+MathEnvironment[group=EnvironmentGroup] {
+	BeginEnv<EnvName>
+	Math
 	EndEnv<EnvName>
 }
 
