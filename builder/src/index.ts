@@ -55,7 +55,6 @@ app.post(
 app.post(
 	'/export',
 	asyncHandler(async (req, res) => {
-		console.log('export file');
 		const filepath = req.body.filepath; // eslint-disable-line
 		if (!filepath) {
 			res.status(400).send({ message: 'Filepath not provided' });
