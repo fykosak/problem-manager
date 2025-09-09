@@ -459,6 +459,35 @@ describe('math', () => {
 			},
 		]);
 	});
+
+	describe('extensible delimiters', () => {
+		runTestStrings([
+			{
+				input: '$\\left(a\\right)$',
+				output: '<p>$\\left(a\\right)$</p>',
+			},
+			{
+				input: '$\\left\\{a\\right\\}$',
+				output: '<p>$\\left\\{a\\right\\}$</p>',
+			},
+			{
+				input: '$\\left[a\\right]$',
+				output: '<p>$\\left[a\\right]$</p>',
+			},
+			{
+				input: '$\\left|a\\right|$',
+				output: '<p>$\\left|a\\right|$</p>',
+			},
+			{
+				input: '$\\left\\|a\\right\\|$',
+				output: '<p>$\\left\\|a\\right\\|$</p>',
+			},
+			{
+				input: '$\\left<a\\right>$',
+				output: '<p>$\\left<a\\right>$</p>',
+			},
+		]);
+	});
 });
 
 describe('comments', () => {

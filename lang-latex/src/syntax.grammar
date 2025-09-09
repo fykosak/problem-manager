@@ -13,6 +13,7 @@ Math {
 		InlineMathContent |
 		MathCommand |
 		UnderscoreCommand |
+		DelimiterCommand |
 		MathCommandArgument |
 		QuoteMacro |
 		"[" | "]" | "{" | "}" |
@@ -94,6 +95,16 @@ ItemCommand {
 	@specialize<CommandIdentifier, "\\item"> CommandArgumentOptional?
 }
 
+DelimiterCommand {
+	DelimiterCommandIdentifier (
+		"(" | ")"
+		| "[" | "]"
+		| "<" | ">"
+		| "|"
+		| MathCommand
+	)
+}
+
 QuoteMacro {
 	"\"" (Number | MathCommand | MathCommandArgument | QuoteMacroContent)*
 	("e" (Number | MathCommandArgument))? ((Whitespace|Newline) Math)? "\""
@@ -103,7 +114,8 @@ QuoteMacro {
 @external specialize {CommandIdentifier} specializeCommandIdentifier from "./tokenizer.ts" {
 	IfCommandIdentifier,
 	ElseCommandIdentifier,
-	IfEndCommandIdentifier
+	IfEndCommandIdentifier,
+	DelimiterCommandIdentifier
 }
 
 IfBranch {
@@ -196,7 +208,14 @@ TableEnvironment[group=EnvironmentGroup] {
 	Text { (![\\${}\[\]%\n&])+ }
 	CommandIdentifier {
 		"\\"
-		(((@asciiLetter)+"*"?)|"%"|"{"|"}"|"\\"|"_"|"("|")"|","|"#"|"-")
+		(
+			((@asciiLetter)+"*"?)
+			| "%"
+			| "{" | "}"
+			| "\\" | "_"
+			| "(" | ")"
+			| "," | "#" | "-"
+		)
 	}
 	InlineMathContent { (![\\${}\[\]\"%\n\t\r 0-9])+ }
 	QuoteMacroContent { (![\\${}\[\]\"%\n\t\re\+\- 0-9])+ }
@@ -211,6 +230,7 @@ TableEnvironment[group=EnvironmentGroup] {
 
 	// listing those characters to enable syntax highlighting
 	"[" "]" "{" "}" "$" "\"" "e" "&"
+	"(" ")" "<" ">" "|"
 
 	@precedence {Number, InlineMathContent}
 	@precedence {ParagraphSeparator, Newline}

@@ -3,12 +3,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-export class ExporterError extends Error {
-	constructor(message: string) {
-		super(message);
-		this.name = 'ExporterError';
-	}
-}
+import { ExporterError } from './errors/exporterError';
 
 export default abstract class Exporter {
 	protected readonly inputFile: string;

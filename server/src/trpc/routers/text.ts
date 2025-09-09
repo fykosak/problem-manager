@@ -7,13 +7,14 @@ import { textTable } from '@server/db/schema';
 import { StorageProvider } from '@server/sockets/storageProvider';
 
 export async function releaseText(textId: number) {
-	console.log(`Exporting text ${textId}`);
 	const text = await db.query.textTable.findFirst({
 		where: eq(textTable.textId, textId),
 	});
 	if (!text) {
 		throw new Error(`Text ${textId} does not exist`);
 	}
+
+	console.log(`Exporting text ${textId} for problem ${text.problemId}`);
 
 	const ydocStorage = new StorageProvider();
 	const ydoc = await ydocStorage.getYDoc(textId);

@@ -2,7 +2,10 @@ import { NodeProp, type SyntaxNode, Tree, TreeCursor } from '@lezer/common';
 import type { ParserInput } from 'lang-latex';
 
 import type { LangEnum, TextTypeEnum } from '@server/db/schema';
-import { ProblemStorage } from '@server/runner/problemStorage';
+import {
+	ProblemStorage,
+	ProblemStorageError,
+} from '@server/runner/problemStorage';
 
 interface Paragraph {
 	type: 'env' | 'str';
@@ -279,7 +282,9 @@ export class HtmlGenerator {
 
 			return content + footnoteContent;
 		} catch (e) {
-			this.print();
+			if (!(e instanceof ProblemStorageError)) {
+				this.print();
+			}
 			throw e;
 		}
 	}
@@ -1411,6 +1416,15 @@ export class HtmlGenerator {
 
 			case 'UnderscoreCommand':
 				return this.generateUnderscoreCommand();
+
+			case 'DelimiterCommand': {
+				this.expectNext();
+				this.expectNodeName('DelimiterCommandIdentifier');
+				const delimiterCommand = this.getCursorText();
+				this.expectNext();
+				const delimiter = await this.generateNode();
+				return delimiterCommand + delimiter;
+			}
 
 			case 'Command':
 			case 'MathCommand':

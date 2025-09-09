@@ -1,8 +1,8 @@
 import path from 'node:path';
 
 import EpsExporter from './epsExporter';
+import { NoExporterError } from './errors/noExporterError';
 import type Exporter from './exporter';
-import { ExporterError } from './exporter';
 import ImageExporter from './imageExporter';
 import IpeExporter from './ipeExporter';
 import MetapostExporter from './metapostExporter';
@@ -34,5 +34,5 @@ export default function getExporter(
 			return new ImageExporter(inputFile, targetDirectory);
 	}
 
-	throw new ExporterError('No exporter for this filetype');
+	throw new NoExporterError('No exporter for this filetype');
 }

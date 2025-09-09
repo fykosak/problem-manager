@@ -1,4 +1,5 @@
 import {
+	DelimiterCommandIdentifier,
 	ElseCommandIdentifier,
 	IfCommandIdentifier,
 	IfEndCommandIdentifier,
@@ -45,6 +46,10 @@ export function specializeCommandIdentifier(name: string) {
 
 	if (name === '\\fi') {
 		return IfEndCommandIdentifier;
+	}
+
+	if (name === '\\left' || name === '\\right') {
+		return DelimiterCommandIdentifier;
 	}
 
 	return -1;
