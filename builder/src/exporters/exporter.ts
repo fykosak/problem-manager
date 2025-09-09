@@ -85,11 +85,18 @@ export default abstract class Exporter {
 	protected execute(
 		command: string,
 		args: string[] = [],
-		cwd: string | undefined = undefined
+		cwd: string | undefined = undefined,
+		env: Record<string, string> = {}
 	) {
 		console.log(args);
 		return new Promise((resolve, reject) => {
-			const commandProcess = spawn(command, args, { cwd: cwd });
+			const commandProcess = spawn(command, args, {
+				cwd: cwd,
+				env: {
+					...process.env,
+					...env,
+				},
+			});
 			commandProcess.on('exit', (code) => {
 				console.log(commandProcess.stderr.setEncoding('utf-8').read());
 				console.log('exit code: ' + code);
