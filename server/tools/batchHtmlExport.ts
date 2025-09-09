@@ -51,7 +51,7 @@ async function main() {
 
 	for (const text of textsToExport) {
 		try {
-			await releaseText(text.text.textId, text.problem.problemId);
+			await releaseText(text.text.textId);
 		} catch (error) {
 			console.error(error);
 			if (error instanceof ProblemStorageError) {

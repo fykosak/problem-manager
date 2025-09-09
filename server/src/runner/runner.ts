@@ -5,7 +5,7 @@ import path from 'node:path';
 import config from '@server/config/config';
 
 import { db } from '../db';
-import { langEnum, textTable, textTypeEnum } from '../db/schema';
+import { type LangEnum, type TextTypeEnum, textTable } from '../db/schema';
 import { StorageProvider } from '../sockets/storageProvider';
 import { ProblemStorage } from './problemStorage';
 
@@ -24,10 +24,7 @@ export class Runner {
 		return config.builderUrl;
 	}
 
-	public getPdfContents(
-		textType: (typeof textTypeEnum.enumValues)[number],
-		textLang: (typeof langEnum.enumValues)[number]
-	): string {
+	public getPdfContents(textType: TextTypeEnum, textLang: LangEnum): string {
 		const absolutePath = path.join(
 			'/data',
 			this.problemId.toString(),
@@ -37,10 +34,7 @@ export class Runner {
 		return fs.readFileSync(absolutePath, { encoding: 'base64' });
 	}
 
-	public async run(
-		textType: (typeof textTypeEnum.enumValues)[number],
-		textLang: (typeof langEnum.enumValues)[number]
-	) {
+	public async run(textType: TextTypeEnum, textLang: LangEnum) {
 		const directoryName = this.problemId.toString();
 		const absolutePath = this.storage.getStorageDirectory();
 

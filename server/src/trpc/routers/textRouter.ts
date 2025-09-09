@@ -70,7 +70,7 @@ export const textRouter = trpc.router({
 			}
 
 			try {
-				await releaseText(input.textId, text.problemId);
+				await releaseText(input.textId);
 			} catch (error) {
 				console.error(error);
 				throw new TRPCError({

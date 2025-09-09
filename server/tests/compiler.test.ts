@@ -2,23 +2,38 @@ import { ParserInput, latexLanguage } from 'lang-latex';
 import { describe, expect, test, vi } from 'vitest';
 
 import { HtmlGenerator } from '@server/api/compiler/htmlGenerator';
+import type { LangEnum, TextTypeEnum } from '@server/db/schema';
 import { ProblemStorage } from '@server/runner/problemStorage';
 
-async function parse(input: string): Promise<string> {
+async function parse(
+	input: string,
+	type: TextTypeEnum,
+	lang: LangEnum
+): Promise<string> {
 	const parserInput = new ParserInput(input);
 	const tree = latexLanguage.parser.parse(parserInput);
-	const generator = new HtmlGenerator(tree, parserInput, 1);
+	const generator = new HtmlGenerator(tree, parserInput, 1, type, lang);
 	return await generator.generateHtml();
 }
 
 function runTestStrings(
-	testCases: { name?: string; input: string; output: string }[]
+	testCases: {
+		name?: string;
+		input: string;
+		output: string;
+		type?: TextTypeEnum;
+		lang?: LangEnum;
+	}[]
 ) {
 	for (const testCase of testCases) {
 		test(
 			testCase.name ?? testCase.input.replace(/\n/g, '\\n'),
 			async () => {
-				const output = await parse(testCase.input);
+				const output = await parse(
+					testCase.input,
+					testCase.type ?? 'task',
+					testCase.lang ?? 'cs'
+				);
 				expect(output).toBe(testCase.output);
 			}
 		);
@@ -267,6 +282,21 @@ describe('math', () => {
 		]);
 	});
 
+	describe('display math', () => {
+		runTestStrings([
+			{
+				name: 'empty',
+				input: '$$$$',
+				output: '<p>$$$$</p>',
+			},
+			{
+				name: 'basic content',
+				input: '$$a$$',
+				output: '<p>$$a$$</p>',
+			},
+		]);
+	});
+
 	describe('eq command', () => {
 		runTestStrings([
 			{
@@ -305,8 +335,26 @@ describe('math', () => {
 				output: '<p>$20$</p>',
 			},
 			{
+				name: 'comma separator',
 				input: '$"20,5"$',
 				output: '<p>$20{,}5$</p>',
+			},
+			{
+				name: 'dot separator',
+				input: '$"20.5"$',
+				output: '<p>$20{,}5$</p>',
+			},
+			{
+				name: 'en comma separator',
+				input: '$"20,5"$',
+				output: '<p>$20.5$</p>',
+				lang: 'en',
+			},
+			{
+				name: 'en dot separator',
+				input: '$"20.5"$',
+				output: '<p>$20.5$</p>',
+				lang: 'en',
 			},
 			{
 				input: '$"1 km"$',
@@ -494,6 +542,18 @@ describe('figures', () => {
 \\fullfig{fig}{Figures}{fig1}
 text after`,
 				output: `<p>text before</p><figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure><p>text after</p>`,
+			},
+			{
+				name: 'fullfig en caption',
+				input: '\\fullfig{fig}{Figures}{fig1}',
+				output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figure 1: Figures</figcaption></figure>',
+				lang: 'en',
+			},
+			{
+				name: 'illfig en caption',
+				input: '\\illfig{fig}{Figures}{fig1}{}',
+				output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Figure 1: Figures</figcaption></figure>',
+				lang: 'en',
 			},
 		]);
 	});
@@ -748,8 +808,14 @@ qwer
 			},
 			{
 				name: 'captioned table',
-				input: '\\begin{table}\\caption{Toto je caption}\\label{table}\\begin{tabular}{ll}sadf&asdf\\end{tabular}\\end{table}',
-				output: '<table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: Toto je caption</caption><tbody><tr><td>sadf</td><td>asdf</td></tr></tbody></table>',
+				input: '\\begin{table}\\caption{Table caption}\\label{table}\\begin{tabular}{ll}sadf&asdf\\end{tabular}\\end{table}',
+				output: '<table class="table table-sm table-borderless w-auto mx-auto"><caption>Tabulka 1: Table caption</caption><tbody><tr><td>sadf</td><td>asdf</td></tr></tbody></table>',
+			},
+			{
+				name: 'en caption',
+				input: '\\begin{table}\\caption{Table caption}\\label{table}\\begin{tabular}{ll}sadf&asdf\\end{tabular}\\end{table}',
+				output: '<table class="table table-sm table-borderless w-auto mx-auto"><caption>Table 1: Table caption</caption><tbody><tr><td>sadf</td><td>asdf</td></tr></tbody></table>',
+				lang: 'en',
 			},
 		]);
 	});
@@ -836,6 +902,16 @@ describe('ifs', () => {
 		{
 			input: '\\iftask{asdf}\\fi text',
 			output: '<p>asdf text</p>',
+		},
+		{
+			input: '\\iftask asdf\\else qwer\\fi',
+			output: '<p>qwer</p>',
+			type: 'solution',
+		},
+		{
+			input: '\\ifsolution asdf\\else qwer\\fi',
+			output: '<p>asdf</p>',
+			type: 'solution',
 		},
 	]);
 });

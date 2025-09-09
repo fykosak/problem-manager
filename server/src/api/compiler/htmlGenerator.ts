@@ -1,7 +1,7 @@
 import { NodeProp, type SyntaxNode, Tree, TreeCursor } from '@lezer/common';
 import type { ParserInput } from 'lang-latex';
 
-import type { langEnum, textTypeEnum } from '@server/db/schema';
+import type { LangEnum, TextTypeEnum } from '@server/db/schema';
 import { ProblemStorage } from '@server/runner/problemStorage';
 
 interface Paragraph {
@@ -14,8 +14,8 @@ type RefType = 'figure' | 'equation' | 'table';
 export class HtmlGenerator {
 	private tree: Tree;
 	private parserInput: ParserInput;
-	private type: (typeof textTypeEnum.enumValues)[number];
-	private lang: (typeof langEnum.enumValues)[number];
+	private type: TextTypeEnum;
+	private lang: LangEnum;
 
 	private cursor: TreeCursor;
 	private problemStorage: ProblemStorage;
@@ -26,15 +26,20 @@ export class HtmlGenerator {
 	private refs = new Map<string, number>();
 	private lastIncrementedRefCounter: RefType | null = null;
 
-	constructor(tree: Tree, parserInput: ParserInput, problemId: number) {
+	constructor(
+		tree: Tree,
+		parserInput: ParserInput,
+		problemId: number,
+		type: TextTypeEnum,
+		lang: LangEnum
+	) {
 		this.tree = tree;
 		this.cursor = tree.cursor();
 		this.parserInput = parserInput;
 		this.problemStorage = new ProblemStorage(problemId);
 
-		// TODO
-		this.type = 'task';
-		this.lang = 'cs';
+		this.type = type;
+		this.lang = lang;
 
 		// this.print();
 	}
@@ -379,19 +384,6 @@ export class HtmlGenerator {
 		}
 	}
 
-	private async generateParagraph(): Promise<string> {
-		this.expectNodeName('Paragraph');
-		const topNode = this.cursor.node;
-		let buffer = '<p>';
-		while (this.expectNext()) {
-			buffer += await this.generateNode();
-			if (this.cursor.to >= topNode.to || this.cursor.name === 'EOF') {
-				break;
-			}
-		}
-		return buffer + '</p>';
-	}
-
 	/**
 	 * Generate code for command argument. Cursor position ends and the last },
 	 * .next() needs to be called.
@@ -430,6 +422,30 @@ export class HtmlGenerator {
 		return buffer;
 	}
 
+	private getCaptionLabel(type: RefType) {
+		switch (this.lang) {
+			case 'cs':
+				switch (type) {
+					case 'equation':
+						return 'Rovnice';
+					case 'figure':
+						return 'Obrázek';
+					case 'table':
+						return 'Tabulka';
+				}
+			//eslint-disable-next-line
+			default:
+				switch (type) {
+					case 'equation':
+						return 'Equation';
+					case 'figure':
+						return 'Figure';
+					case 'table':
+						return 'Table';
+				}
+		}
+	}
+
 	// generate html for \fullfig[position]{filename}{caption}{label}[opts]
 	private async generateCommandFullfig(
 		commandNode: SyntaxNode
@@ -463,7 +479,8 @@ export class HtmlGenerator {
 		if (caption !== '') {
 			const figNumber = this.incrementRefCounter('figure');
 			buffer += '<figcaption class="figure-caption text-center">';
-			buffer += `Obrázek ${figNumber}: ${caption}`; // TODO lang
+			buffer += this.getCaptionLabel('figure');
+			buffer += ` ${figNumber}: ${caption}`;
 			buffer += '</figcaption>';
 		}
 		buffer += '</figure>';
@@ -503,7 +520,8 @@ export class HtmlGenerator {
 		if (caption !== '') {
 			const figNumber = this.incrementRefCounter('figure');
 			buffer += '<figcaption class="figure-caption text-center">';
-			buffer += `Obrázek ${figNumber}: ${caption}`; // TODO lang
+			buffer += this.getCaptionLabel('figure');
+			buffer += ` ${figNumber}: ${caption}`;
 			buffer += '</figcaption>';
 		}
 		buffer += '</figure>';
@@ -596,20 +614,9 @@ export class HtmlGenerator {
 			case '\\caption': {
 				const captionNumber = this.registerCaption();
 				const captionType = this.getCaptionType();
-				let captionLabel = '';
 
-				// TODO lang
-				switch (captionType) {
-					case 'equation':
-						captionLabel += `Rovnice ${captionNumber}:`;
-						break;
-					case 'figure':
-						captionLabel += `Obrázek ${captionNumber}:`;
-						break;
-					case 'table':
-						captionLabel += `Tabulka ${captionNumber}:`;
-						break;
-				}
+				let captionLabel = this.getCaptionLabel(captionType);
+				captionLabel += ` ${captionNumber}:`;
 
 				this.expectNext();
 				const caption = await this.generateCommandArgument();
@@ -715,7 +722,12 @@ export class HtmlGenerator {
 			case '\\Ohm':
 				return '\\Omega';
 			case '\\const':
-				return '\\mathrm{konst}'; // TODO lang
+				switch (this.lang) {
+					case 'cs':
+						return '\\mathrm{konst}';
+					default:
+						return '\\mathrm{const}';
+				}
 			case '\\f': {
 				this.expectNext();
 				const functionName = await this.generateCommandArgument();
@@ -824,15 +836,12 @@ export class HtmlGenerator {
 		return '$' + mathContents + '$';
 	}
 
+	// $$ is not listed in tree so no need to consume it
 	private async generateDisplayMath(): Promise<string> {
 		this.expectNodeName('DisplayMath');
-		//this.expectNext(); // move to $$
-		//this.expectNodeName('$$');
 		this.expectNext(); // move to Math
 		const contents = await this.generateMath();
-		//this.expectNext();
-		//this.expectNodeName('$$');
-		return contents;
+		return `$$${contents}$$`;
 	}
 
 	private async generateMathArgument(): Promise<string> {
@@ -938,10 +947,17 @@ export class HtmlGenerator {
 			numberPart += `\\cdot 10^${exponent}`;
 		}
 
-		numberPart = numberPart
-			.replace(/\./g, ',') // TODO lang , -> . for en
-			.replace(/(?<!\\),/g, '{,}') // negative lookbehind to ignore \,
-			.replace(/~/g, '\\,');
+		switch (this.lang) {
+			case 'cs':
+				numberPart = numberPart
+					.replace(/\./g, ',')
+					.replace(/(?<!\\),/g, '{,}'); // negative lookbehind to ignore \,
+				break;
+			case 'en':
+				numberPart = numberPart.replace(/(?<!\\),/g, '.');
+				break;
+		}
+		numberPart = numberPart.replace(/~/g, '\\,');
 
 		if (parts[2] === '') {
 			return numberPart;
@@ -1383,9 +1399,6 @@ export class HtmlGenerator {
 
 	private async generateNode(): Promise<string> {
 		switch (this.cursor.name) {
-			case 'Paragraph':
-				return this.generateParagraph();
-
 			case 'ParagraphSeparator':
 			case 'Comment':
 				return '';
