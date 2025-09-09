@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull } from 'drizzle-orm';
 import express from 'express';
 import { type Response } from 'express';
 import * as Y from 'yjs';
@@ -11,6 +11,7 @@ import {
 	contestTable,
 	contestYearTable,
 	langEnum,
+	organizerTable,
 	problemTable,
 	problemTopicTable,
 	seriesTable,
@@ -171,6 +172,7 @@ apiRouter.get(
 						contestYear: true,
 					},
 				},
+				authors: true,
 			},
 		});
 
@@ -207,6 +209,30 @@ apiRouter.get(
 			texts[text.type][text.lang] = contents;
 		}
 
+		const authorSignatures = new Map<string, string[]>();
+		for (const authorType of textTypeEnum.enumValues) {
+			const authors = problem.authors.filter(
+				(author) => author.type === authorType
+			);
+			const personIds = authors.map((author) => author.personId);
+			const organizers = await db.query.organizerTable.findMany({
+				columns: {
+					texSignature: true,
+				},
+				where: and(
+					inArray(organizerTable.personId, personIds),
+					isNotNull(organizerTable.texSignature),
+					eq(organizerTable.contestId, contestId)
+				),
+			});
+			authorSignatures.set(
+				authorType,
+				// @ts-expect-error only organizer with a signature are selected,
+				// so the correct type is string instead of string | null
+				organizers.map((organizer) => organizer.texSignature)
+			);
+		}
+
 		res.json({
 			problemId: problem.problemId,
 			contest: contestId,
@@ -219,6 +245,7 @@ apiRouter.get(
 				(problemTopic) => problemTopic.topic.label
 			),
 			texts: texts,
+			authorSignatures: Object.fromEntries(authorSignatures),
 		});
 	})
 );

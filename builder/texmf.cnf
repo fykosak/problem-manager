@@ -4,4 +4,4 @@
 % p (paranoid)   : as 'r' and disallow going to parent directories, and
 %                  restrict absolute paths to be under $TEXMFOUTPUT.
 openout_any = p
-openin_any = p
+openin_any = r

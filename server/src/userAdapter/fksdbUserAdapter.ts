@@ -23,6 +23,7 @@ export class FKSDBUserAdapter extends UserAdapter {
 			familyName: string;
 			domainAlias: string | null;
 			state: (typeof organizerStateEnum.enumValues)[number];
+			texSignature: string | null;
 		}[];
 	}
 
@@ -77,6 +78,7 @@ export class FKSDBUserAdapter extends UserAdapter {
 							? organizer.domainAlias + fksdbContest.domain
 							: null,
 						state: organizer.state,
+						texSignature: organizer.texSignature,
 					});
 
 					people.set(organizer.personId, person);

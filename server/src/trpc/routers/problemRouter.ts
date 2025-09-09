@@ -10,6 +10,7 @@ import { db } from '@server/db';
 import {
 	authorTable,
 	langEnum,
+	problemStateEnum,
 	problemTable,
 	problemTopicTable,
 	seriesTable,
@@ -24,6 +25,42 @@ import { Runner } from '@server/runner/runner';
 
 import { authedProcedure, contestProcedure } from '../middleware';
 import { trpc } from '../trpc';
+
+async function getProblemContest(problemId: number) {
+	const problem = await db.query.problemTable.findFirst({
+		where: eq(problemTable.problemId, problemId),
+		with: {
+			contest: true,
+			series: {
+				with: {
+					contestYear: {
+						with: {
+							contest: true,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	if (!problem) {
+		throw new TRPCError({
+			message: 'Problem does not exist',
+			code: 'NOT_FOUND',
+		});
+	}
+
+	const contestSymbol =
+		problem.contest?.symbol ?? problem.series?.contestYear.contest.symbol;
+	if (!contestSymbol) {
+		throw new TRPCError({
+			message: 'Problem not connected to contest',
+			code: 'INTERNAL_SERVER_ERROR',
+		});
+	}
+
+	return contestSymbol;
+}
 
 export const problemRouter = trpc.router({
 	info: authedProcedure.input(z.number()).query(async ({ input }) => {
@@ -186,7 +223,6 @@ export const problemRouter = trpc.router({
 		)
 		.mutation(async ({ input }) => {
 			// TODO validation
-			console.log(input.topics);
 			await db
 				.update(problemTable)
 				.set({
@@ -218,8 +254,6 @@ export const problemRouter = trpc.router({
 			// update authors
 			for (const type of textTypeEnum.enumValues) {
 				const personIds = input.authors[type];
-				console.log(type);
-				console.log(personIds);
 				await db
 					.delete(authorTable)
 					.where(
@@ -262,8 +296,6 @@ export const problemRouter = trpc.router({
 				...returnValue,
 				file: runner.getPdfContents(input.type, input.lang),
 			};
-			//console.log(returnValue);
-			process.stdout.write(JSON.stringify(returnValue) + '\n');
 			return returnValue; // eslint-disable-line
 		}),
 
@@ -276,178 +308,220 @@ export const problemRouter = trpc.router({
 				task: z.string().nonempty(),
 				topics: z.number().array().min(1),
 				type: z.coerce.number(),
+				result: z.object({
+					value: z.coerce.number().optional(),
+					unit: z.string().optional(),
+				}),
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			// TODO validate contestId for available contests of user
-			// TODO to db transaction
-
-			// filter topics by contest
-			const filteredTopics = await db.query.topicTable.findMany({
-				where: and(
-					eq(topicTable.contestId, ctx.contest.contestId),
-					inArray(topicTable.topicId, input.topics)
-				),
-			});
-
-			if (filteredTopics.length < 1) {
+			if (
+				!acl.isAllowedContest(
+					ctx.aclRoles,
+					ctx.contest.symbol,
+					'problem',
+					'create'
+				)
+			) {
 				throw new TRPCError({
-					code: 'BAD_REQUEST',
-					message: 'No topic specified within the defined contest',
+					code: 'FORBIDDEN',
+					message: 'Cannot create problem for this contest',
 				});
 			}
 
-			// create problem
-			const metadata = {
-				name: {
-					[input.lang]: input.name,
-				},
-				origin: {},
-			};
-			if (input.origin) {
-				metadata['origin'] = {
-					[input.lang]: input.origin,
-				};
-			}
-			const problem = (
-				await db
-					.insert(problemTable)
-					.values({
-						typeId: input.type,
-						contestId: ctx.contest.contestId,
-						metadata: metadata,
-					})
-					.returning()
-			)[0];
-
-			// add text
-			const taskYDoc = new Y.Doc();
-			taskYDoc.getText().insert(0, input.task);
-
-			const langs = config.contestTextLangs.get(ctx.contest.symbol);
-			if (!langs) {
-				throw new TRPCError({
-					message: 'Could not get languages for contest',
-					code: 'INTERNAL_SERVER_ERROR',
+			return await db.transaction(async (tx) => {
+				// filter topics by contest
+				const filteredTopics = await tx.query.topicTable.findMany({
+					where: and(
+						eq(topicTable.contestId, ctx.contest.contestId),
+						inArray(topicTable.topicId, input.topics)
+					),
 				});
-			}
-			for (const lang of langs) {
-				for (const type of textTypeEnum.enumValues) {
-					if (!(langEnum.enumValues as string[]).includes(lang)) {
-						continue;
-					}
-					// @ts-expect-error Lang is check that its valid, but it's type is
-					// not specified.
-					await db.insert(textTable).values({
-						problemId: problem.problemId,
-						lang: lang,
-						type: type,
-						contents:
-							type === 'task' && lang === input.lang
-								? Y.encodeStateAsUpdate(taskYDoc)
-								: null,
-					});
-				}
-			}
 
-			// add topics
-			await db.insert(problemTopicTable).values(
-				Array.from(filteredTopics, (topic) => ({
-					problemId: problem.problemId,
-					topicId: topic.topicId,
-				}))
-			);
-
-			await db.insert(authorTable).values({
-				personId: ctx.person.personId,
-				problemId: problem.problemId,
-				type: 'task',
-			});
-
-			return problem;
-		}),
-
-	// files
-
-	files: trpc.router({
-		list: authedProcedure.input(z.number()).query(async ({ input }) => {
-			const problemStorage = new ProblemStorage(input);
-			return await problemStorage.getFiles();
-		}),
-
-		upload: authedProcedure
-			.input(
-				z.object({
-					problemId: z.number(),
-					files: z
-						.object({
-							name: z.string().nonempty(),
-							data: z.string().nonempty(),
-						})
-						.array(),
-				})
-			)
-			.mutation(async ({ input }) => {
-				const problem = await db.query.problemTable.findFirst({
-					where: eq(problemTable.problemId, input.problemId),
-				});
-				if (!problem) {
+				if (filteredTopics.length < 1) {
 					throw new TRPCError({
-						message: 'Problem does not exist',
 						code: 'BAD_REQUEST',
+						message:
+							'No topic specified within the defined contest',
 					});
 				}
 
-				// TODO check for user permissions
+				// create problem
+				const metadata = {
+					name: {
+						[input.lang]: input.name,
+					},
+					origin: {},
+					result: input.result,
+				};
+				if (input.origin) {
+					metadata['origin'] = {
+						[input.lang]: input.origin,
+					};
+				}
 
-				// check for name collisions
-				const nameSet = new Set<string>();
-				for (const file of input.files) {
-					const pureName = path.parse(file.name).name;
-					if (nameSet.has(pureName)) {
-						throw new TRPCError({
-							message: `Cannot upload duplicate file ${pureName}`,
-							code: 'BAD_REQUEST',
+				const problem = (
+					await tx
+						.insert(problemTable)
+						.values({
+							typeId: input.type,
+							contestId: ctx.contest.contestId,
+							metadata: metadata,
+						})
+						.returning()
+				)[0];
+
+				// add text
+				const taskYDoc = new Y.Doc();
+				taskYDoc.getText().insert(0, input.task);
+
+				const langs = config.contestTextLangs.get(ctx.contest.symbol);
+				if (!langs) {
+					throw new TRPCError({
+						message: 'Could not get languages for contest',
+						code: 'INTERNAL_SERVER_ERROR',
+					});
+				}
+				for (const lang of langs) {
+					for (const type of textTypeEnum.enumValues) {
+						if (!(langEnum.enumValues as string[]).includes(lang)) {
+							continue;
+						}
+						// @ts-expect-error Lang is check that its valid, but it's type is
+						// not specified.
+						await tx.insert(textTable).values({
+							problemId: problem.problemId,
+							lang: lang,
+							type: type,
+							contents:
+								type === 'task' && lang === input.lang
+									? Y.encodeStateAsUpdate(taskYDoc)
+									: null,
 						});
 					}
-					nameSet.add(pureName);
 				}
 
-				const runner = new Runner(input.problemId);
-				const problemStorage = new ProblemStorage(input.problemId);
+				// add topics
+				await tx.insert(problemTopicTable).values(
+					Array.from(filteredTopics, (topic) => ({
+						problemId: problem.problemId,
+						topicId: topic.topicId,
+					}))
+				);
 
-				for (const file of input.files) {
-					await problemStorage.saveFile(file.name, file.data);
-					const filepath = problemStorage.getPathForFile(file.name);
-					await runner.exportFile(filepath);
-				}
-			}),
+				await tx.insert(authorTable).values({
+					personId: ctx.person.personId,
+					problemId: problem.problemId,
+					type: 'task',
+				});
 
-		delete: authedProcedure
-			.input(
-				z.object({
-					problemId: z.number(),
-					filename: z.string(),
+				return problem;
+			});
+		}),
+
+	changeState: authedProcedure
+		.input(
+			z.object({
+				problemId: z.number(),
+				state: z.enum(problemStateEnum.enumValues),
+			})
+		)
+		.mutation(async ({ ctx, input }) => {
+			const problem = await db.query.problemTable.findFirst({
+				where: eq(problemTable.problemId, input.problemId),
+				with: {
+					contest: true,
+				},
+			});
+
+			if (!problem) {
+				throw new TRPCError({
+					message: 'Problem does not exist',
+					code: 'BAD_REQUEST',
+				});
+			}
+
+			if (!problem.contest) {
+				throw new TRPCError({
+					message:
+						'Cannot change state of this problem, assigned to a series',
+					code: 'BAD_REQUEST',
+				});
+			}
+
+			if (
+				!acl.isAllowedContest(
+					ctx.aclRoles,
+					problem.contest.symbol,
+					'problem',
+					'changeState'
+				)
+			) {
+				throw new TRPCError({
+					message:
+						'You are not permitted to change state for this problem',
+					code: 'FORBIDDEN',
+				});
+			}
+
+			await db
+				.update(problemTable)
+				.set({
+					state: input.state,
 				})
-			)
-			.mutation(async ({ input }) => {
-				const problemStorage = new ProblemStorage(input.problemId);
-				await problemStorage.deleteFile(input.filename);
-			}),
+				.where(eq(problemTable.problemId, input.problemId));
+		}),
 
-		rename: authedProcedure
-			.input(
-				z.object({
-					problemId: z.number(),
-					oldName: z.string(),
-					newName: z.string(),
+	changeContest: authedProcedure
+		.input(
+			z.object({
+				problemId: z.number(),
+				contestId: z.number(),
+			})
+		)
+		.mutation(async ({ ctx, input }) => {
+			const problem = await db.query.problemTable.findFirst({
+				where: eq(problemTable.problemId, input.problemId),
+				with: {
+					contest: true,
+				},
+			});
+
+			if (!problem) {
+				throw new TRPCError({
+					message: 'Problem does not exist',
+					code: 'BAD_REQUEST',
+				});
+			}
+
+			if (!problem.contest) {
+				throw new TRPCError({
+					message: 'Problem not assigned to a contest',
+					code: 'BAD_REQUEST',
+				});
+			}
+
+			if (
+				!acl.isAllowedContest(
+					ctx.aclRoles,
+					problem.contest.symbol,
+					'problem',
+					'changeContest'
+				)
+			) {
+				throw new TRPCError({
+					message: 'Not allowed to change contest for problem',
+					code: 'FORBIDDEN',
+				});
+			}
+
+			await db
+				.update(problemTable)
+				.set({
+					contestId: input.contestId,
 				})
-			)
-			.mutation(async ({ input }) => {
-				const problemStorage = new ProblemStorage(input.problemId);
-				await problemStorage.renameFile(input.oldName, input.newName);
-			}),
-	}),
+				.where(eq(problemTable.problemId, problem.problemId));
+		}),
 
 	// series
 	assignSeries: authedProcedure
@@ -558,53 +632,156 @@ export const problemRouter = trpc.router({
 
 			await db.insert(workTable).values(newWorkItems);
 		}),
-	delete: authedProcedure
-		.input(
-			z.object({
-				problemId: z.number(),
-			})
-		)
-		.mutation(async ({ ctx, input }) => {
-			const problem = await db.query.problemTable.findFirst({
-				where: eq(problemTable.problemId, input.problemId),
-				with: {
-					contest: true,
-				},
-			});
 
-			if (!problem) {
-				throw new TRPCError({
-					message: 'Problem does not exist',
-					code: 'BAD_REQUEST',
-				});
-			}
-
-			if (!problem.contest) {
-				throw new TRPCError({
-					message: 'Cannot delete problem, assigned to a series',
-					code: 'BAD_REQUEST',
-				});
-			}
-
-			if (
-				!acl.isAllowedContest(
-					ctx.aclRoles,
-					problem.contest.symbol,
-					'problem',
-					'delete'
-				)
-			) {
-				throw new TRPCError({
-					message: 'You are not permitted to delete this problem',
-					code: 'UNAUTHORIZED',
-				});
-			}
-
-			await db
-				.update(problemTable)
-				.set({
-					state: 'deleted',
-				})
-				.where(eq(problemTable.problemId, input.problemId));
+	// files
+	files: trpc.router({
+		list: authedProcedure.input(z.number()).query(async ({ input }) => {
+			const problemStorage = new ProblemStorage(input);
+			return await problemStorage.getFiles();
 		}),
+
+		upload: authedProcedure
+			.input(
+				z.object({
+					problemId: z.number(),
+					files: z
+						.object({
+							name: z.string().nonempty(),
+							data: z.string().nonempty(),
+						})
+						.array(),
+				})
+			)
+			.mutation(async ({ input, ctx }) => {
+				const contestSymbol = await getProblemContest(input.problemId);
+				if (
+					!acl.isAllowedContest(
+						ctx.aclRoles,
+						contestSymbol,
+						'file',
+						'upload'
+					)
+				) {
+					throw new TRPCError({
+						message: 'Not allowed to upload file',
+						code: 'FORBIDDEN',
+					});
+				}
+
+				// check for name collisions
+				const nameSet = new Set<string>();
+				for (const file of input.files) {
+					const pureName = path.parse(file.name).name;
+					if (nameSet.has(pureName)) {
+						throw new TRPCError({
+							message: `Cannot upload duplicate file ${pureName}`,
+							code: 'BAD_REQUEST',
+						});
+					}
+					nameSet.add(pureName);
+				}
+
+				const runner = new Runner(input.problemId);
+				const problemStorage = new ProblemStorage(input.problemId);
+
+				for (const file of input.files) {
+					await problemStorage.saveFile(file.name, file.data);
+					const filepath = problemStorage.getPathForFile(file.name);
+					try {
+						await runner.exportFile(filepath);
+					} catch {
+						throw new TRPCError({
+							message: `Failed to export file ${file.name}`,
+							code: 'INTERNAL_SERVER_ERROR',
+						});
+					}
+				}
+			}),
+
+		/**
+		 * Exports original files as DataURI
+		 */
+		download: authedProcedure
+			.input(
+				z.object({
+					problemId: z.number(),
+					filename: z.string(),
+				})
+			)
+			.query(async ({ input, ctx }) => {
+				const contestSymbol = await getProblemContest(input.problemId);
+				if (
+					!acl.isAllowedContest(
+						ctx.aclRoles,
+						contestSymbol,
+						'file',
+						'download'
+					)
+				) {
+					throw new TRPCError({
+						message: 'Not allowed to download file',
+						code: 'FORBIDDEN',
+					});
+				}
+
+				const problemStorage = new ProblemStorage(input.problemId);
+				const filepath = problemStorage.getPathForFile(input.filename);
+				return problemStorage.getFileAsDataUri(filepath);
+			}),
+
+		delete: authedProcedure
+			.input(
+				z.object({
+					problemId: z.number(),
+					filename: z.string(),
+				})
+			)
+			.mutation(async ({ input, ctx }) => {
+				const contestSymbol = await getProblemContest(input.problemId);
+				if (
+					!acl.isAllowedContest(
+						ctx.aclRoles,
+						contestSymbol,
+						'file',
+						'delete'
+					)
+				) {
+					throw new TRPCError({
+						message: 'Not allowed to upload file',
+						code: 'FORBIDDEN',
+					});
+				}
+
+				const problemStorage = new ProblemStorage(input.problemId);
+				await problemStorage.deleteFile(input.filename);
+			}),
+
+		rename: authedProcedure
+			.input(
+				z.object({
+					problemId: z.number(),
+					oldName: z.string(),
+					newName: z.string(),
+				})
+			)
+			.mutation(async ({ input, ctx }) => {
+				const contestSymbol = await getProblemContest(input.problemId);
+				if (
+					!acl.isAllowedContest(
+						ctx.aclRoles,
+						contestSymbol,
+						'file',
+						'rename'
+					)
+				) {
+					throw new TRPCError({
+						message: 'Not allowed to upload file',
+						code: 'FORBIDDEN',
+					});
+				}
+
+				const problemStorage = new ProblemStorage(input.problemId);
+				await problemStorage.renameFile(input.oldName, input.newName);
+			}),
+	}),
 });

@@ -291,7 +291,6 @@ export async function setupWSConnection(
 	const authorization = url.searchParams.get('auth');
 
 	if (!authorization) {
-		console.log('auth missing');
 		conn.close(3000, 'Unauthorized');
 		return;
 	}
@@ -299,14 +298,12 @@ export async function setupWSConnection(
 	const jwtData = await getJWTFromHeader(authorization);
 
 	if (!jwtData) {
-		console.log('jwt data missing');
 		conn.close(3000, 'Unauthorized');
 		return;
 	}
 
 	const person = await getPersonFromJWT(jwtData);
 	if (!person) {
-		console.log('jwt missing person');
 		conn.close(3000, 'Unauthorized');
 		return;
 	}

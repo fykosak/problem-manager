@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
@@ -12,7 +12,7 @@ import { usePersonRoles } from '@client/hooks/usePersonRoles';
 import { trpc, type trpcOutputTypes } from '@client/trpc';
 
 import { Button } from '../ui/button';
-import { Checkbox } from '../ui/checkbox';
+import { FieldSetContent, FieldSetRoot, FieldSetTitle } from '../ui/fieldset';
 import {
 	Form,
 	FormControl,
@@ -21,7 +21,6 @@ import {
 	FormLabel,
 	FormMessage,
 } from '../ui/form';
-import { Input } from '../ui/input';
 import {
 	Select,
 	SelectContent,
@@ -30,6 +29,9 @@ import {
 	SelectValue,
 } from '../ui/select';
 import { Textarea } from '../ui/textarea';
+import { FormInput } from './formInput';
+import { TopicSelection } from './topicSelection';
+import { TypeSelection } from './typeSelection';
 
 const formSchema = z.object({
 	contestSymbol: z.string(),
@@ -39,56 +41,111 @@ const formSchema = z.object({
 	task: z.string().nonempty('Text zádání nemůže být prázdný'),
 	topics: z.number().array().min(1, 'Alespoň jeden topic musí být přidělen'),
 	type: z.coerce.number({ message: 'Potřeba vybrat typ úlohy' }),
+	result: z.object({
+		value: z.coerce.number().optional(),
+		unit: z.string().optional(),
+	}),
 });
 
 export function CreateProblemForm({
 	currentContestSymbol,
-	contestData,
+	currentContestYear,
+	contestCreateProblemData: contestData,
+	availableContests,
 }: {
 	currentContestSymbol?: string;
-	contestData: trpcOutputTypes['contest']['createProblemData'];
+	currentContestYear?: number;
+	contestCreateProblemData: trpcOutputTypes['contest']['createProblemData'];
+	availableContests: trpcOutputTypes['getContests'];
 }) {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			contestSymbol: currentContestSymbol,
 			lang: 'cs', // TODO from config?
-			name: '',
-			origin: '',
-			task: '',
+			name: undefined,
+			origin: undefined,
+			task: undefined,
 			topics: [],
+			result: {
+				value: undefined,
+				unit: undefined,
+			},
 		},
 	});
 
 	const navigate = useNavigate();
-	async function submitAndRedirect(values: z.infer<typeof formSchema>) {
-		try {
-			const problem = await trpc.problem.create.mutate({
-				...values,
-			});
-			toast.success('Task created');
-			await navigate('../task/' + problem.problemId);
-		} catch (exception) {
-			form.setError('root', {
-				message: (exception as Error).message ?? 'Error',
-				type: 'server',
-			});
-		}
-	}
+	const submitAndRedirect = useCallback(
+		async (values: z.infer<typeof formSchema>) => {
+			try {
+				const problem = await trpc.problem.create.mutate(values);
+				toast.success('Úlohy byla vytvořena');
+
+				if (
+					values.contestSymbol === currentContestSymbol &&
+					currentContestYear
+				) {
+					await navigate(
+						'/' +
+							values.contestSymbol +
+							'/' +
+							currentContestYear +
+							'/task/' +
+							problem.problemId
+					);
+					return;
+				}
+
+				const selectedContest = availableContests
+					.filter(
+						(contestYear) =>
+							contestYear.symbol === values.contestSymbol
+					)
+					.at(0);
+
+				if (!selectedContest) {
+					toast.error('Nebyla nalezena soutěž pro přesměrování');
+					return;
+				}
+				const latestContestYear = selectedContest.years
+					.sort((a, b) => b.year - a.year)
+					.at(0);
+				if (!latestContestYear) {
+					toast.error(
+						'Nebyl nalezen ročník soutěže pro přesměrování'
+					);
+					return;
+				}
+
+				await navigate(
+					'/' +
+						selectedContest.symbol +
+						'/' +
+						latestContestYear.year +
+						'/task/' +
+						problem.problemId
+				);
+			} catch (exception) {
+				form.setError('root', {
+					message: (exception as Error).message ?? 'Error',
+					type: 'server',
+				});
+			}
+		},
+		[availableContests, currentContestSymbol, currentContestYear]
+	);
 
 	async function submitAndContinue(values: z.infer<typeof formSchema>) {
 		try {
-			await trpc.problem.create.mutate({
-				...values,
-			});
-			toast.success('Task created');
+			await trpc.problem.create.mutate(values);
+			toast.success('Úlohy byla vytvořena');
 			form.reset();
 		} catch (exception) {
 			form.setError('root', {
 				message: (exception as Error).message ?? 'Error',
 				type: 'server',
 			});
-			toast.error('Failed to create task');
+			toast.error('Vytvoření úlohy selhalo');
 		}
 	}
 
@@ -108,6 +165,8 @@ export function CreateProblemForm({
 		(contest) => contest.symbol === contestSymbol
 	);
 	const langs = contestData.contestTextLangs[contestSymbol] ?? [];
+	const metadataFields =
+		contestData.contestMetadataFields[contestSymbol] ?? [];
 
 	function langLabel(lang: string) {
 		if (lang === 'cs') {
@@ -117,45 +176,6 @@ export function CreateProblemForm({
 			return 'Angličtina';
 		}
 		return lang;
-	}
-
-	function getTopicsCheckboxes() {
-		const selectableTopics = selectedContest ? selectedContest.topics : [];
-		return selectableTopics.map((topic) => (
-			<FormField
-				key={topic.topicId}
-				control={form.control}
-				name="topics"
-				render={({ field }) => (
-					<FormItem
-						key={topic.topicId}
-						className="flex flex-row items-start space-x-2 space-y-0"
-					>
-						<FormControl>
-							<Checkbox
-								checked={field.value?.includes(topic.topicId)}
-								onCheckedChange={(checked) => {
-									return checked
-										? field.onChange([
-												...field.value,
-												topic.topicId,
-											])
-										: field.onChange(
-												field.value?.filter(
-													(value) =>
-														value !== topic.topicId
-												)
-											);
-								}}
-							/>
-						</FormControl>
-						<FormLabel className="text-sm font-normal">
-							{topic.label}
-						</FormLabel>
-					</FormItem>
-				)}
-			/>
-		));
 	}
 
 	const contestSelectComponent = (
@@ -203,7 +223,6 @@ export function CreateProblemForm({
 			<div>{errors.root?.message}</div>
 			<form className="space-y-8">
 				{contestSelectComponent}
-
 				<FormField
 					control={form.control}
 					name="lang"
@@ -232,36 +251,23 @@ export function CreateProblemForm({
 					)}
 				/>
 
-				<FormField
-					control={form.control}
-					name="name"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Název</FormLabel>
-							<FormControl>
-								<Input placeholder="Název" {...field} />
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+				{metadataFields.includes('name') && (
+					<FormInput
+						control={form.control}
+						name="name"
+						placeholder="Název úlohy"
+						label="Název"
+					/>
+				)}
 
-				<FormField
-					control={form.control}
-					name="origin"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Původ úlohy</FormLabel>
-							<FormControl>
-								<Input
-									placeholder="Krátká věta o původu/vzniku úlohy"
-									{...field}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+				{metadataFields.includes('origin') && (
+					<FormInput
+						control={form.control}
+						name="origin"
+						placeholder="Krátká věta o původu/vzniku úlohy"
+						label="Původ úlohy"
+					/>
+				)}
 
 				<FormField
 					control={form.control}
@@ -281,50 +287,40 @@ export function CreateProblemForm({
 					)}
 				/>
 
-				<FormField
+				{metadataFields.includes('result') && (
+					<FieldSetRoot>
+						<FieldSetTitle>Výsledek úlohy</FieldSetTitle>
+						<FieldSetContent>
+							<FormInput
+								control={form.control}
+								name="result.value"
+								placeholder="např. 1.1e-2"
+								label="Číselný výsledek"
+								type="number"
+							/>
+
+							<FormInput
+								control={form.control}
+								name="result.unit"
+								placeholder="např. m.s^{-1}"
+								label="Jednotky"
+							/>
+						</FieldSetContent>
+					</FieldSetRoot>
+				)}
+
+				<TopicSelection
 					control={form.control}
 					name="topics"
-					render={() => (
-						<FormItem>
-							<FormLabel>Témata</FormLabel>
-							<div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-								{getTopicsCheckboxes()}
-							</div>
-							<FormMessage />
-						</FormItem>
-					)}
+					topics={selectedContest ? selectedContest.topics : []}
 				/>
 
-				<FormField
+				<TypeSelection
 					control={form.control}
 					name="type"
-					render={({ field }) => (
-						<FormItem className="space-x-2">
-							<FormLabel>Typ úlohy</FormLabel>
-							<Select
-								onValueChange={field.onChange}
-								// select value placeholder if field.value undefined
-								value={
-									field.value ? field.value.toString() : ''
-								}
-							>
-								<SelectTrigger>
-									<SelectValue placeholder="Select type" />
-								</SelectTrigger>
-								<SelectContent>
-									{selectedContest?.types.map((type) => (
-										<SelectItem
-											value={type.typeId.toString()}
-											key={type.typeId}
-										>
-											{type.label}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-							<FormMessage />
-						</FormItem>
-					)}
+					availableTypes={
+						selectedContest ? selectedContest.types : []
+					}
 				/>
 			</form>
 

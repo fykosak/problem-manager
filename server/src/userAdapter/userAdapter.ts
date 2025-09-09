@@ -8,6 +8,7 @@ export interface User {
 		contestSymbol: string;
 		email: string | null;
 		state: (typeof organizerStateEnum.enumValues)[number];
+		texSignature: string | null;
 	}[];
 }
 

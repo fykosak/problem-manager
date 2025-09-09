@@ -1,7 +1,20 @@
 import { ACL } from './acl';
 import { BaseRole, ContestRole } from './roleTypes';
 
-export const acl = new ACL();
+export const acl = new ACL({
+	organizers: ['import'],
+	contest: [],
+	series: ['create', 'edit', 'ordering'],
+	problem: [
+		'assignSeries',
+		'create',
+		'delete',
+		'changeContest',
+		'changeState',
+	],
+	text: ['edit', 'release', 'revoke'],
+	file: ['upload', 'download', 'delete', 'rename'],
+});
 
 // base roles
 acl.addRole(BaseRole.admin);
@@ -16,7 +29,10 @@ acl.addRole(ContestRole.manager, ContestRole.organizer);
 acl.allow(ContestRole.organizer, 'problem');
 acl.allow(ContestRole.organizer, 'contest');
 acl.allow(ContestRole.organizer, 'text', 'edit');
+acl.allow(ContestRole.organizer, 'file');
 
 acl.allow(ContestRole.manager, 'series');
 acl.allow(ContestRole.manager, 'text', 'release');
 acl.allow(ContestRole.manager, 'text', 'revoke');
+acl.allow(ContestRole.manager, 'problem', 'changeContest');
+acl.allow(ContestRole.manager, 'problem', 'changeState');

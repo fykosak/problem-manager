@@ -6,6 +6,7 @@ import { contestYearTable, personWorkTable } from '@server/db/schema';
 
 import { authedProcedure } from './middleware';
 import { contestRouter } from './routers/contestRouter';
+import { organizersRouter } from './routers/organizersRouter';
 import { personRouter } from './routers/personRouter';
 import { problemRouter } from './routers/problemRouter';
 import { seriesRouter } from './routers/seriesRouter';
@@ -57,6 +58,7 @@ export const appRouter = trpc.router({
 				}
 			}),
 	}),
+	organizers: organizersRouter,
 });
 
 export type AppRouter = typeof appRouter;

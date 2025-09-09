@@ -67,7 +67,6 @@ export const seriesRouter = trpc.router({
 			return series;
 		}),
 
-	// TODO check permissions
 	// TODO validate data for contest year
 	ordering: authedProcedure
 		.input(
@@ -75,7 +74,39 @@ export const seriesRouter = trpc.router({
 				series: z.record(z.coerce.number(), z.array(z.number())),
 			})
 		)
-		.mutation(async ({ input }) => {
+		.mutation(async ({ input, ctx }) => {
+			for (const seriesId in input.series) {
+				const series = await db.query.seriesTable.findFirst({
+					where: eq(seriesTable.seriesId, Number(seriesId)),
+					with: {
+						contestYear: {
+							with: {
+								contest: true,
+							},
+						},
+					},
+				});
+				if (!series) {
+					throw new TRPCError({
+						message: 'Series does not exist',
+						code: 'BAD_REQUEST',
+					});
+				}
+				if (
+					!acl.isAllowedContest(
+						ctx.aclRoles,
+						series.contestYear.contest.symbol,
+						'series',
+						'ordering'
+					)
+				) {
+					throw new TRPCError({
+						message: 'Not allowed to sort series',
+						code: 'UNAUTHORIZED',
+					});
+				}
+			}
+
 			for (const seriesId in input.series) {
 				for (const [index, problemId] of input.series[
 					seriesId
@@ -106,13 +137,32 @@ export const seriesRouter = trpc.router({
 					eq(contestYearTable.contestId, ctx.contest.contestId),
 					eq(contestYearTable.year, input.contestYear)
 				),
+				with: {
+					contest: true,
+				},
 			});
+
 			if (!contestYear) {
 				throw new TRPCError({
 					message: 'Contest year does not exist',
 					code: 'BAD_REQUEST',
 				});
 			}
+
+			if (
+				!acl.isAllowedContest(
+					ctx.aclRoles,
+					contestYear.contest.symbol,
+					'series',
+					'create'
+				)
+			) {
+				throw new TRPCError({
+					message: 'Cannot create series for this contest',
+					code: 'FORBIDDEN',
+				});
+			}
+
 			await db.insert(seriesTable).values({
 				contestYearId: contestYear.contestYearId,
 				label: input.label,

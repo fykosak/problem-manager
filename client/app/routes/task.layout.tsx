@@ -126,10 +126,15 @@ function ProblemSidebar({
 							}
 						</span>
 						{problem.series && (
-							<span>
-								série {problem.series.label}, ročník{' '}
-								{problem.series.contestYear.year}
-							</span>
+							<>
+								<span>
+									ročník {problem.series.contestYear.year}
+								</span>
+								<span>
+									série {problem.series.label}, úloha{' '}
+									{problem.seriesOrder}
+								</span>
+							</>
 						)}
 					</SidebarGroupLabel>
 					<SidebarGroupContent>
@@ -232,6 +237,13 @@ function TaskBreadcrumb({
 				<BreadcrumbSeparator />
 				<BreadcrumbItem>
 					{(problem.metadata.name as Record<string, string>).cs}
+					{problem.series && (
+						<>
+							{' '}
+							(r. {problem.series.contestYear.year}, s.{' '}
+							{problem.series.label}, u. {problem.seriesOrder})
+						</>
+					)}
 				</BreadcrumbItem>
 				<BreadcrumbSeparator />
 				<BreadcrumbItem>

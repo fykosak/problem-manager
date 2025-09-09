@@ -11,4 +11,10 @@ export default defineConfig({
 		},
 	},
 	plugins: [reactRouter(), tsconfigPaths()],
+	ssr: {
+		// react-codemirror cannot correctly resolve imports on static page rendering
+		// and is not needed anyway
+		noExternal: ['@uiw/react-codemirror'],
+	},
+	assetsInclude: ['./docs/*'],
 });

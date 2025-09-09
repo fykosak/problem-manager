@@ -24,6 +24,9 @@
         "contest.organizer": ["role"],
       }
     },
+  "contestMetadataFields": {
+    "fykos": ["name", "origin", "points", "result"],
+  },
   "contestWork": {
     "fykos": [
       {
