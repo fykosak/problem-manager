@@ -3,7 +3,7 @@
 @top Document {
 	(Text | InlineMath | DisplayMath | Command | EqCommand | UnderscoreEscape | Newline | ParagraphSeparator |
 	NewlineCommand | "[" | "]" | "{" | "}" | "&" |
-	Environment | ListEnvironment | TabularEnvironment | TableEnvironment |
+	Environment | ListEnvironment | TaskEnvironment | TabularEnvironment | TableEnvironment |
 	IfBlock)*
 }
 
@@ -49,7 +49,7 @@ CommandArgument {
 		Text | InlineMath | DisplayMath | Command | EqCommand |
 		UnderscoreEscape | NewlineCommand | CommandArgument | Newline | ParagraphSeparator |
 		"[" | "]" |
-		Environment | ListEnvironment | TabularEnvironment | TableEnvironment | IfBlock
+		Environment | ListEnvironment | TaskEnvironment | TabularEnvironment | TableEnvironment | IfBlock
 	)* "}"
 }
 
@@ -92,7 +92,11 @@ HlineCommand {
 }
 
 ItemCommand {
-	@specialize<CommandIdentifier, "\\item"> CommandArgumentOptional?
+	(
+		@specialize<CommandIdentifier, "\\item"> |
+		@specialize<CommandIdentifier, "\\task">
+	)
+	CommandArgumentOptional?
 }
 
 DelimiterCommand {
@@ -120,7 +124,7 @@ QuoteMacro {
 
 IfBranch {
 	(Text | InlineMath | DisplayMath | Command | CommandArgument | EqCommand | NewlineCommand |
-	Newline | Environment | ListEnvironment | TableEnvironment | TabularEnvironment | IfBlock |
+	Newline | Environment | ListEnvironment | TaskEnvironment | TableEnvironment | TabularEnvironment | IfBlock |
 	ParagraphSeparator)*
 }
 
@@ -161,7 +165,7 @@ EndEnv<name> {
 Environment[group=EnvironmentGroup] {
 	BeginEnv<EnvName>
 	(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
-	Newline | Environment | ListEnvironment | TabularEnvironment | IfBlock)*
+	Newline | Environment | ListEnvironment | TaskEnvironment | TabularEnvironment | IfBlock)*
 	EndEnv<EnvName>
 }
 
@@ -173,20 +177,31 @@ MathEnvironment[group=EnvironmentGroup] {
 
 @external specialize {EnvName} specializeEnvName from "./tokenizer.ts" {
 	ListEnvName,
+	TaskEnvName,
 	TabularEnvName,
 	TableEnvName
+}
+
+ListItem {
+	ItemCommand
+	(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
+	Newline | ParagraphSeparator | Environment | ListEnvironment |
+	TaskEnvironment | TabularEnvironment | TableEnvironment | IfBlock | CommandArgument)*
 }
 
 ListEnvironment[group=EnvironmentGroup] {
 	BeginEnv<ListEnvName>
 	(Newline | Command | Whitespace | IfBlock)*
-	ListItem {
-		ItemCommand
-		(Text | InlineMath | DisplayMath | Command | EqCommand | NewlineCommand |
-		Newline | ParagraphSeparator | Environment | ListEnvironment |
-		TabularEnvironment | TableEnvironment | IfBlock | CommandArgument)*
-	}+
+	ListItem*
 	EndEnv<ListEnvName>
+}
+
+TaskEnvironment[group=EnvironmentGroup] {
+	BeginEnv<TaskEnvName>
+	( "(" Number ")" )?
+	(Newline | Command | Whitespace | IfBlock)*
+	ListItem*
+	EndEnv<TaskEnvName>
 }
 
 TabularEnvironment[group=EnvironmentGroup] {

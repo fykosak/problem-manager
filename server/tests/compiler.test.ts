@@ -683,6 +683,11 @@ describe('environment', () => {
 	describe('list', () => {
 		runTestStrings([
 			{
+				name: 'empty',
+				input: '\\begin{enumerate}\\end{enumerate}',
+				output: '',
+			},
+			{
 				input: '\\begin{enumerate}\\item asdf\\item qwer\\end{enumerate}',
 				output: '<ol><li><p>asdf</p></li><li><p>qwer</p></li></ol>',
 			},
@@ -764,6 +769,31 @@ qwer
 			{
 				input: `\\begin{enumerate}\\item asdf{} qwer\\end{enumerate}`,
 				output: '<ol><li><p>asdf qwer</p></li></ol>',
+			},
+		]);
+	});
+
+	describe('tasks', () => {
+		runTestStrings([
+			{
+				name: 'empty',
+				input: '\\begin{tasks}\\end{tasks}',
+				output: '',
+			},
+			{
+				name: 'basic task',
+				input: '\\begin{tasks}\\task text\\end{tasks}',
+				output: "<ol type='a'><li><p>text</p></li></ol>",
+			},
+			{
+				name: 'multiple tasks',
+				input: '\\begin{tasks}\\task text \\task text2\\end{tasks}',
+				output: "<ol type='a'><li><p>text</p></li><li><p>text2</p></li></ol>",
+			},
+			{
+				name: 'multiple columns',
+				input: '\\begin{tasks}(2)\\task text \\task text2\\end{tasks}',
+				output: "<ol type='a'><li><p>text</p></li><li><p>text2</p></li></ol>",
 			},
 		]);
 	});
@@ -869,22 +899,22 @@ describe('footnote', () => {
 	runTestStrings([
 		{
 			input: 'text\\footnote{footnote}',
-			output: '<p>text<sup>1</sup></p><hr><ol><li><p>footnote</p></li></ol>',
+			output: '<p>text<sup>1</sup></p><hr><small><ol><li><p>footnote</p></li></ol></small>',
 		},
 		{
 			input: 'text\\footnote{footnote}text\\footnote{footnote2}',
-			output: '<p>text<sup>1</sup>text<sup>2</sup></p><hr><ol><li><p>footnote</p></li><li><p>footnote2</p></li></ol>',
+			output: '<p>text<sup>1</sup>text<sup>2</sup></p><hr><small><ol><li><p>footnote</p></li><li><p>footnote2</p></li></ol></small>',
 		},
 		{
 			input: 'text\\footnotei{,}{footnote}',
-			output: '<p>text,<sup>1</sup></p><hr><ol><li><p>footnote</p></li></ol>',
+			output: '<p>text,<sup>1</sup></p><hr><small><ol><li><p>footnote</p></li></ol></small>',
 		},
 		{
 			input: `text\\footnote{par1
 
 	par2
 }`,
-			output: '<p>text<sup>1</sup></p><hr><ol><li><p>par1</p><p>par2</p></li></ol>',
+			output: '<p>text<sup>1</sup></p><hr><small><ol><li><p>par1</p><p>par2</p></li></ol></small>',
 		},
 	]);
 });

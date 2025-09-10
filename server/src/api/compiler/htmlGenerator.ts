@@ -273,11 +273,11 @@ export class HtmlGenerator {
 			const content = await this.generateContentUntil(this.cursor.to);
 			let footnoteContent = '';
 			if (this.footnotes.length > 0) {
-				footnoteContent += '<hr><ol>';
+				footnoteContent += '<hr><small><ol>';
 				for (const footnote of this.footnotes) {
 					footnoteContent += `<li>${footnote}</li>`;
 				}
-				footnoteContent += '</ol>';
+				footnoteContent += '</ol></small>';
 			}
 
 			return content + footnoteContent;
@@ -1025,7 +1025,7 @@ export class HtmlGenerator {
 		this.expectNodeName('{');
 		buffer += '{';
 		this.expectNext();
-		this.expectNodeName('EnvName');
+		this.expectAnyNodeName(['EnvName', 'TaskEnvName']);
 		buffer += this.getCursorText();
 		this.expectNext();
 		this.expectNodeName('}');
@@ -1077,6 +1077,7 @@ export class HtmlGenerator {
 		const topNode = this.cursor.node;
 		this.expectNext();
 		this.expectNodeName('BeginEnv');
+
 		const listEnvNameNode = this.cursor.node
 			.getChild('EnvironmentNameArgument')
 			?.getChild('ListEnvName');
@@ -1089,13 +1090,10 @@ export class HtmlGenerator {
 			listEnvNameNode.to
 		);
 
-		let buffer = '';
-		if (envName === 'enumerate' || envName === 'compactenum') {
-			buffer += '<ol>';
-		} else {
-			buffer += '<ul>';
-		}
+		// skip to BeginEnv end to be able to get EndEnv with .next()
+		this.cursor.moveTo(this.cursor.to, -1);
 
+		let buffer = '';
 		// instead of looping over the cursor with next, just get the list items
 		for (const node of topNode.getChildren('ListItem')) {
 			buffer += await this.generateListItemNode(node);
@@ -1105,11 +1103,37 @@ export class HtmlGenerator {
 		this.expectNodeName('EndEnv');
 		this.cursor.moveTo(this.cursor.to, -1);
 
-		if (envName === 'enumerate' || envName === 'compactenum') {
-			buffer += '</ol>';
-		} else {
-			buffer += '</ul>';
+		if (buffer === '') {
+			return '';
 		}
+
+		if (envName === 'enumerate' || envName === 'compactenum') {
+			buffer = `<ol>${buffer}</ol>`;
+		} else {
+			buffer = `<ul>${buffer}</ul>`;
+		}
+
+		return buffer;
+	}
+
+	private async generateTaskEnvironment(): Promise<string> {
+		this.expectNodeName('TaskEnvironment');
+		const topNode = this.cursor.node;
+		this.expectNext();
+		await this.generateBeginEnv();
+
+		let buffer = '';
+		for (const node of topNode.getChildren('ListItem')) {
+			buffer += await this.generateListItemNode(node);
+		}
+
+		if (buffer.length > 0) {
+			buffer = `<ol type='a'>${buffer}</ol>`;
+		}
+
+		this.expectNext();
+		this.expectNodeName('EndEnv');
+		this.cursor.moveTo(this.cursor.to, -1);
 
 		return buffer;
 	}
@@ -1475,6 +1499,9 @@ export class HtmlGenerator {
 
 			case 'ListEnvironment':
 				return this.generateListEnvironment();
+
+			case 'TaskEnvironment':
+				return this.generateTaskEnvironment();
 
 			case 'TabularEnvironment':
 				return this.generateTabularEnvironment();

@@ -6,6 +6,7 @@ import {
 	ListEnvName,
 	TableEnvName,
 	TabularEnvName,
+	TaskEnvName,
 } from './parser.terms.js';
 
 const listEnvNames = new Set([
@@ -17,11 +18,17 @@ const listEnvNames = new Set([
 	'compactdesc',
 ]);
 
+const taskEnvNames = new Set(['tasks']);
+
 const tabularEnvNames = new Set(['tabular', 'tabularx', 'longtable']);
 
 export function specializeEnvName(name: string) {
 	if (listEnvNames.has(name)) {
 		return ListEnvName;
+	}
+
+	if (taskEnvNames.has(name)) {
+		return TaskEnvName;
 	}
 
 	if (tabularEnvNames.has(name)) {
