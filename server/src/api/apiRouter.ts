@@ -1,4 +1,15 @@
-import { and, eq, inArray, isNotNull } from 'drizzle-orm';
+import {
+	and,
+	asc,
+	eq,
+	exists,
+	inArray,
+	isNotNull,
+	isNull,
+	lt,
+	not,
+	or,
+} from 'drizzle-orm';
 import express from 'express';
 import { type Response } from 'express';
 import * as Y from 'yjs';
@@ -52,12 +63,69 @@ apiRouter.get(
 			res.status(403).send('Cannot access this contest');
 		}
 
-		const years = await db.query.contestYearTable.findMany({
-			where: eq(contestYearTable.contestId, contestId),
-			with: { series: true },
-		});
+		// Get only the series (and with that the contest years) that
+		// should be published -> current date is after the release date
+		// and series has at least one released text
+		const contestYearSeries = await db
+			.select()
+			.from(contestYearTable)
+			.innerJoin(
+				seriesTable,
+				eq(seriesTable.contestYearId, contestYearTable.contestYearId)
+			)
+			.where(
+				and(
+					eq(contestYearTable.contestId, contestId),
+					or(
+						isNull(seriesTable.release),
+						lt(seriesTable.release, new Date())
+					),
+					exists(
+						db
+							.select()
+							.from(textTable)
+							.leftJoin(
+								problemTable,
+								eq(problemTable.problemId, textTable.problemId)
+							)
+							.where(
+								and(
+									eq(
+										seriesTable.seriesId,
+										problemTable.seriesId
+									),
+									not(isNull(textTable.html))
+								)
+							)
+					)
+				)
+			)
+			.orderBy(
+				asc(contestYearTable.year),
+				asc(seriesTable.deadline),
+				asc(seriesTable.seriesId)
+			);
 
-		res.json(years);
+		const contestYears = new Map<
+			number,
+			(typeof contestYearSeries)[number]['contest_year'] & {
+				series: (typeof contestYearSeries)[number]['series'][];
+			}
+		>();
+
+		for (const series of contestYearSeries) {
+			const contestYear = contestYears.get(series.contest_year.year);
+			if (contestYear) {
+				contestYear.series.push(series.series);
+			} else {
+				contestYears.set(series.contest_year.year, {
+					...series.contest_year,
+					series: [series.series],
+				});
+			}
+		}
+
+		res.json(Array.from(contestYears.values()));
 	})
 );
 
