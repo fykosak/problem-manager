@@ -9,7 +9,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 		trpc.contest.topics.query({
 			contestSymbol: params.contest,
 		}),
-		trpc.contest.availableTypes.query({
+		trpc.contest.types.query({
 			contestSymbol: params.contest,
 		}),
 		trpc.contest.organizers.query({
@@ -22,7 +22,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	return {
 		taskData: data[0],
 		topics: data[1],
-		availableTypes: data[2],
+		types: data[2],
 		organizers: data[3],
 		metadataFields: data[4],
 	};
@@ -35,7 +35,7 @@ export default function Metadata({ params, loaderData }: Route.ComponentProps) {
 			<MetadataForm
 				problemId={parseInt(params.taskId)}
 				taskData={loaderData.taskData}
-				availableTypes={loaderData.availableTypes}
+				types={loaderData.types}
 				topics={loaderData.topics}
 				organizers={loaderData.organizers}
 				metadataFields={loaderData.metadataFields}

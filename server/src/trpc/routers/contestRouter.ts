@@ -69,19 +69,15 @@ export const contestRouter = trpc.router({
 
 	topics: contestProcedure.query(async ({ ctx }) => {
 		const data = await db.query.topicTable.findMany({
-			where: and(eq(topicTable.contestId, ctx.contest.contestId)),
+			where: eq(topicTable.contestId, ctx.contest.contestId),
 			orderBy: [topicTable.topicId],
 		});
-		console.log(data);
 		return data;
 	}),
 
-	availableTypes: contestProcedure.query(async ({ ctx }) => {
+	types: contestProcedure.query(async ({ ctx }) => {
 		return await db.query.typeTable.findMany({
-			where: and(
-				eq(typeTable.contestId, ctx.contest.contestId),
-				eq(typeTable.available, true)
-			),
+			where: eq(typeTable.contestId, ctx.contest.contestId),
 			orderBy: [typeTable.typeId],
 		});
 	}),

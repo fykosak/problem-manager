@@ -55,14 +55,14 @@ export function MetadataForm({
 	problemId,
 	taskData,
 	topics,
-	availableTypes,
+	types,
 	organizers,
 	metadataFields,
 }: {
 	problemId: number;
 	taskData: trpcOutputTypes['problem']['metadata'];
 	topics: trpcOutputTypes['contest']['topics'];
-	availableTypes: trpcOutputTypes['contest']['availableTypes'];
+	types: trpcOutputTypes['contest']['types'];
 	organizers: trpcOutputTypes['contest']['organizers'];
 	metadataFields: trpcOutputTypes['contest']['metadataFields'];
 }) {
@@ -233,7 +233,8 @@ export function MetadataForm({
 				<TypeSelection
 					control={form.control}
 					name="type"
-					availableTypes={availableTypes}
+					types={types}
+					problemTypeId={taskData.type}
 				/>
 
 				<Button type="submit" disabled={formState.isSubmitting}>

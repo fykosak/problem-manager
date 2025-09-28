@@ -319,9 +319,8 @@ export function CreateProblemForm({
 				<TypeSelection
 					control={form.control}
 					name="type"
-					availableTypes={
-						selectedContest ? selectedContest.types : []
-					}
+					types={selectedContest ? selectedContest.types : []}
+					problemTypeId={null}
 				/>
 			</form>
 
