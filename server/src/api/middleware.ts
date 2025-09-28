@@ -13,8 +13,8 @@ export async function UserAuthMiddleware(
 	res: Response,
 	next: NextFunction
 ) {
-	const apiKeyHeader = req.header('X-API-Key');
-	if (!apiKeyHeader) {
+	const apiKeyHeader = req.header('X-API-Key') ?? req.query.key;
+	if (!apiKeyHeader || typeof apiKeyHeader !== 'string') {
 		res.status(400).send('X-API-Key header missing');
 		return;
 	}

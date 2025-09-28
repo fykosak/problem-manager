@@ -199,7 +199,16 @@ apiRouter.get(
 								contents: false,
 							},
 						},
-						topics: true,
+						topics: {
+							with: {
+								topic: true,
+							},
+						},
+						series: {
+							with: {
+								contestYear: true,
+							},
+						},
 					},
 				},
 				contestYear: true,
@@ -220,10 +229,19 @@ apiRouter.get(
 
 		const modifiedProblems = [];
 		for (const problem of series.problems) {
-			const topicIds = problem.topics.map((topic) => topic.topicId);
+			const topics = problem.topics.map(
+				(problemTopic) => problemTopic.topic.label
+			);
+			const contestId =
+				problem.contestId ?? problem.series?.contestYear.contestId;
+			if (!contestId) {
+				res.status(500).send('Could not get contest id');
+				return;
+			}
 			modifiedProblems.push({
 				...problem,
-				topics: topicIds,
+				topics: topics,
+				contestId: contestId,
 			});
 		}
 
