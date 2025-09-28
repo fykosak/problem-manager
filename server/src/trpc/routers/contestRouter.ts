@@ -67,13 +67,13 @@ export const contestRouter = trpc.router({
 			.orderBy(contestYearTable.contestId, desc(contestYearTable.year));
 	}),
 
-	availableTopics: contestProcedure.query(async ({ ctx }) => {
-		return await db.query.topicTable.findMany({
-			where: and(
-				eq(topicTable.contestId, ctx.contest.contestId),
-				eq(topicTable.available, true)
-			),
+	topics: contestProcedure.query(async ({ ctx }) => {
+		const data = await db.query.topicTable.findMany({
+			where: and(eq(topicTable.contestId, ctx.contest.contestId)),
+			orderBy: [topicTable.topicId],
 		});
+		console.log(data);
+		return data;
 	}),
 
 	availableTypes: contestProcedure.query(async ({ ctx }) => {
@@ -82,6 +82,7 @@ export const contestRouter = trpc.router({
 				eq(typeTable.contestId, ctx.contest.contestId),
 				eq(typeTable.available, true)
 			),
+			orderBy: [typeTable.typeId],
 		});
 	}),
 

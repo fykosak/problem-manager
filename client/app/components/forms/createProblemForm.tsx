@@ -313,6 +313,7 @@ export function CreateProblemForm({
 					control={form.control}
 					name="topics"
 					topics={selectedContest ? selectedContest.topics : []}
+					checkedTopics={new Set()}
 				/>
 
 				<TypeSelection

@@ -14,50 +14,64 @@ import { Checkbox } from '../ui/checkbox';
 export function TopicSelection<T extends FieldValues>({
 	control,
 	topics,
+	checkedTopics,
 	name,
 }: {
 	control: Control<T>;
-	name: FieldPathByValue<T, number[]>; // require the name to point to a form property of type number[]
-	topics: trpcOutputTypes['contest']['availableTopics'];
+	// require the name to point to a form property of type number[]
+	name: FieldPathByValue<T, number[]>;
+	topics: trpcOutputTypes['contest']['topics'];
+	// pass original checked topics separately so that they don't disappear immediately when unchecked
+	checkedTopics: Set<number>;
 }) {
-	const topicCheckboxes = topics.map((topic) => (
-		<FormField
-			key={topic.topicId}
-			control={control}
-			name={name}
-			render={({ field }) => {
-				const fieldValue = field.value as number[];
-				return (
-					<FormItem
-						key={topic.topicId}
-						className="flex flex-row items-start space-x-2 space-y-0"
-					>
-						<FormControl>
-							<Checkbox
-								checked={fieldValue.includes(topic.topicId)}
-								onCheckedChange={(checked) => {
-									return checked
-										? field.onChange([
-												...field.value,
-												topic.topicId,
-											])
-										: field.onChange(
-												fieldValue.filter(
-													(value) =>
-														value !== topic.topicId
-												)
-											);
-								}}
-							/>
-						</FormControl>
-						<FormLabel className="text-sm font-normal">
-							{topic.label}
-						</FormLabel>
-					</FormItem>
-				);
-			}}
-		/>
-	));
+	const topicCheckboxes = topics
+		.filter((topic) => topic.available || checkedTopics.has(topic.topicId))
+		.map((topic) => (
+			<FormField
+				key={topic.topicId}
+				control={control}
+				name={name}
+				render={({ field }) => {
+					const fieldValue = field.value as number[];
+					return (
+						<FormItem
+							key={topic.topicId}
+							className="flex flex-row items-start space-x-2 space-y-0"
+						>
+							<FormControl>
+								<Checkbox
+									checked={fieldValue.includes(topic.topicId)}
+									onCheckedChange={(checked) => {
+										return checked
+											? field.onChange([
+													...field.value,
+													topic.topicId,
+												])
+											: field.onChange(
+													fieldValue.filter(
+														(value) =>
+															value !==
+															topic.topicId
+													)
+												);
+									}}
+								/>
+							</FormControl>
+							<FormLabel
+								className={
+									'text-sm font-normal' +
+									(topic.available
+										? ''
+										: ' text-muted-foreground line-through')
+								}
+							>
+								{topic.label}
+							</FormLabel>
+						</FormItem>
+					);
+				}}
+			/>
+		));
 
 	return (
 		<FormField

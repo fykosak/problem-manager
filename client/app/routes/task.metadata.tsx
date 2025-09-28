@@ -6,7 +6,7 @@ import { Route } from './+types/task.metadata';
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	const data = await Promise.all([
 		trpc.problem.metadata.query(parseInt(params.taskId)),
-		trpc.contest.availableTopics.query({
+		trpc.contest.topics.query({
 			contestSymbol: params.contest,
 		}),
 		trpc.contest.availableTypes.query({
@@ -21,7 +21,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	]);
 	return {
 		taskData: data[0],
-		availableTopics: data[1],
+		topics: data[1],
 		availableTypes: data[2],
 		organizers: data[3],
 		metadataFields: data[4],
@@ -36,7 +36,7 @@ export default function Metadata({ params, loaderData }: Route.ComponentProps) {
 				problemId={parseInt(params.taskId)}
 				taskData={loaderData.taskData}
 				availableTypes={loaderData.availableTypes}
-				availableTopics={loaderData.availableTopics}
+				topics={loaderData.topics}
 				organizers={loaderData.organizers}
 				metadataFields={loaderData.metadataFields}
 			/>
