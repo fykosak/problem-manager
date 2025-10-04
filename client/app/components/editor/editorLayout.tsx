@@ -235,6 +235,7 @@ export function EditorLayout({ problemId }: { problemId: number }) {
 					<>
 						<Editor
 							textId={text.textId}
+							lang={text.lang}
 							key={'editor-' + text.textId}
 							ref={(node) => {
 								const refMap = taskEditorRefs.current;
