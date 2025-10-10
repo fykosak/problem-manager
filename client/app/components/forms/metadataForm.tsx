@@ -54,15 +54,15 @@ const formSchema = z.object({
 export function MetadataForm({
 	problemId,
 	taskData,
-	availableTopics,
-	availableTypes,
+	topics,
+	types,
 	organizers,
 	metadataFields,
 }: {
 	problemId: number;
 	taskData: trpcOutputTypes['problem']['metadata'];
-	availableTopics: trpcOutputTypes['contest']['availableTopics'];
-	availableTypes: trpcOutputTypes['contest']['availableTypes'];
+	topics: trpcOutputTypes['contest']['topics'];
+	types: trpcOutputTypes['contest']['types'];
 	organizers: trpcOutputTypes['contest']['organizers'];
 	metadataFields: trpcOutputTypes['contest']['metadataFields'];
 }) {
@@ -227,13 +227,15 @@ export function MetadataForm({
 				<TopicSelection
 					control={form.control}
 					name="topics"
-					topics={availableTopics}
+					topics={topics}
+					checkedTopics={new Set(taskData.topics)}
 				/>
 
 				<TypeSelection
 					control={form.control}
 					name="type"
-					availableTypes={availableTypes}
+					types={types}
+					problemTypeId={taskData.type}
 				/>
 
 				<Button type="submit" disabled={formState.isSubmitting}>

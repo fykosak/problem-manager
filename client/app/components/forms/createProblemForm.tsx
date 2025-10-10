@@ -313,14 +313,14 @@ export function CreateProblemForm({
 					control={form.control}
 					name="topics"
 					topics={selectedContest ? selectedContest.topics : []}
+					checkedTopics={new Set()}
 				/>
 
 				<TypeSelection
 					control={form.control}
 					name="type"
-					availableTypes={
-						selectedContest ? selectedContest.types : []
-					}
+					types={selectedContest ? selectedContest.types : []}
+					problemTypeId={null}
 				/>
 			</form>
 

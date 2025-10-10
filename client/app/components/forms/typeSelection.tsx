@@ -19,11 +19,13 @@ import {
 export function TypeSelection<T extends FieldValues>({
 	control,
 	name,
-	availableTypes,
+	types,
+	problemTypeId,
 }: {
 	control: Control<T>;
 	name: FieldPathByValue<T, number>;
-	availableTypes: trpcOutputTypes['contest']['availableTypes'];
+	types: trpcOutputTypes['contest']['types'];
+	problemTypeId: number | null;
 }) {
 	return (
 		<FormField
@@ -45,14 +47,25 @@ export function TypeSelection<T extends FieldValues>({
 							<SelectValue placeholder="Vybrat typ" />
 						</SelectTrigger>
 						<SelectContent>
-							{availableTypes.map((type) => (
-								<SelectItem
-									value={type.typeId.toString()}
-									key={type.typeId}
-								>
-									{type.label}
-								</SelectItem>
-							))}
+							{types
+								.filter(
+									(type) =>
+										type.available ||
+										type.typeId === problemTypeId
+								)
+								.map((type) => (
+									<SelectItem
+										value={type.typeId.toString()}
+										key={type.typeId}
+										className={
+											type.available
+												? ''
+												: 'text-muted-foreground line-through'
+										}
+									>
+										{type.label}
+									</SelectItem>
+								))}
 						</SelectContent>
 					</Select>
 					<FormMessage />
