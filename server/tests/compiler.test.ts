@@ -279,6 +279,11 @@ describe('math', () => {
 				input: '$a\\_\\frac{b}{c}d$',
 				output: '<p>$a_{\\mathrm{\\frac{b}{c}}}d$</p>',
 			},
+			{
+				name: 'replace <> with HTML char',
+				input: '$a<b,c>d$',
+				output: '<p>$a&lt;b,c&gt;d$</p>',
+			},
 		]);
 	});
 
@@ -484,7 +489,7 @@ describe('math', () => {
 			},
 			{
 				input: '$\\left<a\\right>$',
-				output: '<p>$\\left<a\\right>$</p>',
+				output: '<p>$\\left&lt;a\\right&gt;$</p>',
 			},
 		]);
 	});

@@ -210,6 +210,7 @@ apiRouter.get(
 							},
 						},
 					},
+					orderBy: asc(problemTable.seriesOrder),
 				},
 				contestYear: true,
 			},

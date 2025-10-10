@@ -34,12 +34,12 @@ const formSchema = z.object({
 			unit: z.string().optional(),
 			precision: z.coerce
 				.number()
-				.min(0, 'Precision should be positive')
+				.min(0, 'Precision must be positive')
 				.optional(),
 			expectedPlaces: z.coerce
 				.number()
 				.int('Expected places must be a whole number')
-				.min(1, 'Should expect at least one place')
+				.min(1, 'Places must be more than or equal to 1')
 				.optional(),
 		}),
 	}),
@@ -203,7 +203,8 @@ export function MetadataForm({
 								control={form.control}
 								name="metadata.result.expectedPlaces"
 								placeholder="např. 2"
-								label="number"
+								type="number"
+								label="Očekávaný počet platných míst"
 							/>
 						</FieldSetContent>
 					</FieldSetRoot>

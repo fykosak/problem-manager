@@ -707,6 +707,10 @@ export class HtmlGenerator {
 				return '\\left(';
 			case '\\)':
 				return '\\right)';
+			case '\\left<':
+				return '\\left&lt;';
+			case '\\right>':
+				return '\\right&gt;';
 			case '\\d':
 				return '\\mathrm{d}';
 			case '\\dg':
@@ -902,10 +906,15 @@ export class HtmlGenerator {
 
 	private generateText(): string {
 		this.expectNodeName('Text');
-		return this.getCursorText()
-			.replace(/~/g, '&nbsp;')
-			.replace(/---/g, '&mdash;')
-			.replace(/--/g, '&ndash;');
+		return (
+			this.getCursorText()
+				.replace(/~/g, '&nbsp;')
+				.replace(/---/g, '&mdash;')
+				.replace(/--/g, '&ndash;')
+				// replace for correct HTML parsing
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+		);
 	}
 
 	private async generateQuoteMacro(): Promise<string> {
@@ -1446,7 +1455,9 @@ export class HtmlGenerator {
 				this.expectNodeName('DelimiterCommandIdentifier');
 				const delimiterCommand = this.getCursorText();
 				this.expectNext();
-				const delimiter = await this.generateNode();
+				const delimiter = (await this.generateNode())
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;');
 				return delimiterCommand + delimiter;
 			}
 
@@ -1475,6 +1486,11 @@ export class HtmlGenerator {
 
 			case 'MathCommandArgument':
 				return '{' + (await this.generateMathArgument()) + '}';
+
+			case 'InlineMathContent':
+				return this.getCursorText()
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;');
 
 			case 'InlineMath':
 				return this.generateInlineMath();
