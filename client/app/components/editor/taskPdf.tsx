@@ -19,7 +19,7 @@ import {
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 
-import { langEnum, textTypeEnum } from '@server/db/schema';
+import { LangEnum, TextTypeEnum } from '@server/db/schema';
 
 import {
 	Tooltip,
@@ -59,8 +59,8 @@ const TaskPdf = forwardRef(
 			textLang,
 		}: {
 			problemId: number;
-			textType: (typeof textTypeEnum.enumValues)[number];
-			textLang: (typeof langEnum.enumValues)[number];
+			textType: TextTypeEnum;
+			textLang: LangEnum;
 		},
 		outerRef: ForwardedRef<HTMLDivElement>
 	) => {

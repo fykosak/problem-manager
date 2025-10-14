@@ -4,6 +4,7 @@ import express, {
 	type Response,
 } from 'express';
 
+import { NoExporterError } from './exporters/errors/noExporterError';
 import getExporter from './exporters/getExporter';
 import { TaskBuilder } from './taskBuilder';
 
@@ -81,6 +82,10 @@ app.post(
 			await getExporter(filepath, targetDirectory).export();
 			res.sendStatus(200);
 		} catch (error) {
+			if (error instanceof NoExporterError) {
+				res.sendStatus(200);
+				return;
+			}
 			if (error instanceof Error) {
 				res.status(500).send({
 					message: error.message,

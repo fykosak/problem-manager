@@ -70,7 +70,7 @@ export function FileUploadForm({ problemId }: { problemId: number }) {
 				onSubmit={form.handleSubmit(async (values) => {
 					try {
 						await onSubmit(values);
-						toast.success('File uploaded');
+						toast.success('Soubor nahrán');
 						form.reset();
 						if (fileInputRef.current) {
 							fileInputRef.current.value = '';
@@ -80,7 +80,9 @@ export function FileUploadForm({ problemId }: { problemId: number }) {
 							message: (exception as Error).message ?? 'Error',
 							type: 'server',
 						});
-						toast.error('Error occured while uploading');
+						toast.error('Chyba během nahrávání souboru', {
+							description: (exception as Error).message,
+						});
 					} finally {
 						await revalidator.revalidate();
 					}

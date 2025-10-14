@@ -97,10 +97,10 @@ async function createKey(validForPeriod: ValidForPeriod) {
 			validUntil: validUntil,
 		});
 
-		toast.success('Key created');
+		toast.success('API klíč vytvořen');
 	} catch (error) {
 		if (error instanceof TRPCClientError) {
-			toast.error('Error occured while creating key', {
+			toast.error('Chyba při vytváření API klíče', {
 				description: error.message,
 			});
 		}
@@ -112,10 +112,10 @@ async function invalidateKey(apiKeyId: number) {
 		await trpc.person.apiKey.invalidate.mutate({
 			apiKeyId: apiKeyId,
 		});
-		toast.success('Key invalidated');
+		toast.success('API klíč invalidován');
 	} catch (error) {
 		if (error instanceof TRPCClientError) {
-			toast.error('Error occured while invalidating', {
+			toast.error('Chyba během invalidace klíče', {
 				description: error.message,
 			});
 		}

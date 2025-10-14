@@ -33,7 +33,9 @@ export function WebTextItem({
 			await revalidator.revalidate();
 		} catch (error) {
 			if (error instanceof TRPCClientError) {
-				toast.error(error.message);
+				toast.error('HTML textu se nepovedlo vygenerovat', {
+					description: error.message,
+				});
 			}
 		}
 	}

@@ -19,10 +19,10 @@ async function assignProblemToSeries(seriesId: number, problemId: number) {
 			problemId,
 			seriesId,
 		});
-		toast.success('Problem assigned to series');
+		toast.success('Úloha přidána do série');
 	} catch (error) {
 		if (error instanceof TRPCClientError) {
-			toast.error('Failed to assign problem', {
+			toast.error('Úlohu se nepodařilo přiřadit', {
 				description: error.message,
 			});
 		}

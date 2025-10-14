@@ -35,10 +35,10 @@ export function DeleteFileButton({
 	async function deleteFile(filename: string) {
 		try {
 			await trpc.problem.files.delete.mutate({ problemId, filename });
-			toast.success(`File ${filename} deleted`);
+			toast.success(`Soubor ${filename} smazán`);
 		} catch (error) {
 			if (error instanceof TRPCClientError) {
-				toast.error(`Error occured while deleting file ${filename}`, {
+				toast.error(`Chyba při mazání souboru ${filename}`, {
 					description: error.message,
 				});
 			}

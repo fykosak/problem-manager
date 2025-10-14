@@ -236,6 +236,8 @@ export class ProblemStorage {
 			}
 		}
 
-		throw new ProblemStorageError('No suited file format found');
+		throw new ProblemStorageError(
+			`No suited file format found for ${filename}`
+		);
 	}
 }
