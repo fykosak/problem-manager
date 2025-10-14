@@ -32,12 +32,9 @@ export function DownloadButton({
 			window.document.body.removeChild(linkElement);
 		} catch (error) {
 			if (error instanceof TRPCClientError) {
-				toast.error(
-					`Error occured while downloading file ${filename}`,
-					{
-						description: error.message,
-					}
-				);
+				toast.error(`Chyba při stahování souboru ${filename}`, {
+					description: error.message,
+				});
 			}
 		}
 	}

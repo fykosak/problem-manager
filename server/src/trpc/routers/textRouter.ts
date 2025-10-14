@@ -72,10 +72,14 @@ export const textRouter = trpc.router({
 			try {
 				await releaseText(input.textId);
 			} catch (error) {
+				let message = 'Failed to generate HTML';
+				if (error instanceof Error) {
+					message = error.message;
+				}
 				console.error(error);
 				throw new TRPCError({
 					code: 'INTERNAL_SERVER_ERROR',
-					message: 'Failed to generate HTML',
+					message: message,
 				});
 			}
 		}),

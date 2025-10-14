@@ -68,7 +68,7 @@ export function FileListItem({
 				oldName: filename,
 				newName: values.filename,
 			});
-			toast.success('File renamed');
+			toast.success(`Soubor přejmenován na ${values.filename}`);
 			setIsEditting(false);
 		} catch (error) {
 			if (error instanceof TRPCClientError) {

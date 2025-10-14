@@ -87,16 +87,18 @@ export function SeriesForm({
 					try {
 						await onSubmit(values);
 						if (series) {
-							toast.success('Series saved');
+							toast.success('Série uložena');
 						} else {
-							toast.success('Series created');
+							toast.success('Série smazána');
 						}
 					} catch (exception) {
 						form.setError('root', {
 							message: (exception as Error).message ?? 'Error',
 							type: 'server',
 						});
-						toast.error('Failed to create series');
+						toast.error('Nepodařilo se upravit sérii', {
+							description: (exception as Error).message,
+						});
 					}
 				})}
 			>
