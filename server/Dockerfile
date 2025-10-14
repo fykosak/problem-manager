@@ -23,6 +23,7 @@ COPY --from=deps /app/node_modules /app/node_modules
 COPY --from=deps /app/server/node_modules /app/server/node_modules
 COPY --from=latex /app/lang-latex /app/lang-latex
 COPY ./server/tsconfig.json /app/server/
+COPY ./server/tools/ /app/server/tools
 COPY ./server/src/ /app/server/src
 
 ENV NODE_ENV="production"
