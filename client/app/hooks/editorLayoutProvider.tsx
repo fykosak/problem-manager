@@ -16,6 +16,11 @@ const EditorLayoutContext = createContext<{
 	setContainerRef: (container: string, node: HTMLDivElement | null) => void;
 	desktopLayout: Layout;
 	setDesktopLayout: (layout: Layout) => void;
+	buildFunctions: Map<number, () => Promise<void>>;
+	setBuildFunction: (
+		textId: number,
+		buildFunction: () => Promise<void>
+	) => void;
 } | null>(null);
 
 export function EditorLayoutProvider({
@@ -73,6 +78,14 @@ export function EditorLayoutProvider({
 		setDesktopLayout(newLayout);
 	}
 
+	const buildFunctions = new Map<number, () => Promise<void>>();
+	function setBuildFunction(
+		textId: number,
+		buildFunction: () => Promise<void>
+	) {
+		buildFunctions.set(textId, buildFunction);
+	}
+
 	return (
 		<EditorLayoutContext.Provider
 			value={{
@@ -83,6 +96,8 @@ export function EditorLayoutProvider({
 				setContainerRef,
 				desktopLayout,
 				setDesktopLayout: setDesktopLayoutSanitized,
+				buildFunctions,
+				setBuildFunction,
 			}}
 		>
 			{children}

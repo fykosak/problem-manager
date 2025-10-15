@@ -247,6 +247,7 @@ export function EditorLayout({ problemId }: { problemId: number }) {
 						/>
 						<TaskPdf
 							problemId={problemId}
+							textId={text.textId}
 							textType={text.type}
 							textLang={text.lang}
 							key={'pdf-' + text.textId}
