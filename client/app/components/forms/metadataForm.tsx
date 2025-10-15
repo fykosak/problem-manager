@@ -17,6 +17,7 @@ import { AuthorSelection } from './authorSelection';
 import { FormInput } from './formInput';
 import { TopicSelection } from './topicSelection';
 import { TypeSelection } from './typeSelection';
+import { UnsavedChangesDialog } from './unsavedChangesDialog';
 
 const formSchema = z.object({
 	metadata: z.object({
@@ -105,143 +106,149 @@ export function MetadataForm({
 	const { errors } = formState;
 
 	return (
-		<Form {...form}>
-			<div>{errors.root?.message}</div>
-			<form
-				// eslint-disable-next-line
-				onSubmit={form.handleSubmit(async (values) => {
-					try {
-						await onSubmit(values);
-					} catch (exception) {
-						form.setError('root', {
-							message: (exception as Error).message ?? 'Error',
-							type: 'server',
-						});
-					}
-				})}
-				className="space-y-8"
-			>
-				{metadataFields.includes('name') && (
-					<FieldSetRoot>
-						<FieldSetTitle>Název úlohy</FieldSetTitle>
-						<FieldSetContent>
-							<FormInput
-								control={form.control}
-								name="metadata.name.cs"
-								placeholder="Český název"
-								label="Název CS"
-							/>
+		<>
+			<UnsavedChangesDialog
+				isDirty={formState.isDirty && !formState.isSubmitted}
+			/>
+			<Form {...form}>
+				<div>{errors.root?.message}</div>
+				<form
+					// eslint-disable-next-line
+					onSubmit={form.handleSubmit(async (values) => {
+						try {
+							await onSubmit(values);
+						} catch (exception) {
+							form.setError('root', {
+								message:
+									(exception as Error).message ?? 'Error',
+								type: 'server',
+							});
+						}
+					})}
+					className="space-y-8"
+				>
+					{metadataFields.includes('name') && (
+						<FieldSetRoot>
+							<FieldSetTitle>Název úlohy</FieldSetTitle>
+							<FieldSetContent>
+								<FormInput
+									control={form.control}
+									name="metadata.name.cs"
+									placeholder="Český název"
+									label="Název CS"
+								/>
 
-							<FormInput
-								control={form.control}
-								name="metadata.name.en"
-								placeholder="Anglický název"
-								label="Název EN"
-							/>
-						</FieldSetContent>
-					</FieldSetRoot>
-				)}
+								<FormInput
+									control={form.control}
+									name="metadata.name.en"
+									placeholder="Anglický název"
+									label="Název EN"
+								/>
+							</FieldSetContent>
+						</FieldSetRoot>
+					)}
 
-				{metadataFields.includes('origin') && (
-					<FieldSetRoot>
-						<FieldSetTitle>Původ úlohy</FieldSetTitle>
-						<FieldSetContent>
-							<FormInput
-								control={form.control}
-								name="metadata.origin.cs"
-								placeholder="Český původ"
-								label="Původ CS"
-							/>
-							<FormInput
-								control={form.control}
-								name="metadata.origin.en"
-								placeholder="Anglický původ"
-								label="Původ EN"
-							/>
-						</FieldSetContent>
-					</FieldSetRoot>
-				)}
+					{metadataFields.includes('origin') && (
+						<FieldSetRoot>
+							<FieldSetTitle>Původ úlohy</FieldSetTitle>
+							<FieldSetContent>
+								<FormInput
+									control={form.control}
+									name="metadata.origin.cs"
+									placeholder="Český původ"
+									label="Původ CS"
+								/>
+								<FormInput
+									control={form.control}
+									name="metadata.origin.en"
+									placeholder="Anglický původ"
+									label="Původ EN"
+								/>
+							</FieldSetContent>
+						</FieldSetRoot>
+					)}
 
-				{metadataFields.includes('points') && (
-					<FormInput
+					{metadataFields.includes('points') && (
+						<FormInput
+							control={form.control}
+							name="metadata.points"
+							placeholder="Počet bodů"
+							label="Body za úlohu"
+							type="number"
+						/>
+					)}
+
+					{metadataFields.includes('result') && (
+						<FieldSetRoot>
+							<FieldSetTitle>Výsledek úlohy</FieldSetTitle>
+							<FieldSetContent>
+								<FormInput
+									control={form.control}
+									name="metadata.result.value"
+									placeholder="např. 1.1e-2"
+									label="Číselný výsledek"
+									type="number"
+								/>
+
+								<FormInput
+									control={form.control}
+									name="metadata.result.unit"
+									placeholder="např. m.s^{-1}"
+									label="Jednotky"
+								/>
+
+								<FormInput
+									control={form.control}
+									name="metadata.result.precision"
+									placeholder="např. 0.1"
+									label="Tolerance"
+									type="number"
+								/>
+
+								<FormInput
+									control={form.control}
+									name="metadata.result.expectedPlaces"
+									placeholder="např. 2"
+									type="number"
+									label="Očekávaný počet platných míst"
+								/>
+							</FieldSetContent>
+						</FieldSetRoot>
+					)}
+
+					<AuthorSelection
 						control={form.control}
-						name="metadata.points"
-						placeholder="Počet bodů"
-						label="Body za úlohu"
-						type="number"
+						name="authors.task"
+						label="Authoři zadání"
+						organizers={organizers}
 					/>
-				)}
 
-				{metadataFields.includes('result') && (
-					<FieldSetRoot>
-						<FieldSetTitle>Výsledek úlohy</FieldSetTitle>
-						<FieldSetContent>
-							<FormInput
-								control={form.control}
-								name="metadata.result.value"
-								placeholder="např. 1.1e-2"
-								label="Číselný výsledek"
-								type="number"
-							/>
+					<AuthorSelection
+						control={form.control}
+						name="authors.solution"
+						label="Authoři řešení"
+						organizers={organizers}
+					/>
 
-							<FormInput
-								control={form.control}
-								name="metadata.result.unit"
-								placeholder="např. m.s^{-1}"
-								label="Jednotky"
-							/>
+					<TopicSelection
+						control={form.control}
+						name="topics"
+						topics={topics}
+						checkedTopics={new Set(taskData.topics)}
+					/>
 
-							<FormInput
-								control={form.control}
-								name="metadata.result.precision"
-								placeholder="např. 0.1"
-								label="Tolerance"
-								type="number"
-							/>
+					<TypeSelection
+						control={form.control}
+						name="type"
+						types={types}
+						problemTypeId={taskData.type}
+					/>
 
-							<FormInput
-								control={form.control}
-								name="metadata.result.expectedPlaces"
-								placeholder="např. 2"
-								type="number"
-								label="Očekávaný počet platných míst"
-							/>
-						</FieldSetContent>
-					</FieldSetRoot>
-				)}
-
-				<AuthorSelection
-					control={form.control}
-					name="authors.task"
-					label="Authoři zadání"
-					organizers={organizers}
-				/>
-
-				<AuthorSelection
-					control={form.control}
-					name="authors.solution"
-					label="Authoři řešení"
-					organizers={organizers}
-				/>
-
-				<TopicSelection
-					control={form.control}
-					name="topics"
-					topics={topics}
-					checkedTopics={new Set(taskData.topics)}
-				/>
-
-				<TypeSelection
-					control={form.control}
-					name="type"
-					types={types}
-					problemTypeId={taskData.type}
-				/>
-
-				<Button type="submit" disabled={formState.isSubmitting}>
-					{formState.isSubmitting && <Loader />}Uložit
-				</Button>
-			</form>
-		</Form>
+					<Button type="submit" disabled={formState.isSubmitting}>
+						{formState.isSubmitting && <Loader />}Uložit
+					</Button>
+				</form>
+			</Form>
+		</>
 	);
 }
