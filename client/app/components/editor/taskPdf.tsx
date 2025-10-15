@@ -27,6 +27,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from '@client/components/ui/tooltip';
+import { useEditorLayout } from '@client/hooks/editorLayoutProvider';
 import { trpc } from '@client/trpc';
 
 import { Button } from '../ui/button';
@@ -55,10 +56,12 @@ const TaskPdf = forwardRef(
 	(
 		{
 			problemId,
+			textId,
 			textType,
 			textLang,
 		}: {
 			problemId: number;
+			textId: number;
 			textType: TextTypeEnum;
 			textLang: LangEnum;
 		},
@@ -94,6 +97,9 @@ const TaskPdf = forwardRef(
 				setIsRunning(false);
 			}
 		}, []);
+
+		const { setBuildFunction } = useEditorLayout();
+		setBuildFunction(textId, buildPdf);
 
 		const [pdfWidth, setPdfWidth] = useState(400);
 		function setCappedScale(newWidth: number) {

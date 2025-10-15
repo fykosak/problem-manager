@@ -1,9 +1,8 @@
 import { lintGutter, linter } from '@codemirror/lint';
-import { EditorView } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
 import { material } from '@uiw/codemirror-theme-material';
 import CodeMirror from '@uiw/react-codemirror';
 import { latex, latexLinter } from 'lang-latex';
-import { CircleCheckIcon } from 'lucide-react';
 import { ForwardedRef, forwardRef, useEffect, useRef, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { yCollab } from 'y-codemirror.next';
@@ -11,6 +10,7 @@ import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
 
 import { config } from '@client/config';
+import { useEditorLayout } from '@client/hooks/editorLayoutProvider';
 
 import { Loader } from '../ui/loader';
 
@@ -24,7 +24,9 @@ const Editor = forwardRef(
 
 		const [connectionStatus, setConnectionStatus] =
 			useState('disconnected');
-		const [syncStatus, setSyncStatus] = useState(false);
+		// const [syncStatus, setSyncStatus] = useState(false);
+
+		const { buildFunctions } = useEditorLayout();
 
 		// Set user awareness on mount
 		useEffect(() => {
@@ -44,7 +46,7 @@ const Editor = forwardRef(
 			providerRef.current = provider;
 
 			provider.on('status', ({ status }) => setConnectionStatus(status));
-			provider.on('sync', (sync) => setSyncStatus(sync));
+			// provider.on('sync', (sync) => setSyncStatus(sync));
 
 			const awarenessUser = {
 				name: auth.user?.profile.name ?? '',
@@ -103,18 +105,20 @@ const Editor = forwardRef(
 		 */
 		return (
 			<div ref={ref} className="h-full flex flex-col">
-				<div className="inline-flex gap-2 text-sm">
-					{syncStatus ? (
-						<>
-							<CircleCheckIcon className="text-green-500" />{' '}
-							Uloženo
-						</>
-					) : (
-						<>
-							<Loader /> Synchronizace
-						</>
-					)}
-				</div>
+				{
+					// <div className="inline-flex gap-2 text-sm">
+					// 	{syncStatus ? (
+					// 		<>
+					// 			<CircleCheckIcon className="text-green-500" />{' '}
+					// 			Uloženo
+					// 		</>
+					// 	) : (
+					// 		<>
+					// 			<Loader /> Synchronizace
+					// 		</>
+					// 	)}
+					// </div>
+				}
 				<CodeMirror
 					value={yTextRef.current.toJSON()}
 					height="100%"
@@ -137,6 +141,20 @@ const Editor = forwardRef(
 							}
 						),
 						EditorView.lineWrapping,
+						keymap.of([
+							{
+								key: 'Ctrl-s',
+								mac: 'Cmd-s',
+								run: () => {
+									const buildFunction =
+										buildFunctions.get(textId);
+									if (buildFunction) {
+										buildFunction().catch(() => {});
+									}
+									return true;
+								},
+							},
+						]),
 					]}
 					basicSetup={{ foldGutter: true, dropCursor: true }}
 				/>
