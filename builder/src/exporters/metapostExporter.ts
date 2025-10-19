@@ -18,6 +18,7 @@ export default class MetapostExporter extends Exporter {
 		await this.execute(
 			'mpost',
 			[
+				'-interaction=nonstopmode',
 				'-jobname=' + parsedFileName.name,
 				'-s',
 				'outputtemplate="%j.%o"',
