@@ -14,23 +14,35 @@ import { useEditorLayout } from '@client/hooks/editorLayoutProvider';
 
 import { Loader } from '../ui/loader';
 
+const palette = [
+	'#e25963',
+	'#8ec16a',
+	'#e6ba67',
+	'#4ba7f3',
+	'#c265de',
+	'#47b5c2',
+];
+
 const Editor = forwardRef(
 	({ textId }: { textId: number }, ref: ForwardedRef<HTMLDivElement>) => {
 		const auth = useAuth();
-		const ydocRef = useRef(new Y.Doc());
-		const providerRef = useRef<WebsocketProvider | null>(null);
-		const yTextRef = useRef(ydocRef.current.getText());
-		const undoManagerRef = useRef(new Y.UndoManager(yTextRef.current));
 
-		const [connectionStatus, setConnectionStatus] =
-			useState('disconnected');
-		// const [syncStatus, setSyncStatus] = useState(false);
+		// state values
+		const [ready, setReady] = useState(false);
+		const [connectionStatus, setConnectionStatus] = useState('connecting');
+
+		// Yjs object refs
+		const ydocRef = useRef<Y.Doc | null>(null);
+		const providerRef = useRef<WebsocketProvider | null>(null);
+		const yTextRef = useRef<Y.Text | null>(null);
+		const undoManagerRef = useRef<Y.UndoManager | null>(null);
 
 		const { buildFunctions } = useEditorLayout();
 
-		// Set user awareness on mount
 		useEffect(() => {
-			const ydoc = ydocRef.current;
+			// create Yjs objects
+			const ydoc = new Y.Doc();
+			const yText = ydoc.getText();
 			const provider = new WebsocketProvider(
 				config.WS_URL,
 				textId.toString(),
@@ -43,51 +55,71 @@ const Editor = forwardRef(
 					},
 				}
 			);
+
+			// store them in refs
+			ydocRef.current = ydoc;
 			providerRef.current = provider;
+			yTextRef.current = yText;
 
+			// tract connection status
 			provider.on('status', ({ status }) => setConnectionStatus(status));
-			// provider.on('sync', (sync) => setSyncStatus(sync));
 
-			const awarenessUser = {
-				name: auth.user?.profile.name ?? '',
-				color: '#553322',
-				colorLight: '#998866',
+			const handleSync = (synced: boolean) => {
+				if (!synced) {
+					return;
+				}
+				undoManagerRef.current = new Y.UndoManager(yText);
+
+				// bind awareness info
+				const color =
+					palette[Math.floor(Math.random() * palette.length)];
+				const awarenessUser = {
+					name: auth.user?.profile.name ?? '',
+					color: color,
+				};
+				provider.awareness.setLocalStateField('user', awarenessUser);
+
+				// Ensure user mapping
+				const userData = new Y.PermanentUserData(ydoc);
+				userData.setUserMapping(
+					ydoc,
+					ydoc.clientID,
+					awarenessUser.name
+				);
+
+				setReady(true);
 			};
-			provider.awareness.setLocalStateField('user', awarenessUser);
-
-			// Ensure user mapping
-			const userData = new Y.PermanentUserData(ydoc);
-			userData.setUserMapping(ydoc, ydoc.clientID, awarenessUser.name);
+			provider.once('sync', handleSync);
 
 			return () => {
+				provider.off('sync', handleSync);
 				provider.destroy();
 				ydoc.destroy();
+				ydocRef.current = null;
+				providerRef.current = null;
+				yTextRef.current = null;
+				undoManagerRef.current = null;
+				setReady(false);
 			};
 		}, []);
 
-		// Ensure yText is defined before rendering
-		if (!yTextRef.current) {
-			return null;
-		}
-		if (!providerRef.current) {
-			return null;
-		}
-		if (!undoManagerRef.current) {
-			return null;
-		}
-
-		if (connectionStatus === 'disconnected') {
+		if (
+			!ready ||
+			!yTextRef.current ||
+			!providerRef.current ||
+			!undoManagerRef.current
+		) {
 			return (
-				<div ref={ref} className="h-full flex flex-col">
-					<Loader /> Odpojeno
-				</div>
-			);
-		}
-
-		if (connectionStatus == 'connecting') {
-			return (
-				<div ref={ref} className="h-full flex flex-col">
-					<Loader /> Připojování
+				<div
+					ref={ref}
+					className="flex flex-col justify-center items-center text-muted-foreground m-2"
+				>
+					<span className="inline-flex gap-1">
+						<Loader />
+						{connectionStatus === 'connected'
+							? 'Načítání editoru...'
+							: 'Připojování...'}
+					</span>
 				</div>
 			);
 		}
@@ -105,20 +137,6 @@ const Editor = forwardRef(
 		 */
 		return (
 			<div ref={ref} className="h-full flex flex-col">
-				{
-					// <div className="inline-flex gap-2 text-sm">
-					// 	{syncStatus ? (
-					// 		<>
-					// 			<CircleCheckIcon className="text-green-500" />{' '}
-					// 			Uloženo
-					// 		</>
-					// 	) : (
-					// 		<>
-					// 			<Loader /> Synchronizace
-					// 		</>
-					// 	)}
-					// </div>
-				}
 				<CodeMirror
 					value={yTextRef.current.toJSON()}
 					height="100%"
@@ -128,7 +146,7 @@ const Editor = forwardRef(
 						fontSize: '14px',
 					}}
 					className="grow h-px"
-					spellCheck="true"
+					spellCheck={true}
 					extensions={[
 						latex(),
 						linter(latexLinter),

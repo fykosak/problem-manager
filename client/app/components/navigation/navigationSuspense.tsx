@@ -5,8 +5,8 @@ import { Loader } from '../ui/loader';
 function Loading() {
 	return (
 		<div className="flex w-full justify-center items-center my-2">
-			<span className="inline-flex">
-				<Loader /> Loading
+			<span className="inline-flex gap-1">
+				<Loader /> Načítání
 			</span>
 		</div>
 	);
