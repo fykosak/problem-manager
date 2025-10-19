@@ -5,10 +5,20 @@ import 'react-pdf/dist/esm/Page/TextLayer.css';
 
 import { cn } from '@client/lib/utils';
 
+import { Loader } from '../ui/loader';
+
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	'pdfjs-dist/build/pdf.worker.min.mjs',
 	import.meta.url
 ).toString();
+
+function PdfViewerMessage({ children }: { children: React.ReactNode }) {
+	return (
+		<div className="flex flex-col justify-center items-center text-muted-foreground m-2">
+			{children}
+		</div>
+	);
+}
 
 export default function PdfViewer({
 	file,
@@ -30,16 +40,29 @@ export default function PdfViewer({
 	return (
 		<div
 			className={cn(
-				'bg-gray-500 relative overflow-auto flex flex-col',
+				'bg-muted relative overflow-auto flex flex-col',
 				className
 			)}
 			ref={container}
 		>
 			<Document
 				file={file}
-				noData={'Nenačten žádný dokument'}
-				error={'Chyba při načítání dokumentu'}
-				loading={'Načítání dokumentu'}
+				noData={
+					<PdfViewerMessage>Nenačten žádný dokument</PdfViewerMessage>
+				}
+				error={
+					<PdfViewerMessage>
+						Chyba při načítání dokumentu
+					</PdfViewerMessage>
+				}
+				loading={
+					<PdfViewerMessage>
+						<span className="inline-flex gap-1">
+							<Loader />
+							Načítání dokumentu
+						</span>
+					</PdfViewerMessage>
+				}
 				onLoadError={console.error}
 				onLoadSuccess={onDocumentLoadSuccess}
 				externalLinkTarget="_blank"

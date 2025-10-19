@@ -12,20 +12,28 @@ export default function Login() {
 		case 'signinRedirect':
 		case 'signinSilent':
 			return (
-				<div>
-					<Loader /> Přihlašování
+				<div className="flex flex-col items-center justify-center w-full h-screen">
+					<span className="inline-flex gap-1">
+						<Loader /> Přihlašování
+					</span>
 				</div>
 			);
 		case 'signoutRedirect':
 			return (
-				<div>
-					<Loader /> Odhlašování
+				<div className="flex flex-col items-center justify-center w-full h-screen">
+					<span className="inline-flex gap-1">
+						<Loader /> Odhlašování
+					</span>
 				</div>
 			);
 	}
 
 	if (auth.isLoading) {
-		return <Loader />;
+		return (
+			<div className="flex flex-col items-center justify-center w-full h-screen">
+				<Loader />
+			</div>
+		);
 	}
 
 	if (auth.isAuthenticated) {

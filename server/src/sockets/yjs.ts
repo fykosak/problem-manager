@@ -309,7 +309,7 @@ export async function setupWSConnection(
 	}
 
 	const roles = getRolesFromJWT(jwtData);
-	if (!person) {
+	if (!roles) {
 		conn.close(3000, 'Unauthorized');
 		return;
 	}
@@ -331,6 +331,7 @@ export async function setupWSConnection(
 	conn.binaryType = 'arraybuffer';
 	// get doc, initialize if it does not exist yet
 	const doc = getYDoc(docName, gc);
+	await doc.whenInitialized;
 	doc.conns.set(conn, new Set());
 	// listen and reply to events
 	conn.on('message', (message: ArrayBuffer) => {
