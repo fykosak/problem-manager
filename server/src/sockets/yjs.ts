@@ -166,12 +166,12 @@ export class WSSharedDoc extends Y.Doc {
  *
  * @return {WSSharedDoc}
  */
-export function getYDoc(docname: string, gc = true): WSSharedDoc {
-	return map.setIfUndefined(docs, docname, () => {
+export async function getYDoc(docname: string, gc = true): WSSharedDoc {
+	return map.setIfUndefined(docs, docname, async () => {
 		const doc = new WSSharedDoc(docname);
 		doc.gc = gc;
 		if (persistence !== null) {
-			persistence.bindState(docname, doc);
+			await persistence.bindState(docname, doc);
 		}
 		docs.set(docname, doc);
 		return doc;
@@ -330,7 +330,7 @@ export async function setupWSConnection(
 
 	conn.binaryType = 'arraybuffer';
 	// get doc, initialize if it does not exist yet
-	const doc = getYDoc(docName, gc);
+	const doc = await getYDoc(docName, gc);
 	await doc.whenInitialized;
 	doc.conns.set(conn, new Set());
 	// listen and reply to events

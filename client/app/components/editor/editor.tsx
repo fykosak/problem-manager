@@ -53,6 +53,7 @@ const Editor = forwardRef(
 							? 'Bearer ' + auth.user.access_token
 							: '',
 					},
+					resyncInterval: 3000,
 				}
 			);
 
