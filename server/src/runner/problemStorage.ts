@@ -195,7 +195,7 @@ export class ProblemStorage {
 	public async getFileAsDataUri(filepath: string) {
 		const ext = path.parse(filepath).ext;
 		let buffer = '';
-		switch (ext) {
+		switch (ext.toLowerCase()) {
 			case '.svg':
 				buffer += 'data:image/svg+xml';
 				break;
@@ -203,12 +203,17 @@ export class ProblemStorage {
 				buffer += 'data:image/png';
 				break;
 			case '.jpg':
+			case '.jpeg':
 				buffer += 'data:image/jpeg';
+				break;
+			case '.pdf':
+				buffer += 'data:application/pdf';
 				break;
 			case '.dat':
 			case '.plt':
 			case '.ipe':
 			case '.mp':
+			case '.txt':
 				buffer += 'data:text/plain;charset=UTF-8';
 				break;
 			default:
