@@ -88,7 +88,7 @@ export const contestRouter = trpc.router({
 
 	organizers: contestProcedure.query(async ({ ctx }) => {
 		let contestId = ctx.contest.contestId;
-		if (Object.keys(config.organizerMapping).includes(ctx.contest.symbol)) {
+		if (ctx.contest.symbol in config.organizerMapping) {
 			const mappedSymbol = config.organizerMapping[ctx.contest.symbol];
 			const mappedContest = await db.query.contestTable.findFirst({
 				where: eq(contestTable.symbol, mappedSymbol),

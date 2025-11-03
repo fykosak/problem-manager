@@ -187,6 +187,11 @@ export class ProblemStorage {
 		}
 	}
 
+	public async getFileAsBase64(filepath: string) {
+		const fileData = await fs.readFile(filepath);
+		return fileData.toString('base64');
+	}
+
 	public async getFileAsDataUri(filepath: string) {
 		const ext = path.parse(filepath).ext;
 		let buffer = '';
@@ -210,9 +215,8 @@ export class ProblemStorage {
 				throw new Error('Unsupported extension');
 		}
 
-		const fileData = await fs.readFile(filepath);
 		buffer += ';base64,';
-		buffer += fileData.toString('base64');
+		buffer += await this.getFileAsBase64(filepath);
 		return buffer;
 	}
 

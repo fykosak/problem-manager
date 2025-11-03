@@ -41,10 +41,28 @@ export const apiRouter = express.Router();
 
 apiRouter.use('/', asyncHandler(UserAuthMiddleware));
 
-function testPersonAuthorized(contestId: number, res: Response) {
+async function testPersonAuthorized(contestId: number, res: Response) {
 	const person = res.locals.person as RequestPerson;
+
+	const contest = await db.query.contestTable.findFirst({
+		where: eq(contestTable.contestId, contestId),
+	});
+	if (!contest) {
+		throw new Error('Contest does not exist');
+	}
+
+	// get target contest by organizer mapping
+	let mappedSymbol = null;
+	if (contest.symbol in config.organizerMapping) {
+		mappedSymbol = config.organizerMapping[contest.symbol];
+	}
+
+	// check existance of organizer by both original contest id and mapped
+	// contest symbol
 	const organizer = person.organizers.find(
-		(organizer) => organizer.contestId === contestId
+		(organizer) =>
+			organizer.contestId === contestId ||
+			(mappedSymbol && organizer.contest.symbol == mappedSymbol)
 	);
 
 	if (!organizer) {
@@ -52,13 +70,16 @@ function testPersonAuthorized(contestId: number, res: Response) {
 	}
 }
 
+/**
+ * Web api route for listing series with released texts
+ */
 apiRouter.get(
 	'/contest/:contestId/years',
 	asyncHandler(async (req, res) => {
 		const contestId = Number(req.params.contestId);
 
 		try {
-			testPersonAuthorized(contestId, res);
+			await testPersonAuthorized(contestId, res);
 		} catch {
 			res.status(403).send('Cannot access this contest');
 		}
@@ -129,13 +150,16 @@ apiRouter.get(
 	})
 );
 
+/**
+ * List contest topics
+ */
 apiRouter.get(
 	'/contest/:contestId/topics',
 	asyncHandler(async (req, res) => {
 		const contestId = Number(req.params.contestId);
 
 		try {
-			testPersonAuthorized(contestId, res);
+			await testPersonAuthorized(contestId, res);
 		} catch {
 			res.status(403).send('Cannot access this contest');
 		}
@@ -148,6 +172,9 @@ apiRouter.get(
 	})
 );
 
+/**
+ * Get problems with specific topic
+ */
 apiRouter.get(
 	'/topic/:topicId',
 	asyncHandler(async (req, res) => {
@@ -163,7 +190,7 @@ apiRouter.get(
 		}
 
 		try {
-			testPersonAuthorized(topic.contestId, res);
+			await testPersonAuthorized(topic.contestId, res);
 		} catch {
 			res.status(403).send('Cannot access this contest');
 			return;
@@ -184,6 +211,9 @@ apiRouter.get(
 	})
 );
 
+/**
+ * Get specified series with problems and texts in HTML
+ */
 apiRouter.get(
 	'/series/:seriesId',
 	asyncHandler(async (req, res) => {
@@ -222,7 +252,7 @@ apiRouter.get(
 		}
 
 		try {
-			testPersonAuthorized(series.contestYear.contestId, res);
+			await testPersonAuthorized(series.contestYear.contestId, res);
 		} catch {
 			res.status(403).send('Cannot access this contest');
 			return;
@@ -250,12 +280,53 @@ apiRouter.get(
 	})
 );
 
+/**
+ * Get problem by contest, year, series label and number
+ */
 apiRouter.get(
-	'/problem/:problemId',
+	'/contest/:contestId/year/:year/series/:seriesLabel/problem/:seriesOrder',
 	asyncHandler(async (req, res) => {
-		const problemId = Number(req.params.problemId);
+		const contestId = Number(req.params.contestId);
+		const year = Number(req.params.year);
+		const seriesLabel = req.params.seriesLabel;
+		const seriesOrder = Number(req.params.seriesOrder);
+
+		try {
+			await testPersonAuthorized(contestId, res);
+		} catch {
+			res.status(403).send('Cannot access this contest');
+			return;
+		}
+
+		const contestYear = await db.query.contestYearTable.findFirst({
+			where: and(
+				eq(contestYearTable.contestId, contestId),
+				eq(contestYearTable.year, year)
+			),
+		});
+
+		if (!contestYear) {
+			res.status(404).send('Contest year does not exist');
+			return;
+		}
+
+		const series = await db.query.seriesTable.findFirst({
+			where: and(
+				eq(seriesTable.contestYearId, contestYear.contestYearId),
+				eq(seriesTable.label, seriesLabel)
+			),
+		});
+
+		if (!series) {
+			res.status(404).send('Series does not exist');
+			return;
+		}
+
 		const problem = await db.query.problemTable.findFirst({
-			where: eq(problemTable.problemId, problemId),
+			where: and(
+				eq(problemTable.seriesId, series.seriesId),
+				eq(problemTable.seriesOrder, seriesOrder)
+			),
 			with: {
 				texts: true,
 				type: true,
@@ -275,22 +346,6 @@ apiRouter.get(
 
 		if (!problem) {
 			res.status(404).send('Problem does not exist');
-			return;
-		}
-
-		const contestId = problem.series
-			? problem.series.contestYear.contestId
-			: problem.contestId;
-
-		if (!contestId) {
-			res.status(500).send('Problem not assigned to contest');
-			return;
-		}
-
-		try {
-			testPersonAuthorized(contestId, res);
-		} catch {
-			res.status(403).send('Cannot access this contest');
 			return;
 		}
 
@@ -330,6 +385,20 @@ apiRouter.get(
 			);
 		}
 
+		const problemStorage = new ProblemStorage(problem.problemId);
+		const filenames = await problemStorage.getFiles();
+		console.log(filenames);
+
+		const files = [];
+		for (const filename of filenames) {
+			files.push({
+				name: filename,
+				contents: await problemStorage.getFileAsBase64(
+					problemStorage.getPathForFile(filename)
+				),
+			});
+		}
+
 		res.json({
 			problemId: problem.problemId,
 			contest: contestId,
@@ -343,6 +412,7 @@ apiRouter.get(
 			),
 			texts: texts,
 			authorSignatures: Object.fromEntries(authorSignatures),
+			files: files,
 		});
 	})
 );
@@ -411,7 +481,7 @@ apiRouter.post(
 		}
 
 		try {
-			testPersonAuthorized(contestId, res);
+			await testPersonAuthorized(contestId, res);
 		} catch {
 			res.status(403).send('Cannot access this contest');
 			return;
