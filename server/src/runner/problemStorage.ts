@@ -187,10 +187,15 @@ export class ProblemStorage {
 		}
 	}
 
+	public async getFileAsBase64(filepath: string) {
+		const fileData = await fs.readFile(filepath);
+		return fileData.toString('base64');
+	}
+
 	public async getFileAsDataUri(filepath: string) {
 		const ext = path.parse(filepath).ext;
 		let buffer = '';
-		switch (ext) {
+		switch (ext.toLowerCase()) {
 			case '.svg':
 				buffer += 'data:image/svg+xml';
 				break;
@@ -198,21 +203,25 @@ export class ProblemStorage {
 				buffer += 'data:image/png';
 				break;
 			case '.jpg':
+			case '.jpeg':
 				buffer += 'data:image/jpeg';
+				break;
+			case '.pdf':
+				buffer += 'data:application/pdf';
 				break;
 			case '.dat':
 			case '.plt':
 			case '.ipe':
 			case '.mp':
+			case '.txt':
 				buffer += 'data:text/plain;charset=UTF-8';
 				break;
 			default:
 				throw new Error('Unsupported extension');
 		}
 
-		const fileData = await fs.readFile(filepath);
 		buffer += ';base64,';
-		buffer += fileData.toString('base64');
+		buffer += await this.getFileAsBase64(filepath);
 		return buffer;
 	}
 

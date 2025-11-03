@@ -2,10 +2,17 @@ import { type InferSelectModel, eq } from 'drizzle-orm';
 import type { NextFunction, Request, Response } from 'express';
 
 import { db } from '@server/db';
-import { apiKeyTable, organizerTable, personTable } from '@server/db/schema';
+import {
+	apiKeyTable,
+	contestTable,
+	organizerTable,
+	personTable,
+} from '@server/db/schema';
 
 export type RequestPerson = InferSelectModel<typeof personTable> & {
-	organizers: InferSelectModel<typeof organizerTable>[];
+	organizers: (InferSelectModel<typeof organizerTable> & {
+		contest: InferSelectModel<typeof contestTable>;
+	})[];
 };
 
 export async function UserAuthMiddleware(
@@ -31,7 +38,11 @@ export async function UserAuthMiddleware(
 	const person = await db.query.personTable.findFirst({
 		where: eq(personTable.personId, apiKey.personId),
 		with: {
-			organizers: true,
+			organizers: {
+				with: {
+					contest: true,
+				},
+			},
 		},
 	});
 
