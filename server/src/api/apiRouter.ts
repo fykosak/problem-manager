@@ -298,6 +298,15 @@ apiRouter.get(
 			return;
 		}
 
+		const contest = await db.query.contestTable.findFirst({
+			where: eq(contestTable.contestId, contestId),
+		});
+
+		if (!contest) {
+			res.status(404).send('Contest does not exist');
+			return;
+		}
+
 		const contestYear = await db.query.contestYearTable.findFirst({
 			where: and(
 				eq(contestYearTable.contestId, contestId),
@@ -349,6 +358,7 @@ apiRouter.get(
 			return;
 		}
 
+		// get text
 		const ydocStorage = new StorageProvider();
 		const texts: Record<string, Record<string, string>> = {};
 
@@ -359,6 +369,20 @@ apiRouter.get(
 				texts[text.type] = {};
 			}
 			texts[text.type][text.lang] = contents;
+		}
+
+		// author signatures
+		let organizerContestId = contestId;
+		if (Object.keys(config.organizerMapping).includes(contest.symbol)) {
+			const mappedSymbol = config.organizerMapping[contest.symbol];
+			const mappedContest = await db.query.contestTable.findFirst({
+				where: eq(contestTable.symbol, mappedSymbol),
+			});
+			if (!mappedContest) {
+				res.status(500).send('Mapped contest does not exist');
+				return;
+			}
+			organizerContestId = mappedContest.contestId;
 		}
 
 		const authorSignatures = new Map<string, string[]>();
@@ -374,7 +398,7 @@ apiRouter.get(
 				where: and(
 					inArray(organizerTable.personId, personIds),
 					isNotNull(organizerTable.texSignature),
-					eq(organizerTable.contestId, contestId)
+					eq(organizerTable.contestId, organizerContestId)
 				),
 			});
 			authorSignatures.set(
@@ -385,6 +409,7 @@ apiRouter.get(
 			);
 		}
 
+		// file loading
 		const problemStorage = new ProblemStorage(problem.problemId);
 		const filenames = await problemStorage.getFiles();
 		console.log(filenames);
