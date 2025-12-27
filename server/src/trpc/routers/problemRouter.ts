@@ -252,7 +252,9 @@ export const problemRouter = trpc.router({
 				.onConflictDoNothing();
 
 			// update authors
-			for (const type of textTypeEnum.enumValues) {
+			for (const type of Object.keys(
+				input.authors
+			) as (keyof typeof input.authors)[]) {
 				const personIds = input.authors[type];
 				await db
 					.delete(authorTable)
@@ -375,26 +377,38 @@ export const problemRouter = trpc.router({
 				const taskYDoc = new Y.Doc();
 				taskYDoc.getText().insert(0, input.task);
 
-				const langs = config.contestTextLangs.get(ctx.contest.symbol);
-				if (!langs) {
+				const textTypes = config.contestTexts[ctx.contest.symbol];
+				if (!textTypes) {
 					throw new TRPCError({
 						message: 'Could not get languages for contest',
 						code: 'INTERNAL_SERVER_ERROR',
 					});
 				}
-				for (const lang of langs) {
-					for (const type of textTypeEnum.enumValues) {
-						if (!(langEnum.enumValues as string[]).includes(lang)) {
-							continue;
-						}
-						// @ts-expect-error Lang is check that its valid, but it's type is
-						// not specified.
+
+				const taskLangs = textTypes['task'];
+				if (!taskLangs || !taskLangs.includes(input.lang)) {
+					throw new TRPCError({
+						message: 'Invalid lang for text type',
+						code: 'BAD_REQUEST',
+					});
+				}
+
+				// TS cannot infer the key type normally, so it explictly
+				// declared
+				for (const textType of Object.keys(
+					textTypes
+				) as (keyof typeof textTypes)[]) {
+					const textLangs = textTypes[textType];
+					if (!textLangs) {
+						continue;
+					}
+					for (const textLang of textLangs) {
 						await tx.insert(textTable).values({
 							problemId: problem.problemId,
-							lang: lang,
-							type: type,
+							lang: textLang,
+							type: textType,
 							contents:
-								type === 'task' && lang === input.lang
+								textType === 'task' && textLang === input.lang
 									? Y.encodeStateAsUpdate(taskYDoc)
 									: null,
 						});

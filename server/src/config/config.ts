@@ -1,6 +1,8 @@
 import { readFileSync } from 'fs';
 import { z } from 'zod';
 
+import { langEnum, textTypeEnum } from '@server/db/schema';
+
 import { ConfigError, getRequiredString } from './configUtils';
 import { getACLConfig } from './roles';
 import { getWorkConfig } from './work';
@@ -9,42 +11,24 @@ const jsonConfig = JSON.parse(
 	readFileSync('./config.json').toString()
 ) as Record<string, unknown>;
 
+const contestTextsSchema = z.record(
+	z.string().nonempty(),
+	z.record(
+		z.enum(textTypeEnum.enumValues),
+		z.enum(langEnum.enumValues).array()
+	)
+);
+
 /**
- * Get list of used languages of texts for a contest
+ * Get list of used texts and languages for a contest
  */
-function getContestTextLangs(json: Record<string, unknown>, property: string) {
+function getContestTexts(json: Record<string, unknown>, property: string) {
 	const textsConfig = json[property];
 	if (!textsConfig || typeof textsConfig !== 'object') {
 		throw new ConfigError('Texts config is not an object');
 	}
 
-	const contestTextLangs = new Map<string, string[]>();
-
-	for (const contest in textsConfig) {
-		const langList = (textsConfig as Record<string, unknown>)[contest];
-		if (!Array.isArray(langList)) {
-			throw new ConfigError(`Language list for ${contest} is not a list`);
-		}
-
-		const langs = new Set<string>();
-		for (const lang of langList) {
-			if (typeof lang !== 'string') {
-				throw new ConfigError(
-					`Language list should be a list of strings`
-				);
-			}
-			if (lang !== 'cs' && lang !== 'en') {
-				throw new ConfigError(
-					`Invalid language ${lang}, use only cs,en`
-				);
-			}
-			langs.add(lang);
-		}
-
-		contestTextLangs.set(contest, Array.from(langs));
-	}
-
-	return contestTextLangs;
+	return contestTextsSchema.parse(textsConfig);
 }
 
 const organizerMappingSchema = z.record(
@@ -91,7 +75,7 @@ const config = {
 	fksdbLogin: getRequiredString(jsonConfig, 'fksdbLogin'),
 	fksdbPassword: getRequiredString(jsonConfig, 'fksdbPassword'),
 	dbConnection: getRequiredString(jsonConfig, 'dbConnection'),
-	contestTextLangs: getContestTextLangs(jsonConfig, 'contestTextLangs'),
+	contestTexts: getContestTexts(jsonConfig, 'contestTexts'),
 	/**
 	 * Allows to map organizers of one contest to another if they're the same.
 	 * Key-value pairs of <`original contestSymbol`>: <`mapped contestSymbol`>

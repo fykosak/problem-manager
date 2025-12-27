@@ -127,6 +127,8 @@ export function TextTypeSelector({
 				return 'Zadání';
 			case 'solution':
 				return 'Řešení';
+			case 'result':
+				return 'Výsledek';
 		}
 		return type;
 	}
