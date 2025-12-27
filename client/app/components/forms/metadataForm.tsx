@@ -219,14 +219,14 @@ export function MetadataForm({
 					<AuthorSelection
 						control={form.control}
 						name="authors.task"
-						label="Authoři zadání"
+						label="Autoři zadání"
 						organizers={organizers}
 					/>
 
 					<AuthorSelection
 						control={form.control}
 						name="authors.solution"
-						label="Authoři řešení"
+						label="Autoři řešení"
 						organizers={organizers}
 					/>
 

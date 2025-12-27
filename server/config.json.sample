@@ -5,15 +5,33 @@
   "fksdbLogin": "",
   "fksdbPassword": "",
   "dbConnection": "postgresql://pm:password@db/problem_manager",
-  "contestTextLangs": {
-    "fykos": ["cs", "en"],
-    "fol": ["cs", "en"],
-    "fof": ["cs", "en"],
-    "vyfuk": ["cs"]
+  "contestTexts": {
+    "fykos": {
+      "task": ["cs", "en"],
+      "solution": ["cs", "en"]
+    },
+    "fol": {
+      "task": ["cs", "en"],
+      "solution": ["cs", "en"]
+    },
+    "fof": {
+      "task": ["cs", "en"],
+      "solution": ["cs", "en"],
+      "result": ["cs"]
+    },
+    "vyfuk": {
+      "task": ["cs"],
+      "solution": ["cs"]
+    },
+    "naboj-junior": {
+      "task": ["en", "cs"],
+      "solution": ["en", "cs"]
+    }
   },
   "organizerMapping": {
     "fof": "fykos",
-    "fol": "fykos"
+    "fol": "fykos",
+    "naboj-junior": "vyfuk"
   },
   "roleMapping": {
     "baseRole": {

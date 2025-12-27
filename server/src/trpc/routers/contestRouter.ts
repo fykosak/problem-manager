@@ -27,7 +27,7 @@ export const contestRouter = trpc.router({
 		});
 		return {
 			contests,
-			contestTextLangs: Object.fromEntries(config.contestTextLangs),
+			contestTexts: config.contestTexts,
 			contestMetadataFields: config.contestMetadataFields,
 		};
 	}),

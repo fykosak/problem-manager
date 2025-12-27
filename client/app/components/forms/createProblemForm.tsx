@@ -62,7 +62,7 @@ export function CreateProblemForm({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			contestSymbol: currentContestSymbol,
-			lang: 'cs', // TODO from config?
+			lang: undefined,
 			name: undefined,
 			origin: undefined,
 			task: undefined,
@@ -152,21 +152,27 @@ export function CreateProblemForm({
 	const { formState, resetField, watch } = form;
 	const { errors } = formState;
 
-	const contestSymbol = watch('contestSymbol');
-	useEffect(() => {
-		resetField('type');
-	}, [contestSymbol]);
-
 	const personRoles = usePersonRoles();
 	const contests = contestData.contests.filter((contest) =>
 		acl.isAllowedContest(personRoles, contest.symbol, 'problem', 'create')
 	);
+
+	const contestSymbol = watch('contestSymbol');
 	const selectedContest = contests.find(
 		(contest) => contest.symbol === contestSymbol
 	);
-	const langs = contestData.contestTextLangs[contestSymbol] ?? [];
+	const langs = contestSymbol
+		? (contestData.contestTexts[contestSymbol].task ?? [])
+		: [];
 	const metadataFields =
 		contestData.contestMetadataFields[contestSymbol] ?? [];
+
+	useEffect(() => {
+		resetField('lang', {
+			defaultValue: langs.length > 0 ? langs[0] : undefined,
+		});
+		resetField('type');
+	}, [contestSymbol]);
 
 	function langLabel(lang: string) {
 		if (lang === 'cs') {

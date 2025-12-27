@@ -198,7 +198,7 @@ export const problemRelations = relations(problemTable, ({ one, many }) => ({
 }));
 
 export const langEnum = pgEnum('lang', ['cs', 'en']);
-export const textTypeEnum = pgEnum('text_type', ['task', 'solution']);
+export const textTypeEnum = pgEnum('text_type', ['task', 'solution', 'result']);
 
 export type LangEnum = (typeof langEnum.enumValues)[number];
 export type TextTypeEnum = (typeof textTypeEnum.enumValues)[number];
