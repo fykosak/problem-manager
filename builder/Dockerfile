@@ -6,7 +6,7 @@ WORKDIR /app
 RUN npm install-clean
 
 # Create image
-FROM fykosak/buildtools
+FROM fykosak/buildtools:sha-a8ee2f6
 
 # Install JS
 RUN apt-get update && apt-get install -y nodejs npm
