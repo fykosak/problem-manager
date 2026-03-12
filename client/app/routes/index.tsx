@@ -66,7 +66,8 @@ function WorkItem({
 					{work.problem.seriesId && (
 						<CardDescription>
 							{work.contest?.name} {work.contest_year?.year} –
-							série {work.series?.label} – úloha {work.problem.seriesOrder}
+							série {work.series?.label} – úloha{' '}
+							{work.problem.seriesOrder}
 						</CardDescription>
 					)}
 					{work.problem.contestId && (
