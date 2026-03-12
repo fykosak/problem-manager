@@ -65,8 +65,9 @@ function WorkItem({
 					</CardTitle>
 					{work.problem.seriesId && (
 						<CardDescription>
-							{work.contest?.name} {work.contest_year?.year} -
-							série {work.series?.label}
+							{work.contest?.name} {work.contest_year?.year} –
+							série {work.series?.label} – úloha{' '}
+							{work.problem.seriesOrder}
 						</CardDescription>
 					)}
 					{work.problem.contestId && (
@@ -75,7 +76,7 @@ function WorkItem({
 				</CardHeader>
 				<CardContent>
 					{(work.problem.metadata.name as Record<string, string>).cs}{' '}
-					- {work.work.group}
+					– {work.work.group}
 				</CardContent>
 			</Card>
 		</NavLink>
