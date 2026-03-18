@@ -73,6 +73,11 @@ text after`,
 asdf
 \\end{env}<p>text after</p>`,
 		},
+		{
+			name: 'newline',
+			input: 'text before\\\\\ntext after',
+			output: '<p>text before<br>\ntext after</p>',
+		},
 	]);
 });
 
@@ -221,6 +226,19 @@ qwer
 			},
 		]);
 	});
+
+	describe('text commands', () => {
+		runTestStrings([
+			{
+				input: 'text\\dots text',
+				output: '<p>text… text</p>',
+			},
+			{
+				input: 'text\\ldots text',
+				output: '<p>text… text</p>',
+			},
+		]);
+	});
 });
 
 describe('math', () => {
@@ -284,6 +302,54 @@ describe('math', () => {
 				input: '$a<b,c>d$',
 				output: '<p>$a&lt;b,c&gt;d$</p>',
 			},
+			{ input: '$\\vect{v}$', output: '<p>$\\mathbf{v}$</p>' },
+			{ input: '$\\AA$', output: '<p>$\\mathring{A}$</p>' },
+			{
+				input: '$\\der{a}{b}$',
+				output: '<p>$\\frac{\\mathrm{d}a}{\\mathrm{d}b}$</p>',
+			},
+			{
+				input: '$\\dder{a}{b}$',
+				output: '<p>$\\frac{\\mathrm{d}^2a}{\\mathrm{d}b^2}$</p>',
+			},
+			{
+				input: '$\\pder{a}{b}$',
+				output: '<p>$\\frac{\\partial a}{\\partial b}$</p>',
+			},
+			{
+				input: '$\\ppder{a}{b}$',
+				output: '<p>$\\frac{\\partial^2 a}{\\partial b^2}$</p>',
+			},
+			{
+				input: '$\\ointo{-\\infty}{\\infty}$',
+				output: '<p>$\\left(-\\infty,\\infty\\right)$</p>',
+			},
+			{
+				input: '$\\ointc{-\\infty}{5}$',
+				output: '<p>$\\left(-\\infty,5\\right\\rangle$</p>',
+			},
+			{
+				input: '$\\cinto{-5}{\\infty}$',
+				output: '<p>$\\left\\langle -5,\\infty\\right)$</p>',
+			},
+			{
+				input: '$\\cintc{-5}{5}$',
+				output: '<p>$\\left\\langle -5,5\\right\\rangle$</p>',
+			},
+			{
+				input: '$\\op{erf}(x)$',
+				output: '<p>$\\mathup{erf}(x)$</p>',
+			},
+		]);
+	});
+
+	describe('swapped greek letters', () => {
+		runTestStrings([
+			{ input: '$\\epsilon$', output: '<p>$\\varepsilon$</p>' },
+			{ input: '$\\oldepsilon$', output: '<p>$\\epsilon$</p>' },
+			{ input: '$\\oldtheta$', output: '<p>$\\theta$</p>' },
+			{ input: '$\\phi$', output: '<p>$\\varphi$</p>' },
+			{ input: '$\\oldphi$', output: '<p>$\\phi$</p>' },
 		]);
 	});
 
@@ -860,6 +926,11 @@ qwer
 				input: '\\begin{tabular}{ll}a [b]&c [d]\\end{tabular}',
 				output: '<tbody><tr><td>a [b]</td><td>c [d]</td></tr></tbody>',
 			},
+			{
+				name: 'popi & popit',
+				input: '\\begin{tabular}{ll}\\popi{\\rho}{kg.m^{-3}} & \\popit{v}{m.s^{-1}}\\end{tabular}',
+				output: '<tbody><tr><td>$\\dfrac{\\rho}{kg\\!\\cdot\\! m^{-3}}$</td><td>$\\dfrac{v}{m\\!\\cdot\\! s^{-1}}$</td></tr></tbody>',
+			},
 		]);
 	});
 
@@ -924,7 +995,7 @@ describe('footnote', () => {
 	]);
 });
 
-describe('url', () => {
+describe('urls and links', () => {
 	runTestStrings([
 		{
 			input: '\\url{https://example.com}',
@@ -941,6 +1012,10 @@ describe('url', () => {
 		{
 			input: '\\url{https://example.com/url?key=value}',
 			output: '<p><a href="https://example.com/url?key=value">https://example.com/url?key=value</a></p>',
+		},
+		{
+			input: '\\mail{user@example.com}',
+			output: '<p><a href="mailto:user@example.com">user@example.com</a></p>',
 		},
 	]);
 });

@@ -581,6 +581,11 @@ export class HtmlGenerator {
 		return char + `<sup>${footnoteNumber}</sup>`;
 	}
 
+	private async generateCommandArgumentUnit(): Promise<string> {
+		const unit = await this.generateCommandArgument();
+		return unit.replace(/\./g, '\\!\\cdot\\! ');
+	}
+
 	private async generateCommand(): Promise<string> {
 		this.expectAnyNodeName(['Command', 'MathCommand']);
 
@@ -599,6 +604,11 @@ export class HtmlGenerator {
 			case '\\textit':
 				this.expectNext();
 				return '<i>' + (await this.generateCommandArgument()) + '</i>';
+			case '\\texttt':
+				this.expectNext();
+				return (
+					'<tt>' + (await this.generateCommandArgument()) + '</tt>'
+				);
 			case '\\emph':
 				this.expectNext();
 				return (
@@ -611,6 +621,7 @@ export class HtmlGenerator {
 				return this.generateTaskhint();
 
 			case '\\dots':
+			case '\\ldots':
 				return '…';
 			case '\\mbox':
 				this.expectNext();
@@ -639,6 +650,12 @@ export class HtmlGenerator {
 				return `<a href="${url}">${url}</a>`;
 			}
 
+			case '\\mail': {
+				this.expectNext();
+				const mail = await this.generateCommandArgument();
+				return `<a href="mailto:${mail}">${mail}</a>`;
+			}
+
 			case '\\fullfig':
 				return await this.generateCommandFullfig(topNode);
 			case '\\illfig':
@@ -656,6 +673,15 @@ export class HtmlGenerator {
 					throw new Error(`Label ${label} not registered in refs`);
 				}
 				return tagNumber.toString();
+			}
+
+			case '\\popi':
+			case '\\popit': {
+				this.expectNext();
+				const label = await this.generateCommandArgument();
+				this.expectNext();
+				const unit = await this.generateCommandArgumentUnit();
+				return `$\\dfrac{${label}}{${unit}}$`;
 			}
 
 			// short commands
@@ -711,6 +737,8 @@ export class HtmlGenerator {
 				return '\\left&lt;';
 			case '\\right>':
 				return '\\right&gt;';
+			case '\\D':
+				return '\\mathrm{d}';
 			case '\\d':
 				return '\\mathrm{d}';
 			case '\\dg':
@@ -721,6 +749,8 @@ export class HtmlGenerator {
 				return '\\quad\\Rightarrow\\quad';
 			case '\\eu':
 				return '\\mathrm{e}';
+			case '\\im':
+				return '\\mathrm{i}';
 			case '\\Kc':
 				return '\\textrm{Kč}';
 			case '\\C':
@@ -730,6 +760,18 @@ export class HtmlGenerator {
 			case '\\ohm':
 			case '\\Ohm':
 				return '\\Omega';
+			case '\\AA':
+				return '\\mathring{A}';
+			case '\\epsilon':
+				return '\\varepsilon';
+			case '\\oldepsilon':
+				return '\\epsilon';
+			case '\\oldtheta':
+				return '\\theta';
+			case '\\phi':
+				return '\\varphi';
+			case '\\oldphi':
+				return '\\phi';
 			case '\\const':
 				switch (this.lang) {
 					case 'cs':
@@ -747,10 +789,7 @@ export class HtmlGenerator {
 			case '\\jd': {
 				const node = this.cursor.node;
 				this.expectNext();
-				const unit = (await this.generateCommandArgument()).replace(
-					/\./g,
-					'\\!\\cdot\\! '
-				);
+				const unit = await this.generateCommandArgumentUnit();
 				if (!this.checkMathMode(node)) {
 					return '$\\mathrm{' + unit + '}$';
 				}
@@ -782,6 +821,60 @@ export class HtmlGenerator {
 					throw new Error(`Label ${label} not registered in refs`);
 				}
 				return `\\tag{${tagNumber}}\\label{${label}}`;
+			}
+			case '\\vect': {
+				this.expectNext();
+				const symbol = await this.generateCommandArgument();
+				return `\\mathbf{${symbol}}`;
+			}
+			case '\\op': {
+				this.expectNext();
+				const symbol = await this.generateCommandArgument();
+				return `\\mathup{${symbol}}`;
+			}
+
+			case '\\der':
+			case '\\dder':
+			case '\\pder':
+			case '\\ppder': {
+				this.expectNext();
+				const top = await this.generateCommandArgument();
+				this.expectNext();
+				const bottom = await this.generateCommandArgument();
+
+				switch (commandName) {
+					case '\\dder':
+						return `\\frac{\\mathrm{d}^2${top}}{\\mathrm{d}${bottom}^2}`;
+					case '\\pder':
+						return `\\frac{\\partial ${top}}{\\partial ${bottom}}`;
+					case '\\ppder':
+						return `\\frac{\\partial^2 ${top}}{\\partial ${bottom}^2}`;
+				}
+				// \der set as default for eslint to detect the catch of all
+				// commands
+				return `\\frac{\\mathrm{d}${top}}{\\mathrm{d}${bottom}}`;
+			}
+
+			case '\\ointo':
+			case '\\ointc':
+			case '\\cinto':
+			case '\\cintc': {
+				this.expectNext();
+				const intervalFrom = await this.generateCommandArgument();
+				this.expectNext();
+				const intervalTo = await this.generateCommandArgument();
+
+				switch (commandName) {
+					case '\\ointc':
+						return `\\left(${intervalFrom},${intervalTo}\\right\\rangle`;
+					case '\\cinto':
+						return `\\left\\langle ${intervalFrom},${intervalTo}\\right)`;
+					case '\\cintc':
+						return `\\left\\langle ${intervalFrom},${intervalTo}\\right\\rangle`;
+				}
+				// \der set as default for eslint to detect the catch of all
+				// commands
+				return `\\left(${intervalFrom},${intervalTo}\\right)`;
 			}
 
 			default: {
@@ -1461,6 +1554,15 @@ export class HtmlGenerator {
 				return delimiterCommand + delimiter;
 			}
 
+			// Leave newline commands (\\) in mathmode for envs like align to
+			// work. In case of normal text, insert a linebreak.
+			case 'NewlineCommand': {
+				if (this.checkMathMode(this.cursor.node)) {
+					return '\\\\';
+				}
+				return '<br>';
+			}
+
 			case 'Command':
 			case 'MathCommand':
 				return this.generateCommand();
@@ -1472,7 +1574,9 @@ export class HtmlGenerator {
 				const content = await this.generateCommandArgument();
 				if (
 					this.checkMathMode(node) ||
-					this.checkInCommand(node, '\\jd')
+					this.checkInCommand(node, '\\jd') ||
+					this.checkInCommand(node, '\\popi') ||
+					this.checkInCommand(node, '\\popit')
 				) {
 					return `{${content}}`;
 				}
