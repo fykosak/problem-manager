@@ -18,6 +18,7 @@ import { z } from 'zod';
 import config from '@server/config/config';
 import { db } from '@server/db';
 import {
+	type LangEnum,
 	authorTable,
 	contestTable,
 	contestYearTable,
@@ -35,6 +36,7 @@ import { Runner } from '@server/runner/runner';
 import { StorageProvider } from '@server/sockets/storageProvider';
 
 import { asyncHandler } from './asyncHandler';
+import { generateHtmlFromString } from './compiler/generateHtml';
 import { type RequestPerson, UserAuthMiddleware } from './middleware';
 
 export const apiRouter = express.Router();
@@ -269,8 +271,42 @@ apiRouter.get(
 				res.status(500).send('Could not get contest id');
 				return;
 			}
+
+			// export name and origin as html
+			const metadataHtml = {} as Record<string, Record<string, string>>;
+			for (const property of ['name', 'origin']) {
+				const valueObject = problem.metadata[property] as Record<
+					string,
+					string
+				>; // should be object of key value as lang: string
+
+				if (!valueObject) {
+					continue;
+				}
+
+				const html = {} as Record<string, string>;
+				for (const lang of Object.keys(valueObject)) {
+					// @ts-expect-error Includes is typed according to the enumValues,
+					// so when generic string is passed it errors out.
+					if (!langEnum.enumValues.includes(lang)) {
+						throw new Error(`Invalid lang ${lang}`);
+					}
+					html[lang] = await generateHtmlFromString(
+						valueObject[lang],
+						problem.problemId,
+						lang as LangEnum
+					);
+				}
+
+				metadataHtml[property] = html;
+			}
+
 			modifiedProblems.push({
 				...problem,
+				metadata: {
+					...problem.metadata,
+					html: metadataHtml,
+				},
 				topics: topics,
 				contestId: contestId,
 			});

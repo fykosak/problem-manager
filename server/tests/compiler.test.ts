@@ -1,20 +1,8 @@
-import { ParserInput, latexLanguage } from 'lang-latex';
 import { describe, expect, test, vi } from 'vitest';
 
-import { HtmlGenerator } from '@server/api/compiler/htmlGenerator';
+import { generateHtmlFromString } from '@server/api/compiler/generateHtml';
 import type { LangEnum, TextTypeEnum } from '@server/db/schema';
 import { ProblemStorage } from '@server/runner/problemStorage';
-
-async function parse(
-	input: string,
-	type: TextTypeEnum,
-	lang: LangEnum
-): Promise<string> {
-	const parserInput = new ParserInput(input);
-	const tree = latexLanguage.parser.parse(parserInput);
-	const generator = new HtmlGenerator(tree, parserInput, 1, type, lang);
-	return await generator.generateHtml();
-}
 
 function runTestStrings(
 	testCases: {
@@ -29,10 +17,11 @@ function runTestStrings(
 		test(
 			testCase.name ?? testCase.input.replace(/\n/g, '\\n'),
 			async () => {
-				const output = await parse(
+				const output = await generateHtmlFromString(
 					testCase.input,
-					testCase.type ?? 'task',
-					testCase.lang ?? 'cs'
+					1,
+					testCase.lang ?? 'cs',
+					testCase.type ?? 'task'
 				);
 				expect(output).toBe(testCase.output);
 			}

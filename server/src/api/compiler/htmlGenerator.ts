@@ -17,8 +17,8 @@ type RefType = 'figure' | 'equation' | 'table';
 export class HtmlGenerator {
 	private tree: Tree;
 	private parserInput: ParserInput;
-	private type: TextTypeEnum;
 	private lang: LangEnum;
+	private type?: TextTypeEnum;
 
 	private cursor: TreeCursor;
 	private problemStorage: ProblemStorage;
@@ -33,8 +33,8 @@ export class HtmlGenerator {
 		tree: Tree,
 		parserInput: ParserInput,
 		problemId: number,
-		type: TextTypeEnum,
-		lang: LangEnum
+		lang: LangEnum,
+		type?: TextTypeEnum
 	) {
 		this.tree = tree;
 		this.cursor = tree.cursor();
