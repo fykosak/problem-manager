@@ -197,7 +197,7 @@ describe('commands', () => {
 		runTestStrings([
 			{
 				input: '\\taskhint{label}{hint}',
-				output: '<p><em>label</em> hint</p>',
+				output: '<p><em class="me-2">label</em> hint</p>',
 			},
 			{
 				input: `\\taskhint{hint}{
@@ -205,7 +205,7 @@ asdf
 
 qwer
 }`,
-				output: '<p><em>hint</em> asdf</p><p>qwer</p>',
+				output: '<p><em class="me-2">hint</em> asdf</p><p>qwer</p>',
 			},
 		]);
 	});

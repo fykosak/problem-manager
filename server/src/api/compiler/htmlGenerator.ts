@@ -300,7 +300,7 @@ export class HtmlGenerator {
 			}
 
 			const nodeGroups = this.cursor.node.type.prop(NodeProp.group);
-			const isFigCommand = [
+			const paragraphBreakingCommand = [
 				'\\fullfig',
 				'\\illfig',
 				'\\illfigi',
@@ -312,7 +312,7 @@ export class HtmlGenerator {
 
 			if (
 				(nodeGroups && nodeGroups.includes('EnvironmentGroup')) ||
-				(this.cursor.name === 'Command' && isFigCommand)
+				(this.cursor.name === 'Command' && paragraphBreakingCommand)
 			) {
 				this.breakParagraph(paragraphs, currentParagraph);
 				currentParagraph = '';
@@ -552,7 +552,7 @@ export class HtmlGenerator {
 		this.expectNext();
 		this.expectNodeName('}');
 
-		return `<p><em>${hintLabel}</em> ${hintContent}`;
+		return `<p><em class="me-2">${hintLabel}</em> ${hintContent}`;
 	}
 
 	private async generateFootnote(): Promise<string> {
