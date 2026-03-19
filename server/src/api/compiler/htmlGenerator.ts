@@ -707,6 +707,7 @@ export class HtmlGenerator {
 			case '\\newpage':
 			case '\\pagebreak':
 			case '\\linebreak':
+			case '\\allowbreak':
 			case '\\par':
 			case '\\Huge':
 			case '\\huge':
