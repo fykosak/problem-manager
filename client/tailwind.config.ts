@@ -104,7 +104,8 @@ export default {
 				},
 				h3: {
 					fontSize: theme('fontSize.lg'),
-					paddingTop: theme('padding.1'),
+					fontWeight: theme('fontWeight.semibold'),
+					paddingTop: theme('padding.3'),
 					paddingBottom: theme('padding.1'),
 				},
 			});

@@ -1,4 +1,4 @@
-# Soubory a obrázky u úloh
+# Soubory a obrázky
 
 Při otevření úlohy v levém panelu najdete sekci _Soubory_. Zde je možné k úloze
 nahrát soubory, jako jsou obrázky nebo grafy, které následně lze používat v

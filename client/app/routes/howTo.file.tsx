@@ -1,78 +1,44 @@
 import { MoveLeft } from 'lucide-react';
-import Markdown from 'react-markdown';
 import { Link } from 'react-router';
-import rehypeRaw from 'rehype-raw';
-import remarkGFM from 'remark-gfm';
 
-import { getDocContent } from '@client/models/howTo';
+import { DocLink } from '@client/components/docs/docLink';
+import { MarkdownText } from '@client/components/docs/markdown';
+import { getAvailableDocs, getDocContent } from '@client/models/howTo';
 
 import { Route } from './+types/howTo.file';
 
 export async function loader({ params }: Route.LoaderArgs) {
-	return { markdown: await getDocContent(params.markdownFile) };
+	return {
+		docs: await getAvailableDocs(),
+		markdown: await getDocContent(params.markdownFile),
+	};
 }
 
 export default function howToFile({ loaderData }: Route.ComponentProps) {
 	return (
-		<div className="max-w-screen-sm mx-auto mb-8">
+		<div className="max-w-screen-lg mx-auto mb-8">
 			<Link
 				to="/how-to"
 				className="inline-flex text-muted-foreground gap-2 hover:underline"
 			>
 				<MoveLeft /> Přehled návodů
 			</Link>
-			<Markdown
-				remarkPlugins={[remarkGFM]}
-				rehypePlugins={[rehypeRaw]}
-				components={{
-					a: (props) => {
-						const { node, href, ...rest } = props; // eslint-disable-line
 
-						// Remove .md suffix from relative paths so that URL
-						// paths are without extentions but extension can be
-						// used for working links on github.
-						let transformedHref = href;
-						if (href) {
-							const match = href.match(/^(\.\/.*)\.md/);
-							if (match && match.length >= 2) {
-								transformedHref = match[1];
-							}
-						}
-
-						return (
-							<a
-								className="text-blue-600 dark:text-blue-500 hover:underline"
-								href={transformedHref}
-								{...rest}
+			<div className="flex flex-col md:flex-row gap-8">
+				<aside className="flex-shrink-0 hidden md:block">
+					<nav className="sticky top-8 gap-2 flex flex-col items-start">
+						{loaderData.docs.map((docs) => (
+							<DocLink
+								filename={docs.filename}
+								title={docs.title}
 							/>
-						);
-					},
-					p: (props) => {
-						const { node, ...rest } = props; // eslint-disable-line
-						return <p className="my-4" {...rest} />;
-					},
-					ul: (props) => {
-						const { node, ...rest } = props; // eslint-disable-line
-						return (
-							<ul
-								className="list-disc list-outside pl-5"
-								{...rest}
-							/>
-						);
-					},
-					code: (props) => {
-						const { node, ...rest } = props; // eslint-disable-line
-						return (
-							<code
-								className="bg-muted rounded-md p-1 text-sm"
-								{...rest}
-							/>
-						);
-					},
-				}}
-			>
-				{loaderData.markdown}
-			</Markdown>
+						))}
+					</nav>
+				</aside>
+				<main className="flex-1 min-w-0">
+					<MarkdownText>{loaderData.markdown}</MarkdownText>
+				</main>
+			</div>
 		</div>
 	);
 }
