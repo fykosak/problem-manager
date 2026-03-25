@@ -3,8 +3,8 @@
 **Úloha =** vše, co se vztahuje ke klasickému pojetí úlohy, tedy všechny texty
 zadání a řešení, data o názvu úlohy, jejím původu, body za úlohu atd.
 
-**Text =** jeden konkrétní text v TeX konkrétního typu a jazyku. Pokud tedy
-úloha obsahuje zadání a řešení, každé v češtině a angličtině, obsahuje celkem 4
+**Text =** jeden konkrétní text v TeXu daného typu a jazyku. Pokud úloha
+obsahuje zadání a řešení, každé v češtině a angličtině, obsahuje tedy celkem 4
 různé texty.
 
 Zveřejnění úlohy znamená, že se vezme aktuální stav zdrojového textu v TeXu a na
@@ -15,9 +15,9 @@ nemáte.
 
 Text je zveřejněný, pokud pro něj existuje vyexportované HTML. To se exportuje
 pouze v moment kliknutí na tlačítko zveřejnění, kdy se vezme _text v daném
-okamžiku_, vytvoří se HTML a to se uloží. Pokud je poté zdrojový text text
-upraven, tak se změny **neprojeví** v HTML. Je proto nutné jej aktualizovat
-pomocí tlačítka _"Zveřejnit aktuální verzi"_.
+okamžiku_, vytvoří se HTML a to se uloží. Pokud je poté zdrojový text upraven,
+tak se změny **neprojeví** v HTML. Je proto nutné jej aktualizovat pomocí
+tlačítka _"Zveřejnit aktuální verzi"_.
 
 ## Kdy je úloha a série zveřejněna
 
@@ -25,7 +25,7 @@ pomocí tlačítka _"Zveřejnit aktuální verzi"_.
 text. Pokud úloha není zveřejněna, není obsažena v datech o sérii a tedy se
 nikde nezobrazí.
 
-Série je zveřejněna v moment, kdy obsahuje alespoň jednu zveřejněnou úlohu, tedy
+Série je zveřejněna jakmile obsahuje alespoň jednu zveřejněnou úlohu, tedy
 alespoň jeden zveřejněný text. Pokud nemá zveřejněnou úlohu, neobjeví se v
 seznamu sérií a nelze ji zobrazit.
 
@@ -40,11 +40,11 @@ existence zveřejněných úloh.
 
 ## Jaké texty exportovat
 
-Generátor předpokládá, že se zveřejňují pouze zadání úloh. Teoreticky nic
+Generátor HTML předpokládá, že se zveřejňují pouze zadání úloh. Teoreticky nic
 nebrání tomu vygenerovat HTML i pro řešení, nicméně u nich je vzhledem k
 množství použitých TeX příkazů větší pravděpodobnost, že se export z nějakého
 důvodu nepovede. Zároveň HTML pro řešení není nikde použito, tedy (minimálně
-nyní) nemá smysl jejich zveřejňování řešit. Exportujte tedy pouze zadání.
+zatím) nemá smysl jejich zveřejňování řešit. Exportujte tedy pouze zadání.
 
 ## Export HTML
 
@@ -52,13 +52,14 @@ Při zveřejňování úlohy se volá generátor, který daný text vezme, projd
 dle specifikovaných pravidel z něj vytvoří HTML pro web.
 
 Aby to však fungovalo, je nutné, aby TeX byl správně napsaný a obsahoval jen
-standardní příkazy. Generátor je totiž specificky vytvořen pro to, co za TeX se
-v textech úloh vyskytuje (protože vytvořit obecný generátor by bylo buď nemožné
-nebo by znamenalo reimplementaci TeXu). Pokud je tedy použit nestandardní
+standardní příkazy, které generátor umí zpracovat. Ten je totiž specificky
+vytvořen pro to, co za TeX se v textech úloh obvykle vyskytuje (protože vytvořit
+obecný generátor by znamenalo reimplementaci TeXu). Pokud je použit nestandardní
 příkaz, je možné, že se příkaz objeví přímo v HTML, ať už jako příkaz v textu
 nebo neplatný příkaz v matematice. Systém ale nezahlásí error, který by říkal,
 že se takový příkaz vyskytl, protože např. to může být platný příkaz v
-matematice, který se na webu zvládne vykreslit.
+matematice, který se na webu zvládne vykreslit. Vždy proto zkontrolujte, jak
+úloha na webu vypadá.
 
 Během zveřejňování je možné, že systém zahlásí chybu. Typicky se může jednat o
 
@@ -77,8 +78,8 @@ nebo tabulku.
 
 V případě ostatních chyb je pravděpodobně někde špatně použit nějaký příkaz nebo
 je použita TeX magie, se kterou si překladač neporadí. V případě příkazu jej
-zkuste najít a opravit. Nemusí to nutně znamenat, že se PDF nepřeloží, ale třeba
-je použit příkaz s více povinnými parametry, než by měl. Pokud se jedná o TeX
-magii, zamyslete se, jestli je opravdu potřeba, ve většině případů je odpověď
-ne. Pokud by se opravdu jednalo o něco, co by měl překladač zvládat a nezvládá,
-je na místě danou věc do překladače doimplementovat.
+zkuste najít a opravit. Špatně použitý příkaz nemusí nutně znamenat, že se PDF
+nepřeloží, ale třeba je použit příkaz s více povinnými parametry, než by měl.
+Pokud se jedná o TeX magii, zamyslete se, jestli je opravdu potřeba, ve většině
+případů je odpověď ne. Pokud by se opravdu jednalo o něco, co by měl překladač
+zvládat a nezvládá, je na místě danou věc do překladače doimplementovat.
