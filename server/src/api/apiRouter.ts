@@ -260,11 +260,33 @@ apiRouter.get(
 			return;
 		}
 
+		if (series.release && series.release > new Date()) {
+			res.status(403).send('Series is not released');
+			return;
+		}
+
 		const modifiedProblems = [];
 		for (const problem of series.problems) {
+			// determine if at least one text is released so the whole problem
+			// is released
+			let released = false;
+			for (const text of problem.texts) {
+				if (text.html) {
+					released = true;
+					break;
+				}
+			}
+
+			if (!released) {
+				continue;
+			}
+
+			// export topics only as labels
 			const topics = problem.topics.map(
 				(problemTopic) => problemTopic.topic.label
 			);
+
+			// get associated contestId
 			const contestId =
 				problem.contestId ?? problem.series?.contestYear.contestId;
 			if (!contestId) {
@@ -310,6 +332,11 @@ apiRouter.get(
 				topics: topics,
 				contestId: contestId,
 			});
+		}
+
+		if (modifiedProblems.length === 0) {
+			res.status(403).send('Series is not released');
+			return;
 		}
 
 		res.json({ ...series, problems: modifiedProblems });

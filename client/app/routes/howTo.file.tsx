@@ -1,17 +1,15 @@
-import fs from 'fs/promises';
 import { MoveLeft } from 'lucide-react';
-import path from 'node:path';
 import Markdown from 'react-markdown';
 import { Link } from 'react-router';
 import rehypeRaw from 'rehype-raw';
 import remarkGFM from 'remark-gfm';
 
+import { getDocContent } from '@client/models/howTo';
+
 import { Route } from './+types/howTo.file';
 
 export async function loader({ params }: Route.LoaderArgs) {
-	const filepath = path.join('./docs/', params.markdownFile + '.md');
-	const content = await fs.readFile(filepath, { encoding: 'utf8' });
-	return { markdown: content };
+	return { markdown: await getDocContent(params.markdownFile) };
 }
 
 export default function howToFile({ loaderData }: Route.ComponentProps) {
