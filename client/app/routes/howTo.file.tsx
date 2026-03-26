@@ -14,6 +14,10 @@ export async function loader({ params }: Route.LoaderArgs) {
 	};
 }
 
+export function shouldRevalidate() {
+	return true;
+}
+
 export default function howToFile({ loaderData }: Route.ComponentProps) {
 	return (
 		<div className="max-w-screen-lg mx-auto mb-8">
@@ -29,6 +33,7 @@ export default function howToFile({ loaderData }: Route.ComponentProps) {
 					<nav className="sticky top-8 gap-2 flex flex-col items-start">
 						{loaderData.docs.map((docs) => (
 							<DocLink
+								key={docs.filename}
 								filename={docs.filename}
 								title={docs.title}
 							/>
