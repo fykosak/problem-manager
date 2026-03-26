@@ -15,7 +15,11 @@ export default function howTo({ loaderData }: Route.ComponentProps) {
 			<h1>Přehled návodů</h1>
 			<div className="flex flex-col items-start gap-2">
 				{loaderData.docs.map((docs) => (
-					<DocLink filename={docs.filename} title={docs.title} />
+					<DocLink
+						key={docs.filename}
+						filename={docs.filename}
+						title={docs.title}
+					/>
 				))}
 			</div>
 		</div>
