@@ -611,6 +611,14 @@ describe('figures', () => {
 				output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
 			},
 			{
+				input: '\\plotfig{fig}{Figures}{fig1}',
+				output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
+				input: '\\plotfig[h]{fig}{Figures}{fig1}',
+				output: '<figure class="figure w-50 text-center mx-auto d-block"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
+			},
+			{
 				input: '\\illfig{fig}{Figures}{fig1}{}',
 				output: '<figure class="figure w-25 float-end m-3"><img class="figure-img img-fluid rounded w-100" src="fig"><figcaption class="figure-caption text-center">Obrázek 1: Figures</figcaption></figure>',
 			},
