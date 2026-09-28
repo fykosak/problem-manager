@@ -3,6 +3,7 @@ import { EditorSelection, EditorState } from '@codemirror/state';
 import { describe, expect, test } from 'vitest';
 
 import { latex } from '../dist/index.js';
+import { isEscaped } from '../src/input';
 
 function typeBracket(state: EditorState, bracket: string) {
 	const transaction = insertBracket(state, bracket);
@@ -15,6 +16,13 @@ function typeBracket(state: EditorState, bracket: string) {
 }
 
 describe('LaTeX paired characters', () => {
+	test('recognizes escaped dollar sign positions', () => {
+		expect(isEscaped('\\')).toBe(true);
+		expect(isEscaped('text \\')).toBe(true);
+		expect(isEscaped('\\\\')).toBe(false);
+		expect(isEscaped('text')).toBe(false);
+	});
+
 	test('pairs dollar signs and places the cursor between them', () => {
 		const state = EditorState.create({
 			extensions: [latex(), closeBrackets()],
