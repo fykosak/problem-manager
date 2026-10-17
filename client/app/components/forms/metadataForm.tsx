@@ -3,6 +3,8 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import { authorTypeEnum } from '@server/db/schema';
+
 import { Button } from '@client/components/ui/button';
 import {
 	FieldSetContent,
@@ -44,10 +46,7 @@ const formSchema = z.object({
 				.optional(),
 		}),
 	}),
-	authors: z.object({
-		task: z.number().array(),
-		solution: z.number().array(),
-	}),
+	authors: z.record(z.enum(authorTypeEnum.enumValues), z.number().array()),
 	topics: z.number().array().min(1),
 	type: z.coerce.number(),
 });
