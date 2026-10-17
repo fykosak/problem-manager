@@ -289,6 +289,14 @@ export const organizerRelations = relations(organizerTable, ({ one }) => ({
 	}),
 }));
 
+export const authorTypeEnum = pgEnum('author_type', [
+	'concept',
+	'task',
+	'solution',
+]);
+
+export type AuthorTypeEnum = (typeof authorTypeEnum.enumValues)[number];
+
 export const authorTable = pgTable(
 	'author',
 	{
@@ -299,7 +307,7 @@ export const authorTable = pgTable(
 		problemId: integer()
 			.notNull()
 			.references(() => problemTable.problemId),
-		type: textTypeEnum().notNull(),
+		type: authorTypeEnum().notNull(),
 	},
 	(table) => [unique().on(table.personId, table.problemId, table.type)]
 );
