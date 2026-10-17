@@ -11,46 +11,12 @@ import {
 } from '@client/components/ui/table';
 
 import { getProblemName } from './helpers';
-import { Problem, Work, WorkConfig, WorkGroupConfig, WorkRow } from './types';
+import { Work, WorkConfig, WorkRow } from './types';
 
 export function getPeople(work: Work) {
 	return work.people
 		.map(({ person }) => `${person.firstName} ${person.lastName}`)
 		.join(', ');
-}
-
-export function getWorkGroups(
-	problems: Problem[],
-	workConfig: WorkConfig | undefined
-): WorkGroupConfig[] {
-	const actualGroups = new Map<string | null, Work[]>();
-	for (const problem of problems) {
-		for (const work of problem.work) {
-			const works = actualGroups.get(work.group) ?? [];
-			works.push(work);
-			actualGroups.set(work.group, works);
-		}
-	}
-
-	const groups: WorkGroupConfig[] = (workConfig ?? []).map(
-		(configuredGroup) => ({
-			groupName: configuredGroup.groupName,
-			items: configuredGroup.items,
-		})
-	);
-	const configuredNames = new Set(groups.map((group) => group.groupName));
-
-	for (const [groupName, works] of actualGroups) {
-		if (configuredNames.has(groupName)) continue;
-		groups.push({
-			groupName,
-			items: Array.from(
-				new Map(works.map((work) => [work.label, work]))
-			).map(([name]) => ({ name, optional: false })),
-		});
-	}
-
-	return groups;
 }
 
 export function WorkGroupTable({
