@@ -117,14 +117,14 @@ export const problemRouter = trpc.router({
 			metadata: taskData.metadata,
 			topics: taskData.topics.map((topic) => topic.topicId),
 			type: taskData.type.typeId,
-			authors: {
-				task: taskData.authors
-					.filter((author) => author.type === 'task')
-					.map((author) => author.personId),
-				solution: taskData.authors
-					.filter((author) => author.type === 'solution')
-					.map((author) => author.personId),
-			},
+			authors: Object.fromEntries(
+				authorTypeEnum.enumValues.map((type) => [
+					type,
+					taskData.authors
+						.filter((author) => author.type === type)
+						.map((author) => author.personId),
+				])
+			) as Record<AuthorTypeEnum, number[]>,
 		};
 	}),
 
@@ -225,10 +225,12 @@ export const problemRouter = trpc.router({
 			})
 		)
 		.mutation(async ({ input }) => {
-			const problemModel = new ProblemModel(input.problemId);
-			await problemModel.setMetadata(input.metadata, input.type);
-			await problemModel.setTopics(input.topics);
-			await problemModel.setAuthors(input.authors);
+			return await db.transaction(async (tx) => {
+				const problemModel = new ProblemModel(tx, input.problemId);
+				await problemModel.setMetadata(input.metadata, input.type);
+				await problemModel.setTopics(input.topics);
+				await problemModel.setAuthors(input.authors);
+			});
 		}),
 
 	build: authedProcedure
@@ -365,18 +367,12 @@ export const problemRouter = trpc.router({
 					}
 				}
 
-				// add topics
-				await tx.insert(problemTopicTable).values(
-					Array.from(filteredTopics, (topic) => ({
-						problemId: problem.problemId,
-						topicId: topic.topicId,
-					}))
+				const problemModel = new ProblemModel(tx, problem.problemId);
+				await problemModel.setTopics(
+					Array.from(filteredTopics, (topic) => topic.topicId)
 				);
-
-				await tx.insert(authorTable).values({
-					personId: ctx.person.personId,
-					problemId: problem.problemId,
-					type: 'task',
+				await problemModel.setAuthors({
+					concept: [ctx.person.personId],
 				});
 
 				return problem;
