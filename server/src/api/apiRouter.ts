@@ -20,6 +20,7 @@ import { db } from '@server/db';
 import {
 	type LangEnum,
 	authorTable,
+	authorTypeEnum,
 	contestTable,
 	contestYearTable,
 	langEnum,
@@ -527,7 +528,7 @@ apiRouter.post(
 			authors: z
 				.object({
 					personId: z.number(),
-					type: z.enum(textTypeEnum.enumValues),
+					type: z.enum(authorTypeEnum.enumValues),
 				})
 				.array(),
 			graphics: z
