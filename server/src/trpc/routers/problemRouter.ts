@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, inArray, notInArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import path from 'node:path';
 import * as Y from 'yjs';
 import { z } from 'zod';
@@ -9,12 +9,10 @@ import config from '@server/config/config';
 import { db } from '@server/db';
 import {
 	type AuthorTypeEnum,
-	authorTable,
 	authorTypeEnum,
 	langEnum,
 	problemStateEnum,
 	problemTable,
-	problemTopicTable,
 	seriesTable,
 	textTable,
 	textTypeEnum,
