@@ -451,13 +451,16 @@ export class HtmlGenerator {
 		}
 	}
 
-	// generate html for \fullfig[position]{filename}{caption}{label}[opts]
-	private async generateCommandFullfig(
+	// generate html for
+	// \fullfig[position]{filename}{caption}{label}[opts]
+	// \plotfig[position]{filename}{caption}{label}
+	private async generateCommandFullsizeFig(
 		commandNode: SyntaxNode
 	): Promise<string> {
 		this.expectNodeName('CommandIdentifier');
-		if (this.getCursorText() !== '\\fullfig') {
-			throw new Error('Fullfig command expected');
+		const commandName = this.getCursorText();
+		if (!['\\fullfig', '\\plotfig'].includes(commandName)) {
+			throw new Error('Fullfig or plotfig command expected');
 		}
 
 		this.expectNext();
@@ -473,7 +476,7 @@ export class HtmlGenerator {
 		await this.generateCommandArgument(); // consume label
 
 		// label was not the last argument
-		if (this.cursor.to < commandNode.to) {
+		if (commandName == '\\fullfig' && this.cursor.to < commandNode.to) {
 			this.expectNext();
 			await this.generateCommandArgumentOptional(); // consume the graphics opts
 		}
@@ -657,7 +660,8 @@ export class HtmlGenerator {
 			}
 
 			case '\\fullfig':
-				return await this.generateCommandFullfig(topNode);
+			case '\\plotfig':
+				return await this.generateCommandFullsizeFig(topNode);
 			case '\\illfig':
 			case '\\illfigi':
 				return await this.generateCommandIllfig();
