@@ -1,6 +1,6 @@
 import { and, eq, notInArray } from 'drizzle-orm';
 
-import { db } from '@server/db';
+import type { DbConnection } from '@server/db';
 import {
 	type AuthorTypeEnum,
 	authorTable,
@@ -13,8 +13,10 @@ import type { ProblemMetadataType } from './types';
 
 export class ProblemModel {
 	private problemId: number;
+	private db: DbConnection;
 
-	constructor(problemId: number) {
+	constructor(db: DbConnection, problemId: number) {
+		this.db = db;
 		this.problemId = problemId;
 	}
 
@@ -23,7 +25,7 @@ export class ProblemModel {
 		type: number
 	): Promise<void> {
 		// TODO Validate metadata shape
-		await db
+		await this.db
 			.update(problemTable)
 			.set({
 				metadata: metadata,
@@ -34,7 +36,7 @@ export class ProblemModel {
 
 	public async setTopics(topics: number[]): Promise<void> {
 		// Delete topics designed for deletion
-		await db
+		await this.db
 			.delete(problemTopicTable)
 			.where(
 				and(
@@ -44,7 +46,7 @@ export class ProblemModel {
 			);
 
 		// Add new topics
-		await db
+		await this.db
 			.insert(problemTopicTable)
 			.values(
 				topics.map((topicId) => ({
@@ -66,7 +68,7 @@ export class ProblemModel {
 				continue;
 			}
 
-			await db
+			await this.db
 				.delete(authorTable)
 				.where(
 					and(
@@ -78,7 +80,7 @@ export class ProblemModel {
 			if (personIds.length === 0) {
 				continue;
 			}
-			await db
+			await this.db
 				.insert(authorTable)
 				.values(
 					personIds.map((personId) => ({
