@@ -46,15 +46,17 @@ export class ProblemModel {
 			);
 
 		// Add new topics
-		await this.db
-			.insert(problemTopicTable)
-			.values(
-				topics.map((topicId) => ({
-					problemId: this.problemId,
-					topicId: topicId,
-				}))
-			)
-			.onConflictDoNothing();
+		if (topics.length > 0) {
+			await this.db
+				.insert(problemTopicTable)
+				.values(
+					topics.map((topicId) => ({
+						problemId: this.problemId,
+						topicId: topicId,
+					}))
+				)
+				.onConflictDoNothing();
+		}
 	}
 
 	public async setAuthors(
