@@ -76,7 +76,6 @@ async function truncateTables() {
 describe('ProblemModel', () => {
 	// shared values between tests
 	let contestId: number;
-	let typeId: number;
 	let problemId: number;
 	let problemModel: ProblemModel;
 
@@ -85,7 +84,6 @@ describe('ProblemModel', () => {
 		const type = await insertType(contest.contestId);
 		const problem = await insertProblem(type.typeId, contest.contestId);
 		contestId = contest.contestId;
-		typeId = type.typeId;
 		problemId = problem.problemId;
 		problemModel = new ProblemModel(db, problemId);
 	});

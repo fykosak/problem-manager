@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     services:
-      db:
+      postgres:
         image: postgres:17
         env:
           POSTGRES_DB: problem_manager_test
@@ -37,6 +37,10 @@ jobs:
       - name: Init test database schema
         working-directory: server
         run: npm run test:init
+        env:
+          TEST_DATABASE_URL: 'postgresql://pm:password@localhost:5432/problem_manager_test'
       - name: Run server tests
         working-directory: server
         run: npm run test
+        env:
+          TEST_DATABASE_URL: 'postgresql://pm:password@localhost:5432/problem_manager_test'
