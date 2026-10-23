@@ -1,5 +1,5 @@
 # Install dependencies
-FROM node:22-alpine AS deps
+FROM node:24-alpine AS deps
 COPY ./package.json ./package-lock.json /app/
 COPY ./builder/package.json /app/builder/package.json
 WORKDIR /app
