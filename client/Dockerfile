@@ -1,10 +1,10 @@
-FROM node:22-alpine AS latex
+FROM node:24-alpine AS latex
 COPY ./package.json ./package-lock.json /app/
 COPY ./lang-latex /app/lang-latex
 WORKDIR /app/lang-latex
 RUN npm install-clean
 
-FROM node:22-alpine AS deps
+FROM node:24-alpine AS deps
 COPY ./package.json ./package-lock.json /app/
 COPY ./client/package.json /app/client/package.json
 COPY ./server/package.json /app/server/package.json
@@ -12,7 +12,7 @@ COPY --from=latex /app/lang-latex /app/lang-latex
 WORKDIR /app
 RUN npm install-clean
 
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 COPY --from=deps /app/node_modules /app/node_modules
 COPY --from=deps /app/server/node_modules /app/server/node_modules
 COPY --from=latex /app/lang-latex /app/lang-latex

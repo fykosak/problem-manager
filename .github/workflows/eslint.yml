@@ -3,13 +3,13 @@ on: [push, pull_request]
 
 jobs:
   client:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 23
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: ./package-lock.json
 
@@ -27,13 +27,13 @@ jobs:
         run: npm run lint
 
   server:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 23
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: ./package-lock.json
       - name: Install dependencies
@@ -47,13 +47,13 @@ jobs:
         run: npm run lint
 
   builder:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 23
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: ./package-lock.json
       - name: Install dependencies
