@@ -40,5 +40,8 @@ export const latexLanguage = LRLanguage.define({
 	}),
 	languageData: {
 		commentTokens: { line: '%' },
+		closeBrackets: {
+			brackets: ['(', '[', '{', "'", '"', '$'],
+		},
 	},
 });
