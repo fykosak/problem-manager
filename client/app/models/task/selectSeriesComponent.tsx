@@ -11,7 +11,7 @@ import {
 } from '@client/components/ui/dialog';
 import { trpc, trpcOutputTypes } from '@client/trpc';
 
-import { Task } from './columns';
+import { Problem } from './columns';
 
 async function assignProblemToSeries(seriesId: number, problemId: number) {
 	try {
@@ -35,7 +35,7 @@ export function SelectSeriesComponent({
 	setOpen,
 }: {
 	series: trpcOutputTypes['series']['list'];
-	problem: Task;
+	problem: Problem;
 	setOpen: (open: boolean) => void;
 }) {
 	const revalidator = useRevalidator();

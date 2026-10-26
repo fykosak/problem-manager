@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { acl } from '@server/acl/aclFactory';
 import { getPersonFromJWT, getRolesFromJWT } from '@server/auth/jwt';
 import { db } from '@server/db';
-import { contestTable } from '@server/db/schema';
+import { contestTable, problemTable } from '@server/db/schema';
 
 import { trpc } from './trpc';
 
@@ -62,6 +62,65 @@ export const contestProcedure = authedProcedure
 		return next({
 			ctx: {
 				contest: contest,
+			},
+		});
+	});
+
+export const problemProcedure = authedProcedure
+	.input(z.object({ problemId: z.number() }))
+	.use(async ({ input, ctx, next }) => {
+		const problem = await db.query.problemTable.findFirst({
+			where: eq(problemTable.problemId, input.problemId),
+			with: {
+				series: {
+					with: {
+						contestYear: {
+							with: {
+								contest: true,
+							},
+						},
+					},
+				},
+				contest: true,
+				work: true,
+			},
+		});
+
+		if (!problem) {
+			throw new TRPCError({
+				code: 'NOT_FOUND',
+				message: 'Problem not found',
+			});
+		}
+
+		const contestSymbol =
+			problem.series?.contestYear.contest.symbol ??
+			problem.contest?.symbol;
+
+		if (!contestSymbol) {
+			throw new TRPCError({
+				code: 'INTERNAL_SERVER_ERROR',
+				message: 'Could not determine problem contest',
+			});
+		}
+
+		if (
+			!acl.isAllowedContest(
+				ctx.aclRoles,
+				contestSymbol,
+				'problem',
+				'access'
+			)
+		) {
+			throw new TRPCError({
+				code: 'FORBIDDEN',
+				message: 'You cannot access this contest',
+			});
+		}
+
+		return next({
+			ctx: {
+				problem: problem,
 			},
 		});
 	});

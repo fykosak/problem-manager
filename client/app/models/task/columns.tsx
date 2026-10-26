@@ -3,6 +3,7 @@ import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink } from 'react-router';
 
+import { acl } from '@server/acl/aclFactory';
 import { problemStateEnum } from '@server/db/schema';
 
 import { Button } from '@client/components/ui/button';
@@ -17,13 +18,14 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@client/components/ui/dropdown-menu';
+import { usePersonRoles } from '@client/hooks/usePersonRoles';
 import { trpcOutputTypes } from '@client/trpc';
 
 import { ChangeContestComponent } from './changeContestComponent';
 import { ChangeStateComponent } from './changeStateComponent';
 import { SelectSeriesComponent } from './selectSeriesComponent';
 
-export interface Task {
+export interface Problem {
 	problemId: number;
 	name: string | null;
 	authors: string[];
@@ -40,10 +42,11 @@ function RowActions({
 	contests: contests,
 }: {
 	series: trpcOutputTypes['series']['list'];
-	problem: Task;
+	problem: Problem;
 	contests: trpcOutputTypes['getContests'];
 }) {
 	const [open, setOpen] = useState(false);
+	const roles = usePersonRoles();
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -59,19 +62,41 @@ function RowActions({
 							Otevřit úlohu
 						</NavLink>
 					</DropdownMenuItem>
-					<ChangeStateComponent problem={problem} setOpen={setOpen} />
-					{problem.state === 'active' && (
-						<DropdownMenuItem>
-							<DialogTrigger>Vybrat do série</DialogTrigger>
-						</DropdownMenuItem>
-					)}
-					{problem.state === 'active' && (
-						<ChangeContestComponent
+					{acl.isAllowedContest(
+						roles,
+						problem.contestSymbol,
+						'problem',
+						'changeState'
+					) && (
+						<ChangeStateComponent
 							problem={problem}
-							contests={contests}
 							setOpen={setOpen}
 						/>
 					)}
+					{acl.isAllowedContest(
+						roles,
+						problem.contestSymbol,
+						'problem',
+						'assignSeries'
+					) &&
+						problem.state === 'active' && (
+							<DropdownMenuItem>
+								<DialogTrigger>Vybrat do série</DialogTrigger>
+							</DropdownMenuItem>
+						)}
+					{acl.isAllowedContest(
+						roles,
+						problem.contestSymbol,
+						'problem',
+						'changeContest'
+					) &&
+						problem.state === 'active' && (
+							<ChangeContestComponent
+								problem={problem}
+								contests={contests}
+								setOpen={setOpen}
+							/>
+						)}
 				</DropdownMenuContent>
 			</DropdownMenu>
 			<SelectSeriesComponent
@@ -87,7 +112,7 @@ export function getColumns(
 	series: trpcOutputTypes['series']['list'],
 	contests: trpcOutputTypes['getContests']
 ) {
-	const columns: ColumnDef<Task>[] = [
+	const columns: ColumnDef<Problem>[] = [
 		{
 			accessorKey: 'name',
 			header: 'Název',

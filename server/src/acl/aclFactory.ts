@@ -6,14 +6,15 @@ export const acl = new ACL({
 	contest: [],
 	series: ['create', 'edit', 'ordering'],
 	problem: [
+		'access',
 		'assignSeries',
 		'create',
-		'delete',
 		'changeContest',
 		'changeState',
 	],
 	text: ['edit', 'release', 'revoke'],
 	file: ['upload', 'download', 'delete', 'rename'],
+	work: ['create', 'update'],
 });
 
 // base roles
@@ -26,13 +27,16 @@ acl.allow(BaseRole.admin);
 acl.addRole(ContestRole.organizer);
 acl.addRole(ContestRole.manager, ContestRole.organizer);
 
-acl.allow(ContestRole.organizer, 'problem');
+acl.allow(ContestRole.organizer, 'problem', 'create');
+acl.allow(ContestRole.organizer, 'problem', 'access');
 acl.allow(ContestRole.organizer, 'contest');
 acl.allow(ContestRole.organizer, 'text', 'edit');
 acl.allow(ContestRole.organizer, 'file');
+acl.allow(ContestRole.organizer, 'work', 'update');
 
 acl.allow(ContestRole.manager, 'series');
 acl.allow(ContestRole.manager, 'text', 'release');
 acl.allow(ContestRole.manager, 'text', 'revoke');
+acl.allow(ContestRole.manager, 'problem', 'assignSeries');
 acl.allow(ContestRole.manager, 'problem', 'changeContest');
 acl.allow(ContestRole.manager, 'problem', 'changeState');

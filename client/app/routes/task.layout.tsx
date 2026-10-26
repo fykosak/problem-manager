@@ -48,7 +48,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 		throw new Error('Invalid task id');
 	}
 
-	const problem = await trpc.problem.info.query(problemId);
+	const problem = await trpc.problem.info.query({ problemId: problemId });
 
 	const texts = await trpc.problem.texts.query({
 		problemId: problemId,
@@ -65,7 +65,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 		textsByType.set(text.type, textsOfSameType);
 	}
 
-	const problemWork = await trpc.problem.work.query(problemId);
+	const problemWork = await trpc.problem.work.query({ problemId: problemId });
 	const workStats = new Map<string, number>();
 	for (const work of problemWork) {
 		const currentCount = workStats.get(work.state) ?? 0;
