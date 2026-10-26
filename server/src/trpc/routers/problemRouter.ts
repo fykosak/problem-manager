@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, inArray, notInArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import path from 'node:path';
 import * as Y from 'yjs';
 import { z } from 'zod';
@@ -8,11 +8,11 @@ import { acl } from '@server/acl/aclFactory';
 import config from '@server/config/config';
 import { db } from '@server/db';
 import {
-	authorTable,
+	type AuthorTypeEnum,
+	authorTypeEnum,
 	langEnum,
 	problemStateEnum,
 	problemTable,
-	problemTopicTable,
 	seriesTable,
 	textTable,
 	textTypeEnum,
@@ -20,6 +20,7 @@ import {
 	workStateEnum,
 	workTable,
 } from '@server/db/schema';
+import { ProblemModel } from '@server/problem/problemModel';
 import { ProblemStorage } from '@server/runner/problemStorage';
 import { Runner } from '@server/runner/runner';
 
@@ -114,14 +115,14 @@ export const problemRouter = trpc.router({
 			metadata: taskData.metadata,
 			topics: taskData.topics.map((topic) => topic.topicId),
 			type: taskData.type.typeId,
-			authors: {
-				task: taskData.authors
-					.filter((author) => author.type === 'task')
-					.map((author) => author.personId),
-				solution: taskData.authors
-					.filter((author) => author.type === 'solution')
-					.map((author) => author.personId),
-			},
+			authors: Object.fromEntries(
+				authorTypeEnum.enumValues.map((type) => [
+					type,
+					taskData.authors
+						.filter((author) => author.type === type)
+						.map((author) => author.personId),
+				])
+			) as Record<AuthorTypeEnum, number[]>,
 		};
 	}),
 
@@ -215,70 +216,19 @@ export const problemRouter = trpc.router({
 				metadata: z.object<Record<string, any>>({}).passthrough(), // eslint-disable-line
 				topics: z.number().array(),
 				type: z.number(),
-				authors: z.object({
-					task: z.number().array(),
-					solution: z.number().array(),
-				}),
+				authors: z.record(
+					z.enum(authorTypeEnum.enumValues),
+					z.number().array()
+				),
 			})
 		)
 		.mutation(async ({ input }) => {
-			// TODO validation
-			await db
-				.update(problemTable)
-				.set({
-					metadata: input.metadata,
-					typeId: input.type,
-				})
-				.where(eq(problemTable.problemId, input.problemId));
-
-			// update topics
-			await db
-				.delete(problemTopicTable)
-				.where(
-					and(
-						eq(problemTopicTable.problemId, input.problemId),
-						notInArray(problemTopicTable.topicId, input.topics)
-					)
-				);
-
-			await db
-				.insert(problemTopicTable)
-				.values(
-					input.topics.map((topicId) => ({
-						problemId: input.problemId,
-						topicId: topicId,
-					}))
-				)
-				.onConflictDoNothing();
-
-			// update authors
-			for (const type of Object.keys(
-				input.authors
-			) as (keyof typeof input.authors)[]) {
-				const personIds = input.authors[type];
-				await db
-					.delete(authorTable)
-					.where(
-						and(
-							eq(authorTable.problemId, input.problemId),
-							eq(authorTable.type, type),
-							notInArray(authorTable.personId, personIds)
-						)
-					);
-				if (personIds.length === 0) {
-					continue;
-				}
-				await db
-					.insert(authorTable)
-					.values(
-						personIds.map((personId) => ({
-							personId: personId,
-							problemId: input.problemId,
-							type: type,
-						}))
-					)
-					.onConflictDoNothing(); // prevents duplicates because of the unique key in schema
-			}
+			return await db.transaction(async (tx) => {
+				const problemModel = new ProblemModel(tx, input.problemId);
+				await problemModel.setMetadata(input.metadata, input.type);
+				await problemModel.setTopics(input.topics);
+				await problemModel.setAuthors(input.authors);
+			});
 		}),
 
 	build: authedProcedure
@@ -415,18 +365,12 @@ export const problemRouter = trpc.router({
 					}
 				}
 
-				// add topics
-				await tx.insert(problemTopicTable).values(
-					Array.from(filteredTopics, (topic) => ({
-						problemId: problem.problemId,
-						topicId: topic.topicId,
-					}))
+				const problemModel = new ProblemModel(tx, problem.problemId);
+				await problemModel.setTopics(
+					Array.from(filteredTopics, (topic) => topic.topicId)
 				);
-
-				await tx.insert(authorTable).values({
-					personId: ctx.person.personId,
-					problemId: problem.problemId,
-					type: 'task',
+				await problemModel.setAuthors({
+					concept: [ctx.person.personId],
 				});
 
 				return problem;
