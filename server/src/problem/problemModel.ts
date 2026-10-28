@@ -226,6 +226,7 @@ export class ProblemModel {
 				contestId: null,
 				seriesId: seriesId,
 				seriesOrder:
+					// place the problem after the last one in the series
 					lastProblemInSeries && lastProblemInSeries.seriesOrder
 						? lastProblemInSeries.seriesOrder + 1
 						: 1,

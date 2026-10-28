@@ -21,10 +21,7 @@ import {
 import { ProblemModel } from '@server/problem/problemModel';
 import { Runner } from '@server/runner/runner';
 
-import {
-	contestProcedure,
-	problemProcedure,
-} from '../middleware';
+import { contestProcedure, problemProcedure } from '../middleware';
 import { trpc } from '../trpc';
 import { fileRouter } from './fileRouter';
 
