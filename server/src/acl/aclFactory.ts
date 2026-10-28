@@ -14,7 +14,7 @@ export const acl = new ACL({
 	],
 	text: ['edit', 'release', 'revoke'],
 	file: ['upload', 'download', 'delete', 'rename'],
-	work: ['create', 'update'],
+	work: ['assignPeople', 'create', 'update'],
 });
 
 // base roles
@@ -33,6 +33,7 @@ acl.allow(ContestRole.organizer, 'contest');
 acl.allow(ContestRole.organizer, 'text', 'edit');
 acl.allow(ContestRole.organizer, 'file');
 acl.allow(ContestRole.organizer, 'work', 'update');
+acl.allow(ContestRole.organizer, 'work', 'assignPeople');
 
 acl.allow(ContestRole.manager, 'series');
 acl.allow(ContestRole.manager, 'text', 'release');

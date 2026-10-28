@@ -11,6 +11,7 @@ import { personRouter } from './routers/personRouter';
 import { problemRouter } from './routers/problemRouter';
 import { seriesRouter } from './routers/seriesRouter';
 import { textRouter } from './routers/textRouter';
+import { workRouter } from './routers/workRouter';
 import { trpc } from './trpc';
 
 export const appRouter = trpc.router({
@@ -28,36 +29,7 @@ export const appRouter = trpc.router({
 	problem: problemRouter,
 	series: seriesRouter,
 	text: textRouter,
-	work: trpc.router({
-		updatePersonWork: authedProcedure
-			.input(
-				z.object({
-					workId: z.number(),
-					personId: z.number(),
-					assigned: z.boolean(),
-				})
-			)
-			.query(async (opts) => {
-				if (opts.input.assigned) {
-					await db.insert(personWorkTable).values({
-						workId: opts.input.workId,
-						personId: opts.input.personId,
-					});
-				} else {
-					await db
-						.delete(personWorkTable)
-						.where(
-							and(
-								eq(personWorkTable.workId, opts.input.workId),
-								eq(
-									personWorkTable.personId,
-									opts.input.personId
-								)
-							)
-						);
-				}
-			}),
-	}),
+	work: workRouter,
 	organizers: organizersRouter,
 });
 
