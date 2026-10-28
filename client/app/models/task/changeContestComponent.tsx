@@ -40,7 +40,7 @@ export function ChangeContestComponent({
 	setOpen,
 }: {
 	problem: Problem;
-	contests: trpcOutputTypes['getContests'];
+	contests: trpcOutputTypes['contest']['list'];
 	setOpen: (open: boolean) => void;
 }) {
 	const changeForm = useForm();

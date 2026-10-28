@@ -43,7 +43,7 @@ function RowActions({
 }: {
 	series: trpcOutputTypes['series']['list'];
 	problem: Problem;
-	contests: trpcOutputTypes['getContests'];
+	contests: trpcOutputTypes['contest']['list'];
 }) {
 	const [open, setOpen] = useState(false);
 	const roles = usePersonRoles();
@@ -110,7 +110,7 @@ function RowActions({
 
 export function getColumns(
 	series: trpcOutputTypes['series']['list'],
-	contests: trpcOutputTypes['getContests']
+	contests: trpcOutputTypes['contest']['list']
 ) {
 	const columns: ColumnDef<Problem>[] = [
 		{

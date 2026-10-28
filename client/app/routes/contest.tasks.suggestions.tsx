@@ -41,7 +41,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 		contestYear: Number(params.year),
 	});
 
-	const contests = await trpc.getContests.query();
+	const contests = await trpc.contest.list.query();
 
 	return { problems: transformedProblems, series, contests };
 }
