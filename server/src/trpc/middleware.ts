@@ -5,11 +5,43 @@ import { z } from 'zod';
 import { acl } from '@server/acl/aclFactory';
 import { getPersonFromJWT, getRolesFromJWT } from '@server/auth/jwt';
 import { db } from '@server/db';
-import { contestTable, problemTable } from '@server/db/schema';
+import { contestTable } from '@server/db/schema';
+import { PublicError } from '@server/errors/publicError';
+import { statusCodeToTRPCCode } from '@server/errors/statusCodes';
+import { ProblemModel } from '@server/problem/problemModel';
 
 import { trpc } from './trpc';
 
-export const authedProcedure = trpc.procedure.use(async ({ ctx, next }) => {
+/**
+ * Catch custom errors and translate them into TRPCErrors
+ */
+export const errorProcedure = trpc.procedure.use(async ({ next }) => {
+	try {
+		return await next();
+	} catch (error) {
+		// rethrow TRPCErrors
+		if (error instanceof TRPCError) {
+			throw error;
+		}
+
+		// public errors - send message
+		if (error instanceof PublicError) {
+			throw new TRPCError({
+				code: statusCodeToTRPCCode(error.getStatusCode()),
+				message: error.message,
+				cause: error,
+			});
+		}
+
+		// generic error - send a generic message
+		throw new TRPCError({
+			code: 'INTERNAL_SERVER_ERROR',
+			cause: 'Error on the server has occurred',
+		});
+	}
+});
+
+export const authedProcedure = errorProcedure.use(async ({ ctx, next }) => {
 	if (!ctx.jwtData) {
 		throw new TRPCError({ code: 'UNAUTHORIZED' });
 	}
@@ -69,45 +101,13 @@ export const contestProcedure = authedProcedure
 export const problemProcedure = authedProcedure
 	.input(z.object({ problemId: z.number() }))
 	.use(async ({ input, ctx, next }) => {
-		const problem = await db.query.problemTable.findFirst({
-			where: eq(problemTable.problemId, input.problemId),
-			with: {
-				series: {
-					with: {
-						contestYear: {
-							with: {
-								contest: true,
-							},
-						},
-					},
-				},
-				contest: true,
-				work: true,
-			},
-		});
-
-		if (!problem) {
-			throw new TRPCError({
-				code: 'NOT_FOUND',
-				message: 'Problem not found',
-			});
-		}
-
-		const contestSymbol =
-			problem.series?.contestYear.contest.symbol ??
-			problem.contest?.symbol;
-
-		if (!contestSymbol) {
-			throw new TRPCError({
-				code: 'INTERNAL_SERVER_ERROR',
-				message: 'Could not determine problem contest',
-			});
-		}
+		const problemModel = new ProblemModel(db, input.problemId);
+		const contest = await problemModel.getContest();
 
 		if (
 			!acl.isAllowedContest(
 				ctx.aclRoles,
-				contestSymbol,
+				contest.symbol,
 				'problem',
 				'access'
 			)
@@ -120,7 +120,8 @@ export const problemProcedure = authedProcedure
 
 		return next({
 			ctx: {
-				problem: problem,
+				problemModel: problemModel,
+				contest: contest,
 			},
 		});
 	});

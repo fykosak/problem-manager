@@ -216,6 +216,8 @@ function TaskBreadcrumb({
 		case 'web-texts':
 			label = 'Zveřejnění textů';
 			break;
+		default:
+			throw new Error('Path label not defined');
 	}
 
 	return (

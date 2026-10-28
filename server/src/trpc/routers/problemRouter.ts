@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import path from 'node:path';
 import * as Y from 'yjs';
 import { z } from 'zod';
@@ -31,61 +31,15 @@ import {
 } from '../middleware';
 import { trpc } from '../trpc';
 
-async function getProblemContest(problemId: number) {
-	const problem = await db.query.problemTable.findFirst({
-		where: eq(problemTable.problemId, problemId),
-		with: {
-			contest: true,
-			series: {
-				with: {
-					contestYear: {
-						with: {
-							contest: true,
-						},
-					},
-				},
-			},
-		},
-	});
-
-	if (!problem) {
-		throw new TRPCError({
-			message: 'Problem does not exist',
-			code: 'NOT_FOUND',
-		});
-	}
-
-	const contestSymbol =
-		problem.contest?.symbol ?? problem.series?.contestYear.contest.symbol;
-	if (!contestSymbol) {
-		throw new TRPCError({
-			message: 'Problem not connected to contest',
-			code: 'INTERNAL_SERVER_ERROR',
-		});
-	}
-
-	return contestSymbol;
-}
-
 export const problemRouter = trpc.router({
 	info: problemProcedure.query(({ ctx }) => {
-		return ctx.problem;
+		return ctx.problemModel.getProblem();
 	}),
 
 	metadata: problemProcedure.query(async ({ ctx }) => {
-		const taskData = await db.query.problemTable.findFirst({
-			columns: {
-				metadata: true,
-			},
-			where: eq(problemTable.problemId, ctx.problem.problemId),
-			with: {
-				topics: true,
-				type: true,
-				authors: true,
-			},
-		});
+		const problemData = await ctx.problemModel.getMetadata();
 
-		if (!taskData) {
+		if (!problemData) {
 			throw new TRPCError({
 				code: 'NOT_FOUND',
 				message: 'Problem not found',
@@ -93,13 +47,13 @@ export const problemRouter = trpc.router({
 		}
 
 		return {
-			metadata: taskData.metadata,
-			topics: taskData.topics.map((topic) => topic.topicId),
-			type: taskData.type.typeId,
+			metadata: problemData.metadata,
+			topics: problemData.topics.map((topic) => topic.topicId),
+			type: problemData.type.typeId,
 			authors: Object.fromEntries(
 				authorTypeEnum.enumValues.map((type) => [
 					type,
-					taskData.authors
+					problemData.authors
 						.filter((author) => author.type === type)
 						.map((author) => author.personId),
 				])
@@ -110,19 +64,11 @@ export const problemRouter = trpc.router({
 	texts: problemProcedure
 		.input(
 			z.object({
-				textType: z.enum(textTypeEnum.enumValues).nullish(),
+				textType: z.enum(textTypeEnum.enumValues).optional(),
 			})
 		)
-		.query(async ({ input }) => {
-			const texts = await db.query.textTable.findMany({
-				where: and(
-					eq(textTable.problemId, input.problemId),
-					input.textType
-						? eq(textTable.type, input.textType)
-						: undefined
-				),
-				orderBy: [asc(textTable.type), asc(textTable.lang)],
-			});
+		.query(async ({ input, ctx }) => {
+			const texts = await ctx.problemModel.getTexts(input.textType);
 
 			if (texts.length === 0) {
 				throw new TRPCError({
@@ -135,13 +81,7 @@ export const problemRouter = trpc.router({
 		}),
 
 	work: problemProcedure.query(async ({ ctx }) => {
-		return await db.query.workTable.findMany({
-			with: {
-				people: true,
-			},
-			where: eq(workTable.problemId, ctx.problem.problemId),
-			orderBy: workTable.workId,
-		});
+		return ctx.problemModel.getWork();
 	}),
 
 	updateWorkState: authedProcedure
@@ -166,14 +106,15 @@ export const problemRouter = trpc.router({
 				});
 			}
 
-			const contestSymbol = await getProblemContest(
+			const contest = await new ProblemModel(
+				db,
 				work.problem.problemId
-			);
+			).getContest();
 
 			if (
 				!acl.isAllowedContest(
 					ctx.aclRoles,
-					contestSymbol,
+					contest.symbol,
 					'work',
 					'update'
 				)
@@ -388,18 +329,10 @@ export const problemRouter = trpc.router({
 			})
 		)
 		.mutation(async ({ input, ctx }) => {
-			if (!ctx.problem.contest) {
-				throw new TRPCError({
-					message:
-						'Cannot change state of this problem, assigned to a series',
-					code: 'BAD_REQUEST',
-				});
-			}
-
 			if (
 				!acl.isAllowedContest(
 					ctx.aclRoles,
-					ctx.problem.contest.symbol,
+					ctx.contest.symbol,
 					'problem',
 					'changeState'
 				)
@@ -411,12 +344,7 @@ export const problemRouter = trpc.router({
 				});
 			}
 
-			await db
-				.update(problemTable)
-				.set({
-					state: input.state,
-				})
-				.where(eq(problemTable.problemId, input.problemId));
+			await ctx.problemModel.setState(input.state);
 		}),
 
 	changeContest: problemProcedure
@@ -426,17 +354,10 @@ export const problemRouter = trpc.router({
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			if (!ctx.problem.contest) {
-				throw new TRPCError({
-					message: 'Problem not assigned to a contest',
-					code: 'BAD_REQUEST',
-				});
-			}
-
 			if (
 				!acl.isAllowedContest(
 					ctx.aclRoles,
-					ctx.problem.contest.symbol,
+					ctx.contest.symbol,
 					'problem',
 					'changeContest'
 				)
@@ -447,12 +368,7 @@ export const problemRouter = trpc.router({
 				});
 			}
 
-			await db
-				.update(problemTable)
-				.set({
-					contestId: input.contestId,
-				})
-				.where(eq(problemTable.problemId, ctx.problem.problemId));
+			await ctx.problemModel.setContest(input.contestId);
 		}),
 
 	// series
@@ -464,11 +380,12 @@ export const problemRouter = trpc.router({
 		)
 		.mutation(async ({ ctx, input }) => {
 			return await db.transaction(async (tx) => {
+				const problem = await ctx.problemModel.getProblem();
 				if (
-					!ctx.problem.contest || // problem already is assigned to series
+					problem.seriesId !== null || // problem already is assigned to series
 					!acl.isAllowedContest(
 						ctx.aclRoles,
-						ctx.problem.contest.symbol,
+						ctx.contest.symbol,
 						'problem',
 						'assignSeries'
 					)
@@ -488,7 +405,7 @@ export const problemRouter = trpc.router({
 
 				if (
 					!series ||
-					ctx.problem.contestId !== series.contestYear.contestId
+					problem.contestId !== series.contestYear.contestId
 				) {
 					throw new TRPCError({
 						message: 'Cannot assign problem to this series',
@@ -496,65 +413,9 @@ export const problemRouter = trpc.router({
 					});
 				}
 
-				const lastProblemInSeries =
-					await db.query.problemTable.findFirst({
-						where: eq(problemTable.seriesId, series.seriesId),
-						orderBy: desc(problemTable.seriesOrder),
-					});
-
-				await tx
-					.update(problemTable)
-					.set({
-						contestId: null,
-						seriesId: series.seriesId,
-						seriesOrder:
-							lastProblemInSeries &&
-							lastProblemInSeries.seriesOrder
-								? lastProblemInSeries.seriesOrder + 1
-								: 1,
-					})
-					.where(eq(problemTable.problemId, ctx.problem.problemId));
-
-				const workConfig =
-					config.contestWork[ctx.problem.contest.symbol];
-				if (!workConfig) {
-					return;
-				}
-
-				// Add default (and missing) work to the problem
-				const existingWork = new Map<string, Set<string>>();
-				for (const work of ctx.problem.work) {
-					const group =
-						existingWork.get(work.group ?? '') ?? new Set();
-					group.add(work.label);
-					existingWork.set(work.group ?? '', group);
-				}
-
-				const newWorkItems = [];
-				for (const workGroup of workConfig) {
-					for (const workItem of workGroup.items) {
-						if (workItem.optional) {
-							continue;
-						}
-
-						if (
-							existingWork.has(workGroup.groupName) &&
-							existingWork
-								.get(workGroup.groupName)
-								?.has(workItem.name)
-						) {
-							continue;
-						}
-
-						newWorkItems.push({
-							problemId: ctx.problem.problemId,
-							group: workGroup.groupName,
-							label: workItem.name,
-						});
-					}
-				}
-
-				await tx.insert(workTable).values(newWorkItems);
+				const problemModel = new ProblemModel(tx, input.problemId);
+				await problemModel.setSeries(input.seriesId);
+				await problemModel.assignDefaultWork(ctx.contest.symbol);
 			});
 		}),
 
@@ -578,11 +439,10 @@ export const problemRouter = trpc.router({
 				})
 			)
 			.mutation(async ({ input, ctx }) => {
-				const contestSymbol = await getProblemContest(input.problemId);
 				if (
 					!acl.isAllowedContest(
 						ctx.aclRoles,
-						contestSymbol,
+						ctx.contest.symbol,
 						'file',
 						'upload'
 					)
@@ -633,11 +493,10 @@ export const problemRouter = trpc.router({
 				})
 			)
 			.query(async ({ input, ctx }) => {
-				const contestSymbol = await getProblemContest(input.problemId);
 				if (
 					!acl.isAllowedContest(
 						ctx.aclRoles,
-						contestSymbol,
+						ctx.contest.symbol,
 						'file',
 						'download'
 					)
@@ -660,11 +519,10 @@ export const problemRouter = trpc.router({
 				})
 			)
 			.mutation(async ({ input, ctx }) => {
-				const contestSymbol = await getProblemContest(input.problemId);
 				if (
 					!acl.isAllowedContest(
 						ctx.aclRoles,
-						contestSymbol,
+						ctx.contest.symbol,
 						'file',
 						'delete'
 					)
@@ -687,11 +545,10 @@ export const problemRouter = trpc.router({
 				})
 			)
 			.mutation(async ({ input, ctx }) => {
-				const contestSymbol = await getProblemContest(input.problemId);
 				if (
 					!acl.isAllowedContest(
 						ctx.aclRoles,
-						contestSymbol,
+						ctx.contest.symbol,
 						'file',
 						'rename'
 					)

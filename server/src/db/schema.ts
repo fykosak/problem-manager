@@ -148,6 +148,7 @@ export const typeRelations = relations(typeTable, ({ one, many }) => ({
 }));
 
 export const problemStateEnum = pgEnum('problem_state', ['active', 'deleted']);
+export type ProblemStateEnum = (typeof problemStateEnum.enumValues)[number];
 
 export const problemTable = pgTable(
 	'problem',
