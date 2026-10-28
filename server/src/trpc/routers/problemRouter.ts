@@ -1,6 +1,5 @@
 import { TRPCError } from '@trpc/server';
 import { and, eq, inArray } from 'drizzle-orm';
-import path from 'node:path';
 import * as Y from 'yjs';
 import { z } from 'zod';
 
@@ -17,14 +16,12 @@ import {
 	textTable,
 	textTypeEnum,
 	topicTable,
-	workStateEnum,
 	workTable,
 } from '@server/db/schema';
 import { ProblemModel } from '@server/problem/problemModel';
 import { Runner } from '@server/runner/runner';
 
 import {
-	authedProcedure,
 	contestProcedure,
 	problemProcedure,
 } from '../middleware';

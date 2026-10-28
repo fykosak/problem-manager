@@ -1,6 +1,6 @@
 import { defineConfig } from 'drizzle-kit';
 
-const url =
+export const TEST_DATABASE_URL =
 	process.env.TEST_DATABASE_URL ??
 	'postgresql://pm:password@db/problem_manager_test';
 
@@ -9,5 +9,5 @@ export default defineConfig({
 	out: './drizzle',
 	dialect: 'postgresql',
 	casing: 'snake_case',
-	dbCredentials: { url },
+	dbCredentials: { url: TEST_DATABASE_URL },
 });

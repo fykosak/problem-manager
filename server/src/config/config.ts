@@ -8,7 +8,9 @@ import { getACLConfig } from './roles';
 import { getWorkConfig } from './work';
 
 const jsonConfig = JSON.parse(
-	readFileSync('./config.json').toString()
+	readFileSync(
+		process.env.VITEST === 'true' ? './config.test.json' : './config.json'
+	).toString()
 ) as Record<string, unknown>;
 
 const contestTextsSchema = z.record(
