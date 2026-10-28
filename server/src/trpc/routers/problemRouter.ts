@@ -1,6 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, inArray } from 'drizzle-orm';
-import path from 'node:path';
+import { and, eq, inArray } from 'drizzle-orm';
 import * as Y from 'yjs';
 import { z } from 'zod';
 
@@ -17,94 +16,24 @@ import {
 	textTable,
 	textTypeEnum,
 	topicTable,
-	workStateEnum,
 	workTable,
 } from '@server/db/schema';
 import { ProblemModel } from '@server/problem/problemModel';
-import { ProblemStorage } from '@server/runner/problemStorage';
 import { Runner } from '@server/runner/runner';
 
-import { authedProcedure, contestProcedure } from '../middleware';
+import { contestProcedure, problemProcedure } from '../middleware';
 import { trpc } from '../trpc';
-
-async function getProblemContest(problemId: number) {
-	const problem = await db.query.problemTable.findFirst({
-		where: eq(problemTable.problemId, problemId),
-		with: {
-			contest: true,
-			series: {
-				with: {
-					contestYear: {
-						with: {
-							contest: true,
-						},
-					},
-				},
-			},
-		},
-	});
-
-	if (!problem) {
-		throw new TRPCError({
-			message: 'Problem does not exist',
-			code: 'NOT_FOUND',
-		});
-	}
-
-	const contestSymbol =
-		problem.contest?.symbol ?? problem.series?.contestYear.contest.symbol;
-	if (!contestSymbol) {
-		throw new TRPCError({
-			message: 'Problem not connected to contest',
-			code: 'INTERNAL_SERVER_ERROR',
-		});
-	}
-
-	return contestSymbol;
-}
+import { fileRouter } from './fileRouter';
 
 export const problemRouter = trpc.router({
-	info: authedProcedure.input(z.number()).query(async ({ input }) => {
-		const problem = await db.query.problemTable.findFirst({
-			where: eq(problemTable.problemId, input),
-			with: {
-				series: {
-					with: {
-						contestYear: {
-							with: {
-								contest: true,
-							},
-						},
-					},
-				},
-				contest: true,
-			},
-		});
-
-		if (!problem) {
-			throw new TRPCError({
-				code: 'NOT_FOUND',
-				message: 'Problem not found',
-			});
-		}
-
-		return problem;
+	info: problemProcedure.query(({ ctx }) => {
+		return ctx.problemModel.getProblem();
 	}),
 
-	metadata: authedProcedure.input(z.number()).query(async (opts) => {
-		const taskData = await db.query.problemTable.findFirst({
-			columns: {
-				metadata: true,
-			},
-			where: eq(problemTable.problemId, opts.input),
-			with: {
-				topics: true,
-				type: true,
-				authors: true,
-			},
-		});
+	metadata: problemProcedure.query(async ({ ctx }) => {
+		const problemData = await ctx.problemModel.getMetadata();
 
-		if (!taskData) {
+		if (!problemData) {
 			throw new TRPCError({
 				code: 'NOT_FOUND',
 				message: 'Problem not found',
@@ -112,13 +41,13 @@ export const problemRouter = trpc.router({
 		}
 
 		return {
-			metadata: taskData.metadata,
-			topics: taskData.topics.map((topic) => topic.topicId),
-			type: taskData.type.typeId,
+			metadata: problemData.metadata,
+			topics: problemData.topics.map((topic) => topic.topicId),
+			type: problemData.type.typeId,
 			authors: Object.fromEntries(
 				authorTypeEnum.enumValues.map((type) => [
 					type,
-					taskData.authors
+					problemData.authors
 						.filter((author) => author.type === type)
 						.map((author) => author.personId),
 				])
@@ -126,23 +55,14 @@ export const problemRouter = trpc.router({
 		};
 	}),
 
-	texts: authedProcedure
+	texts: problemProcedure
 		.input(
 			z.object({
-				problemId: z.number(),
-				textType: z.enum(textTypeEnum.enumValues).nullish(),
+				textType: z.enum(textTypeEnum.enumValues).optional(),
 			})
 		)
-		.query(async ({ input }) => {
-			const texts = await db.query.textTable.findMany({
-				where: and(
-					eq(textTable.problemId, input.problemId),
-					input.textType
-						? eq(textTable.type, input.textType)
-						: undefined
-				),
-				orderBy: [asc(textTable.type), asc(textTable.lang)],
-			});
+		.query(async ({ input, ctx }) => {
+			const texts = await ctx.problemModel.getTexts(input.textType);
 
 			if (texts.length === 0) {
 				throw new TRPCError({
@@ -154,38 +74,13 @@ export const problemRouter = trpc.router({
 			return texts;
 		}),
 
-	work: authedProcedure.input(z.number()).query(async (opts) => {
-		return await db.query.workTable.findMany({
-			with: {
-				people: true,
-			},
-			where: eq(workTable.problemId, opts.input),
-			orderBy: workTable.workId,
-		});
+	work: problemProcedure.query(async ({ ctx }) => {
+		return ctx.problemModel.getWork();
 	}),
 
-	updateWorkState: authedProcedure
+	addWork: problemProcedure
 		.input(
 			z.object({
-				workId: z.number(),
-				state: z.enum(workStateEnum.enumValues),
-			})
-		)
-		.mutation(async (opts) => {
-			const work = await db
-				.update(workTable)
-				.set({
-					state: opts.input.state,
-				})
-				.where(eq(workTable.workId, opts.input.workId))
-				.returning();
-			return work;
-		}),
-
-	addWork: authedProcedure
-		.input(
-			z.object({
-				problemId: z.number(),
 				newWork: z
 					.object({
 						group: z.string().nonempty(),
@@ -199,20 +94,13 @@ export const problemRouter = trpc.router({
 				...work,
 				problemId: input.problemId,
 			}));
-			try {
-				await db.insert(workTable).values(workWithProblemId);
-			} catch {
-				throw new TRPCError({
-					message: 'Failed to add work to the problem',
-					code: 'INTERNAL_SERVER_ERROR',
-				});
-			}
+
+			await db.insert(workTable).values(workWithProblemId);
 		}),
 
-	updateMetadata: authedProcedure
+	updateMetadata: problemProcedure
 		.input(
 			z.object({
-				problemId: z.number(),
 				metadata: z.object<Record<string, any>>({}).passthrough(), // eslint-disable-line
 				topics: z.number().array(),
 				type: z.number(),
@@ -231,10 +119,9 @@ export const problemRouter = trpc.router({
 			});
 		}),
 
-	build: authedProcedure
+	build: problemProcedure
 		.input(
 			z.object({
-				problemId: z.number(),
 				type: z.enum(textTypeEnum.enumValues),
 				lang: z.enum(langEnum.enumValues),
 			})
@@ -377,40 +264,17 @@ export const problemRouter = trpc.router({
 			});
 		}),
 
-	changeState: authedProcedure
+	changeState: problemProcedure
 		.input(
 			z.object({
-				problemId: z.number(),
 				state: z.enum(problemStateEnum.enumValues),
 			})
 		)
-		.mutation(async ({ ctx, input }) => {
-			const problem = await db.query.problemTable.findFirst({
-				where: eq(problemTable.problemId, input.problemId),
-				with: {
-					contest: true,
-				},
-			});
-
-			if (!problem) {
-				throw new TRPCError({
-					message: 'Problem does not exist',
-					code: 'BAD_REQUEST',
-				});
-			}
-
-			if (!problem.contest) {
-				throw new TRPCError({
-					message:
-						'Cannot change state of this problem, assigned to a series',
-					code: 'BAD_REQUEST',
-				});
-			}
-
+		.mutation(async ({ input, ctx }) => {
 			if (
 				!acl.isAllowedContest(
 					ctx.aclRoles,
-					problem.contest.symbol,
+					ctx.contest.symbol,
 					'problem',
 					'changeState'
 				)
@@ -422,47 +286,20 @@ export const problemRouter = trpc.router({
 				});
 			}
 
-			await db
-				.update(problemTable)
-				.set({
-					state: input.state,
-				})
-				.where(eq(problemTable.problemId, input.problemId));
+			await ctx.problemModel.setState(input.state);
 		}),
 
-	changeContest: authedProcedure
+	changeContest: problemProcedure
 		.input(
 			z.object({
-				problemId: z.number(),
 				contestId: z.number(),
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			const problem = await db.query.problemTable.findFirst({
-				where: eq(problemTable.problemId, input.problemId),
-				with: {
-					contest: true,
-				},
-			});
-
-			if (!problem) {
-				throw new TRPCError({
-					message: 'Problem does not exist',
-					code: 'BAD_REQUEST',
-				});
-			}
-
-			if (!problem.contest) {
-				throw new TRPCError({
-					message: 'Problem not assigned to a contest',
-					code: 'BAD_REQUEST',
-				});
-			}
-
 			if (
 				!acl.isAllowedContest(
 					ctx.aclRoles,
-					problem.contest.symbol,
+					ctx.contest.symbol,
 					'problem',
 					'changeContest'
 				)
@@ -473,273 +310,56 @@ export const problemRouter = trpc.router({
 				});
 			}
 
-			await db
-				.update(problemTable)
-				.set({
-					contestId: input.contestId,
-				})
-				.where(eq(problemTable.problemId, problem.problemId));
+			await ctx.problemModel.setContest(input.contestId);
 		}),
 
 	// series
-	assignSeries: authedProcedure
+	assignSeries: problemProcedure
 		.input(
 			z.object({
-				problemId: z.number(),
 				seriesId: z.number(),
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			const problem = await db.query.problemTable.findFirst({
-				where: eq(problemTable.problemId, input.problemId),
-				with: {
-					contest: true,
-					work: true,
-				},
-			});
-
-			if (!problem) {
-				throw new TRPCError({
-					message: 'Problem does not exist',
-					code: 'BAD_REQUEST',
-				});
-			}
-
-			if (
-				!problem.contest || // problem already is assigned to series
-				!acl.isAllowedContest(
-					ctx.aclRoles,
-					problem.contest.symbol,
-					'problem',
-					'assignSeries'
-				)
-			) {
-				throw new TRPCError({
-					message: 'Cannot assign this problem',
-					code: 'FORBIDDEN',
-				});
-			}
-
-			const series = await db.query.seriesTable.findFirst({
-				where: eq(seriesTable.seriesId, input.seriesId),
-				with: {
-					contestYear: true,
-				},
-			});
-
-			if (!series || problem.contestId !== series.contestYear.contestId) {
-				throw new TRPCError({
-					message: 'Cannot assign problem to this series',
-					code: 'BAD_REQUEST',
-				});
-			}
-
-			const lastProblemInSeries = await db.query.problemTable.findFirst({
-				where: eq(problemTable.seriesId, series.seriesId),
-				orderBy: desc(problemTable.seriesOrder),
-			});
-
-			await db
-				.update(problemTable)
-				.set({
-					contestId: null,
-					seriesId: series.seriesId,
-					seriesOrder:
-						lastProblemInSeries && lastProblemInSeries.seriesOrder
-							? lastProblemInSeries.seriesOrder + 1
-							: 1,
-				})
-				.where(eq(problemTable.problemId, problem.problemId));
-
-			const workConfig = config.contestWork[problem.contest.symbol];
-			if (!workConfig) {
-				return;
-			}
-
-			// Add default (and missing) work to the problem
-			const existingWork = new Map<string | null, Set<string>>();
-			for (const work of problem.work) {
-				const group = existingWork.get(work.group) ?? new Set();
-				group.add(work.label);
-				existingWork.set(work.group, group);
-			}
-
-			const newWorkItems = [];
-			for (const workGroup of workConfig) {
-				for (const workItem of workGroup.items) {
-					if (workItem.optional) {
-						continue;
-					}
-
-					if (
-						existingWork.has(workGroup.groupName) &&
-						existingWork
-							.get(workGroup.groupName)
-							?.has(workItem.name)
-					) {
-						continue;
-					}
-
-					newWorkItems.push({
-						problemId: problem.problemId,
-						group: workGroup.groupName,
-						label: workItem.name,
+			return await db.transaction(async (tx) => {
+				const problem = await ctx.problemModel.getProblem();
+				if (
+					problem.seriesId !== null || // problem already is assigned to series
+					!acl.isAllowedContest(
+						ctx.aclRoles,
+						ctx.contest.symbol,
+						'problem',
+						'assignSeries'
+					)
+				) {
+					throw new TRPCError({
+						message: 'Cannot assign this problem',
+						code: 'FORBIDDEN',
 					});
 				}
-			}
 
-			await db.insert(workTable).values(newWorkItems);
+				const series = await db.query.seriesTable.findFirst({
+					where: eq(seriesTable.seriesId, input.seriesId),
+					with: {
+						contestYear: true,
+					},
+				});
+
+				if (
+					!series ||
+					problem.contestId !== series.contestYear.contestId
+				) {
+					throw new TRPCError({
+						message: 'Cannot assign problem to this series',
+						code: 'BAD_REQUEST',
+					});
+				}
+
+				const problemModel = new ProblemModel(tx, input.problemId);
+				await problemModel.setSeries(input.seriesId);
+				await problemModel.assignDefaultWork(ctx.contest.symbol);
+			});
 		}),
 
-	// files
-	files: trpc.router({
-		list: authedProcedure.input(z.number()).query(async ({ input }) => {
-			const problemStorage = new ProblemStorage(input);
-			return await problemStorage.getFiles();
-		}),
-
-		upload: authedProcedure
-			.input(
-				z.object({
-					problemId: z.number(),
-					files: z
-						.object({
-							name: z.string().nonempty(),
-							data: z.string().nonempty(),
-						})
-						.array(),
-				})
-			)
-			.mutation(async ({ input, ctx }) => {
-				const contestSymbol = await getProblemContest(input.problemId);
-				if (
-					!acl.isAllowedContest(
-						ctx.aclRoles,
-						contestSymbol,
-						'file',
-						'upload'
-					)
-				) {
-					throw new TRPCError({
-						message: 'Not allowed to upload file',
-						code: 'FORBIDDEN',
-					});
-				}
-
-				// check for name collisions
-				const nameSet = new Set<string>();
-				for (const file of input.files) {
-					const pureName = path.parse(file.name).name;
-					if (nameSet.has(pureName)) {
-						throw new TRPCError({
-							message: `Cannot upload duplicate file ${pureName}`,
-							code: 'BAD_REQUEST',
-						});
-					}
-					nameSet.add(pureName);
-				}
-
-				const runner = new Runner(input.problemId);
-				const problemStorage = new ProblemStorage(input.problemId);
-
-				for (const file of input.files) {
-					await problemStorage.saveFile(file.name, file.data);
-					const filepath = problemStorage.getPathForFile(file.name);
-					try {
-						await runner.exportFile(filepath);
-					} catch {
-						throw new TRPCError({
-							message: `Failed to export file ${file.name}`,
-							code: 'INTERNAL_SERVER_ERROR',
-						});
-					}
-				}
-			}),
-
-		/**
-		 * Exports original files as DataURI
-		 */
-		download: authedProcedure
-			.input(
-				z.object({
-					problemId: z.number(),
-					filename: z.string(),
-				})
-			)
-			.query(async ({ input, ctx }) => {
-				const contestSymbol = await getProblemContest(input.problemId);
-				if (
-					!acl.isAllowedContest(
-						ctx.aclRoles,
-						contestSymbol,
-						'file',
-						'download'
-					)
-				) {
-					throw new TRPCError({
-						message: 'Not allowed to download file',
-						code: 'FORBIDDEN',
-					});
-				}
-
-				const problemStorage = new ProblemStorage(input.problemId);
-				const filepath = problemStorage.getPathForFile(input.filename);
-				return problemStorage.getFileAsDataUri(filepath);
-			}),
-
-		delete: authedProcedure
-			.input(
-				z.object({
-					problemId: z.number(),
-					filename: z.string(),
-				})
-			)
-			.mutation(async ({ input, ctx }) => {
-				const contestSymbol = await getProblemContest(input.problemId);
-				if (
-					!acl.isAllowedContest(
-						ctx.aclRoles,
-						contestSymbol,
-						'file',
-						'delete'
-					)
-				) {
-					throw new TRPCError({
-						message: 'Not allowed to upload file',
-						code: 'FORBIDDEN',
-					});
-				}
-
-				const problemStorage = new ProblemStorage(input.problemId);
-				await problemStorage.deleteFile(input.filename);
-			}),
-
-		rename: authedProcedure
-			.input(
-				z.object({
-					problemId: z.number(),
-					oldName: z.string(),
-					newName: z.string(),
-				})
-			)
-			.mutation(async ({ input, ctx }) => {
-				const contestSymbol = await getProblemContest(input.problemId);
-				if (
-					!acl.isAllowedContest(
-						ctx.aclRoles,
-						contestSymbol,
-						'file',
-						'rename'
-					)
-				) {
-					throw new TRPCError({
-						message: 'Not allowed to upload file',
-						code: 'FORBIDDEN',
-					});
-				}
-
-				const problemStorage = new ProblemStorage(input.problemId);
-				await problemStorage.renameFile(input.oldName, input.newName);
-			}),
-	}),
+	files: fileRouter,
 });

@@ -6,7 +6,7 @@ import { trpc } from '@client/trpc';
 import { Route } from './+types/contest.layout';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-	const contests = await trpc.getContests.query();
+	const contests = await trpc.contest.list.query();
 
 	const selectedContest = contests.find(
 		(contest) => contest.symbol === params.contest

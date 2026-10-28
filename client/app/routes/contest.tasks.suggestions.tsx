@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 
 import { Button } from '@client/components/ui/button';
 import { DataTable } from '@client/components/ui/dataTable';
-import { Task, getColumns } from '@client/models/task/columns';
+import { Problem, getColumns } from '@client/models/task/columns';
 import { trpc } from '@client/trpc';
 
 import { Route } from './+types/contest.tasks.suggestions';
@@ -15,7 +15,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	});
 
 	// map to shape
-	const transformedProblems: Task[] = problems.map((problem) => ({
+	const transformedProblems: Problem[] = problems.map((problem) => ({
 		problemId: problem.problemId,
 		name:
 			'name' in problem.metadata
@@ -41,7 +41,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 		contestYear: Number(params.year),
 	});
 
-	const contests = await trpc.getContests.query();
+	const contests = await trpc.contest.list.query();
 
 	return { problems: transformedProblems, series, contests };
 }

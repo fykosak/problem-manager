@@ -1,0 +1,13 @@
+{
+  "oidcCertsUrl": "http://localhost",
+  "builderUrl": "http://localhost",
+  "fksdbApiUrl": "http://localhost",
+  "fksdbLogin": "test",
+  "fksdbPassword": "test",
+  "dbConnection": "postgresql://pm:password@db/problem_manager_test",
+  "contestTexts": {},
+  "organizerMapping": {},
+  "roleMapping": {},
+  "contestMetadataFields": {},
+  "contestWork": {}
+}

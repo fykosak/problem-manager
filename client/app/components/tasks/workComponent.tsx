@@ -54,7 +54,7 @@ export default function WorkComponent({
 	const [state, setState] = useState(work.state);
 
 	async function updateState(state: typeof work.state) {
-		await trpc.problem.updateWorkState.mutate({
+		await trpc.work.updateWorkState.mutate({
 			workId: work.workId,
 			state: state,
 		});
