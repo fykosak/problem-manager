@@ -1,23 +1,20 @@
 import { TRPCError } from '@trpc/server';
 import { and, eq, inArray } from 'drizzle-orm';
-import * as Y from 'yjs';
 import { z } from 'zod';
 
 import { acl } from '@server/acl/aclFactory';
-import config from '@server/config/config';
 import { db } from '@server/db';
 import {
 	type AuthorTypeEnum,
 	authorTypeEnum,
 	langEnum,
 	problemStateEnum,
-	problemTable,
 	seriesTable,
-	textTable,
 	textTypeEnum,
 	topicTable,
 	workTable,
 } from '@server/db/schema';
+import { ProblemManager } from '@server/problem/problemManager';
 import { ProblemModel } from '@server/problem/problemModel';
 import { Runner } from '@server/runner/runner';
 
@@ -113,7 +110,8 @@ export const problemRouter = trpc.router({
 		.mutation(async ({ input }) => {
 			return await db.transaction(async (tx) => {
 				const problemModel = new ProblemModel(tx, input.problemId);
-				await problemModel.setMetadata(input.metadata, input.type);
+				await problemModel.setMetadata(input.metadata);
+				await problemModel.setType(input.type);
 				await problemModel.setTopics(input.topics);
 				await problemModel.setAuthors(input.authors);
 			});
@@ -199,60 +197,15 @@ export const problemRouter = trpc.router({
 					};
 				}
 
-				const problem = (
-					await tx
-						.insert(problemTable)
-						.values({
-							typeId: input.type,
-							contestId: ctx.contest.contestId,
-							metadata: metadata,
-						})
-						.returning()
-				)[0];
-
-				// add text
-				const taskYDoc = new Y.Doc();
-				taskYDoc.getText().insert(0, input.task);
-
-				const textTypes = config.contestTexts[ctx.contest.symbol];
-				if (!textTypes) {
-					throw new TRPCError({
-						message: 'Could not get languages for contest',
-						code: 'INTERNAL_SERVER_ERROR',
-					});
-				}
-
-				const taskLangs = textTypes['task'];
-				if (!taskLangs || !taskLangs.includes(input.lang)) {
-					throw new TRPCError({
-						message: 'Invalid lang for text type',
-						code: 'BAD_REQUEST',
-					});
-				}
-
-				// TS cannot infer the key type normally, so it explictly
-				// declared
-				for (const textType of Object.keys(
-					textTypes
-				) as (keyof typeof textTypes)[]) {
-					const textLangs = textTypes[textType];
-					if (!textLangs) {
-						continue;
-					}
-					for (const textLang of textLangs) {
-						await tx.insert(textTable).values({
-							problemId: problem.problemId,
-							lang: textLang,
-							type: textType,
-							contents:
-								textType === 'task' && textLang === input.lang
-									? Y.encodeStateAsUpdate(taskYDoc)
-									: null,
-						});
-					}
-				}
-
+				const problem = await ProblemManager.create(
+					tx,
+					ctx.contest.contestId,
+					input.type
+				);
 				const problemModel = new ProblemModel(tx, problem.problemId);
+
+				await problemModel.setMetadata(metadata);
+				await problemModel.addDefaultTexts(input.task, input.lang);
 				await problemModel.setTopics(
 					Array.from(filteredTopics, (topic) => topic.topicId)
 				);
@@ -357,7 +310,7 @@ export const problemRouter = trpc.router({
 
 				const problemModel = new ProblemModel(tx, input.problemId);
 				await problemModel.setSeries(input.seriesId);
-				await problemModel.assignDefaultWork(ctx.contest.symbol);
+				await problemModel.addDefaultWork(ctx.contest.symbol);
 			});
 		}),
 

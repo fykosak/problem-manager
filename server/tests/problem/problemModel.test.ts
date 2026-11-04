@@ -222,10 +222,9 @@ describe('ProblemModel', () => {
 	});
 
 	describe('setMetadata', () => {
-		it('update type and metadata', async () => {
-			const type2 = await insertType(contestId);
+		it('update metadata', async () => {
 			const newMeta = { name: { cs: 'Nový název', en: 'New name' } };
-			await problemModel.setMetadata(newMeta, type2.typeId);
+			await problemModel.setMetadata(newMeta);
 
 			const [updated] = await db
 				.select()
@@ -233,7 +232,35 @@ describe('ProblemModel', () => {
 				.where(eq(problemTable.problemId, problemId));
 
 			expect(updated.metadata).toEqual(newMeta);
+		});
+	});
+
+	describe('setType', () => {
+		it('update type', async () => {
+			const type2 = await insertType(contestId);
+			await problemModel.setType(type2.typeId);
+
+			const [updated] = await db
+				.select()
+				.from(problemTable)
+				.where(eq(problemTable.problemId, problemId));
+
 			expect(updated.typeId).toBe(type2.typeId);
+		});
+
+		it('reject type from another contest', async () => {
+			const otherContest = await insertContest();
+			const type = await insertType(otherContest.contestId);
+
+			await expect(problemModel.setType(type.typeId)).rejects.toThrow(
+				BadRequestError
+			);
+		});
+
+		it('reject unknown type', async () => {
+			await expect(problemModel.setType(-1)).rejects.toThrow(
+				BadRequestError
+			);
 		});
 	});
 

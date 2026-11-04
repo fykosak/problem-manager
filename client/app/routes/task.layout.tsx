@@ -217,7 +217,7 @@ function TaskBreadcrumb({
 			label = 'Zveřejnění textů';
 			break;
 		default:
-			throw new Error('Path label not defined');
+			break;
 	}
 
 	return (

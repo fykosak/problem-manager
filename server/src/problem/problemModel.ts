@@ -1,9 +1,11 @@
 import { and, asc, desc, eq, notInArray } from 'drizzle-orm';
+import * as Y from 'yjs';
 
 import config from '@server/config/config';
 import type { DbConnection } from '@server/db';
 import {
 	type AuthorTypeEnum,
+	type LangEnum,
 	type ProblemStateEnum,
 	type TextTypeEnum,
 	authorTable,
@@ -11,6 +13,7 @@ import {
 	problemTable,
 	problemTopicTable,
 	textTable,
+	typeTable,
 	workTable,
 } from '@server/db/schema';
 import { BadRequestError } from '@server/errors/badRequestError';
@@ -105,16 +108,36 @@ export class ProblemModel {
 		return contest;
 	}
 
-	public async setMetadata(
-		metadata: ProblemMetadataType,
-		type: number
-	): Promise<void> {
+	public async setMetadata(metadata: ProblemMetadataType): Promise<void> {
 		// TODO Validate metadata shape
 		await this.db
 			.update(problemTable)
 			.set({
 				metadata: metadata,
-				typeId: type,
+			})
+			.where(eq(problemTable.problemId, this.problemId));
+	}
+
+	public async setType(typeId: number) {
+		const contest = await this.getContest();
+		const type = await this.db.query.typeTable.findFirst({
+			where: eq(typeTable.typeId, typeId),
+		});
+
+		if (!type) {
+			throw new BadRequestError('Type not found');
+		}
+
+		if (type.contestId !== contest.contestId) {
+			throw new BadRequestError(
+				`Contest for type ${type.typeId} is not the same as contest for problem ${this.problemId}`
+			);
+		}
+
+		await this.db
+			.update(problemTable)
+			.set({
+				typeId: typeId,
 			})
 			.where(eq(problemTable.problemId, this.problemId));
 	}
@@ -234,7 +257,7 @@ export class ProblemModel {
 			.where(eq(problemTable.problemId, this.problemId));
 	}
 
-	public async assignDefaultWork(contestSymbol: string): Promise<void> {
+	public async addDefaultWork(contestSymbol: string): Promise<void> {
 		const workConfig = config.contestWork[contestSymbol];
 		if (!workConfig) {
 			return;
@@ -271,5 +294,64 @@ export class ProblemModel {
 		}
 
 		await this.db.insert(workTable).values(newWorkItems);
+	}
+
+	public async addText(
+		type: TextTypeEnum,
+		lang: LangEnum,
+		contents?: string
+	): Promise<void> {
+		let byteContents: Uint8Array | null = null;
+
+		if (contents) {
+			const taskYDoc = new Y.Doc();
+			taskYDoc.getText().insert(0, contents);
+			byteContents = Y.encodeStateAsUpdate(taskYDoc);
+		}
+
+		await this.db.insert(textTable).values({
+			problemId: this.problemId,
+			lang: lang,
+			type: type,
+			contents: byteContents,
+		});
+	}
+
+	public async addDefaultTexts(taskText: string, taskLang: LangEnum) {
+		const taskYDoc = new Y.Doc();
+		taskYDoc.getText().insert(0, taskText);
+
+		const contest = await this.getContest();
+		const textTypes = config.contestTexts[contest.symbol];
+		if (!textTypes) {
+			throw new Error(
+				`Could not get languages for contest ${contest.symbol}`
+			);
+		}
+
+		const taskLangs = textTypes['task'];
+		if (!taskLangs || !taskLangs.includes(taskLang)) {
+			throw new Error(
+				`Invalid lang ${taskLang} for text type task for contest ${contest.symbol}`
+			);
+		}
+
+		// TS cannot infer the key type normally, so it explictly
+		// declared
+		for (const textType of Object.keys(
+			textTypes
+		) as (keyof typeof textTypes)[]) {
+			const textLangs = textTypes[textType];
+			if (!textLangs) {
+				continue;
+			}
+			for (const textLang of textLangs) {
+				if (textType === 'task' && textLang === taskLang) {
+					await this.addText('task', textLang, taskText);
+				} else {
+					await this.addText('task', textLang);
+				}
+			}
+		}
 	}
 }
