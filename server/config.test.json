@@ -5,9 +5,23 @@
   "fksdbLogin": "test",
   "fksdbPassword": "test",
   "dbConnection": "postgresql://pm:password@db/problem_manager_test",
-  "contestTexts": {},
+  "contestTexts": {
+    "trpc-test": {
+      "task": ["en"]
+    }
+  },
   "organizerMapping": {},
-  "roleMapping": {},
+  "roleMapping": {
+    "baseRole": {
+      "admin": ["test-admin"]
+    },
+    "contestRole": {
+      "trpc-test": {
+        "contest.organizer": ["test-organizer"],
+        "contest.manager": ["test-manager"]
+      }
+    }
+  },
   "contestMetadataFields": {},
   "contestWork": {}
 }

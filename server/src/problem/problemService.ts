@@ -1,7 +1,7 @@
 import type { DbConnection } from '@server/db';
 import { problemTable } from '@server/db/schema';
 
-export class ProblemManager {
+export class ProblemService {
 	public static async create(
 		db: DbConnection,
 		contestId: number,

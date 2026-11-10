@@ -14,8 +14,8 @@ import {
 	topicTable,
 	workTable,
 } from '@server/db/schema';
-import { ProblemManager } from '@server/problem/problemManager';
 import { ProblemModel } from '@server/problem/problemModel';
+import { ProblemService } from '@server/problem/problemService';
 import { Runner } from '@server/runner/runner';
 
 import { contestProcedure, problemProcedure } from '../middleware';
@@ -197,7 +197,7 @@ export const problemRouter = trpc.router({
 					};
 				}
 
-				const problem = await ProblemManager.create(
+				const problem = await ProblemService.create(
 					tx,
 					ctx.contest.contestId,
 					input.type
