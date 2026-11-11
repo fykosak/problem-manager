@@ -5,8 +5,8 @@ import { Route } from './+types/base.createProblem';
 
 export async function clientLoader() {
 	const data = await Promise.all([
-		await trpc.contest.createProblemData.query(),
-		await trpc.contest.list.query(),
+		trpc.contest.createProblemData.query(),
+		trpc.contest.list.query(),
 	]);
 
 	return {

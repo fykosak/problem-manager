@@ -5,7 +5,8 @@
   "scripts": {
     "test": "vitest",
     "prepare": "lezer-generator src/syntax.grammar --typeScript --names -o src/parser && rollup -c",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "typecheck": "tsc --build --noEmit"
   },
   "type": "module",
   "main": "dist/index.cjs",
@@ -24,7 +25,7 @@
     "@codemirror/view": "^6.35.0",
     "@lezer/common": "^1.2.3",
     "@lezer/highlight": "^1.2.1",
-    "@lezer/generator": "^1.7.3",
+    "@lezer/generator": "^1.8.1",
     "@lezer/lr": "^1.4.2",
     "rollup": "^2.79.2",
     "rollup-plugin-ts": "^3.4.5"

@@ -29,11 +29,21 @@ function fileToBase64(file: File): Promise<string> {
 		const reader = new FileReader();
 		reader.readAsDataURL(file);
 		reader.onload = () => {
+			if (typeof reader.result !== 'string') {
+				reject(new Error('Failed to read file as a data URL'));
+				return;
+			}
+
 			// extract base64 data from url encoded string
-			const dataPart = (reader.result as string).split(',', 2)[1];
+			const dataPart = reader.result.split(',', 2)[1];
+			if (dataPart === undefined) {
+				reject(new Error('Invalid data URL returned by FileReader'));
+				return;
+			}
+
 			resolve(dataPart);
 		};
-		reader.onerror = () => reject(reader.error as Error);
+		reader.onerror = () => reject(reader.error ?? new Error('Failed to read file'));
 	});
 }
 
