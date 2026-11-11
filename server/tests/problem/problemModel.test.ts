@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { db } from '@server/db';
 import {
 	authorTable,
 	contestTable,
@@ -17,9 +18,6 @@ import {
 import { BadRequestError } from '@server/errors/badRequestError';
 import { NotFoundError } from '@server/errors/notFoundError';
 import { ProblemModel } from '@server/problem/problemModel';
-import { getTestDb } from '@server/tests/db/testDb';
-
-const db = getTestDb();
 
 // automatic unique labels
 let seq = 0;

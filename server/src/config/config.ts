@@ -7,9 +7,12 @@ import { ConfigError, getRequiredString } from './configUtils';
 import { getACLConfig } from './roles';
 import { getWorkConfig } from './work';
 
+// Load JSON config dynamically by context
 const jsonConfig = JSON.parse(
 	readFileSync(
-		process.env.VITEST === 'true' ? './config.test.json' : './config.json'
+		process.env.VITEST === 'true' || process.env.NODE_ENV === 'test'
+			? './config.test.json'
+			: './config.json'
 	).toString()
 ) as Record<string, unknown>;
 
@@ -76,7 +79,10 @@ const config = {
 	fksdbApiUrl: getRequiredString(jsonConfig, 'fksdbApiUrl'),
 	fksdbLogin: getRequiredString(jsonConfig, 'fksdbLogin'),
 	fksdbPassword: getRequiredString(jsonConfig, 'fksdbPassword'),
-	dbConnection: getRequiredString(jsonConfig, 'dbConnection'),
+	// Allow override by env variable for CI/CD
+	dbConnection:
+		process.env.DATABASE_URL ??
+		getRequiredString(jsonConfig, 'dbConnection'),
 	contestTexts: getContestTexts(jsonConfig, 'contestTexts'),
 	/**
 	 * Allows to map organizers of one contest to another if they're the same.
