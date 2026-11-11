@@ -26,6 +26,8 @@ export default function Login() {
 					</span>
 				</div>
 			);
+		default:
+			break;
 	}
 
 	if (auth.isLoading) {

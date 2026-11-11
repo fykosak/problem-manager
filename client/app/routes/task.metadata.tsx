@@ -14,7 +14,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 	}
 
 	const data = await Promise.all([
-		trpc.problem.metadata.query(parseInt(params.taskId)),
+		trpc.problem.metadata.query({ problemId: parseInt(params.taskId) }),
 		trpc.contest.topics.query({
 			contestSymbol,
 		}),
