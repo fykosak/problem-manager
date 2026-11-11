@@ -26,6 +26,11 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export function meta({ data }: Route.MetaArgs) {
+	// if loader does not finish, data is not filled
+	if (!data) {
+		return [{ title: 'Problem manager' }];
+	}
+
 	return [
 		{ title: data.selectedContest.name + ' ' + data.selectedYear.year },
 	];
