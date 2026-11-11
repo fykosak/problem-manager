@@ -97,7 +97,7 @@ async function truncateTables() {
 	await db.delete(contestTable);
 }
 
-describe('ProblemModel', () => {
+describe('ProblemModel', { concurrent: false }, () => {
 	// shared values between tests
 	let contestId: number;
 	let problemId: number;

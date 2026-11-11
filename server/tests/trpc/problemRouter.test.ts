@@ -59,7 +59,7 @@ function caller(role: string) {
 	);
 }
 
-describe('problemRouter', () => {
+describe('problemRouter', { concurrent: false }, () => {
 	beforeAll(truncateTables);
 
 	beforeEach(async () => {
