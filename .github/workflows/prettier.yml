@@ -1,5 +1,6 @@
 name: Prettier
-on: [push, pull_request]
+on: [pull_request]
+
 jobs:
   client:
     runs-on: ubuntu-26.04
