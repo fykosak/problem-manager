@@ -4,7 +4,9 @@ import { trpc } from '@client/trpc';
 import { Route } from './+types/task.metadata';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-	const problem = await trpc.problem.info.query(parseInt(params.taskId));
+	const problem = await trpc.problem.info.query({
+		problemId: parseInt(params.taskId),
+	});
 
 	const contestSymbol =
 		problem.series?.contestYear.contest.symbol ?? problem.contest?.symbol;
