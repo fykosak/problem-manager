@@ -1,7 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { db } from '@server/db';
 import {
 	authorTable,
 	contestTable,
@@ -20,6 +19,10 @@ import {
 	createTestCaller,
 } from '@server/tests/trpc/testContext';
 import { problemRouter } from '@server/trpc/routers/problemRouter';
+
+import { getTestDb } from '../db/testDb';
+
+const db = getTestDb();
 
 const contestSymbol = 'trpc-test';
 const roleNames = {
