@@ -4,19 +4,28 @@ import { trpc } from '@client/trpc';
 import { Route } from './+types/task.metadata';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+	const problem = await trpc.problem.info.query(parseInt(params.taskId));
+
+	const contestSymbol =
+		problem.series?.contestYear.contest.symbol ?? problem.contest?.symbol;
+
+	if (contestSymbol === undefined) {
+		throw new Error('Could not determine problem contest');
+	}
+
 	const data = await Promise.all([
 		trpc.problem.metadata.query(parseInt(params.taskId)),
 		trpc.contest.topics.query({
-			contestSymbol: params.contest,
+			contestSymbol,
 		}),
 		trpc.contest.types.query({
-			contestSymbol: params.contest,
+			contestSymbol,
 		}),
 		trpc.contest.organizers.query({
-			contestSymbol: params.contest,
+			contestSymbol,
 		}),
 		trpc.contest.metadataFields.query({
-			contestSymbol: params.contest,
+			contestSymbol,
 		}),
 	]);
 	return {
