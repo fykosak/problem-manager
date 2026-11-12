@@ -6,7 +6,9 @@
     "test": "vitest",
     "prepare": "lezer-generator src/syntax.grammar --typeScript --names -o src/parser && rollup -c",
     "lint": "eslint src/",
-    "typecheck": "tsc --build --noEmit"
+    "typecheck": "tsc --build --noEmit",
+    "prettier": "prettier . --check",
+    "prettier:fix": "prettier . --write"
   },
   "type": "module",
   "main": "dist/index.cjs",
