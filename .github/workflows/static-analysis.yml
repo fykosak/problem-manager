@@ -1,9 +1,10 @@
-name: Typecheck
+name: Static analysis
 on: [pull_request]
 
 jobs:
-  tsc:
+  static-analysis:
     strategy:
+      fail-fast: false
       matrix:
         subproject:
           - client
@@ -32,6 +33,6 @@ jobs:
         working-directory: lang-latex
         run: npm run prepare
 
-      - name: Run typecheck for ${{ matrix.subproject }}
+      - name: Run ${{ matrix.command }} for ${{ matrix.subproject }}
         working-directory: ${{ matrix.subproject }}
-        run: npm run typecheck
+        run: npm run ${{ matrix.command }}

@@ -26,11 +26,11 @@
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.35.0",
     "@lezer/common": "^1.2.3",
-    "@lezer/highlight": "^1.2.1",
     "@lezer/generator": "^1.8.1",
+    "@lezer/highlight": "^1.2.1",
     "@lezer/lr": "^1.4.2",
-    "rollup": "^2.79.2",
-    "rollup-plugin-ts": "^3.4.5"
+    "@rollup/plugin-typescript": "^12.3.1",
+    "rollup": "^2.79.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
