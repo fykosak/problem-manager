@@ -43,7 +43,8 @@ function fileToBase64(file: File): Promise<string> {
 
 			resolve(dataPart);
 		};
-		reader.onerror = () => reject(reader.error ?? new Error('Failed to read file'));
+		reader.onerror = () =>
+			reject(reader.error ?? new Error('Failed to read file'));
 	});
 }
 
