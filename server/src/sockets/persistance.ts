@@ -14,7 +14,7 @@ const storage = new StorageProvider();
 class VersionKeeper {
 	textId: number;
 	ydoc: WSSharedDoc;
-	inactivityTimeout: Timer | null = null;
+	inactivityTimeout: ReturnType<typeof setTimeout> | null = null;
 	editors = new Set<number>();
 	permanentUserData: Y.PermanentUserData;
 

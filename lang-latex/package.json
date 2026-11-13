@@ -5,7 +5,10 @@
   "scripts": {
     "test": "vitest",
     "prepare": "lezer-generator src/syntax.grammar --typeScript --names -o src/parser && rollup -c",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "typecheck": "tsc --build --noEmit",
+    "prettier": "prettier . --check",
+    "prettier:fix": "prettier . --write"
   },
   "type": "module",
   "main": "dist/index.cjs",
@@ -23,11 +26,11 @@
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.35.0",
     "@lezer/common": "^1.2.3",
+    "@lezer/generator": "^1.8.1",
     "@lezer/highlight": "^1.2.1",
-    "@lezer/generator": "^1.7.3",
     "@lezer/lr": "^1.4.2",
-    "rollup": "^2.79.2",
-    "rollup-plugin-ts": "^3.4.5"
+    "@rollup/plugin-typescript": "^12.3.1",
+    "rollup": "^2.79.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
@@ -36,7 +39,7 @@
     "jiti": "^2.4.2",
     "mocha": "^9.2.2",
     "prettier": "^3.5.3",
-    "typescript": "^4.9.5",
+    "typescript": "^6.0.0",
     "typescript-eslint": "^8.29.0",
     "vitest": "^3.0.9"
   },

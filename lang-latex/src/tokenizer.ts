@@ -1,3 +1,5 @@
+import { Stack } from '@lezer/lr';
+
 import {
 	DelimiterCommandIdentifier,
 	ElseCommandIdentifier,
@@ -22,7 +24,8 @@ const taskEnvNames = new Set(['tasks']);
 
 const tabularEnvNames = new Set(['tabular', 'tabularx', 'longtable']);
 
-export function specializeEnvName(name: string) {
+// eslint-disable-next-line
+export function specializeEnvName(name: string, stack: Stack): number {
 	if (listEnvNames.has(name)) {
 		return ListEnvName;
 	}
@@ -42,7 +45,11 @@ export function specializeEnvName(name: string) {
 	return -1;
 }
 
-export function specializeCommandIdentifier(name: string) {
+export function specializeCommandIdentifier(
+	name: string,
+	// eslint-disable-next-line
+	stack: Stack
+): number {
 	if (name.startsWith('\\if')) {
 		return IfCommandIdentifier;
 	}

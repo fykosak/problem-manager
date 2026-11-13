@@ -14,7 +14,8 @@ const SelectGroup = SelectPrimitive.Group;
 const SelectValue = SelectPrimitive.Value;
 
 interface CustomSelectTriggerProps
-	extends SelectPrimitive.SelectTriggerProps,
+	extends
+		SelectPrimitive.SelectTriggerProps,
 		React.RefAttributes<HTMLButtonElement>,
 		VariantProps<typeof buttonVariants> {
 	arrow?: boolean;

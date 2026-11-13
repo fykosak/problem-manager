@@ -1,0 +1,38 @@
+name: Static analysis
+on: [pull_request]
+
+jobs:
+  static-analysis:
+    strategy:
+      fail-fast: false
+      matrix:
+        subproject:
+          - client
+          - server
+          - builder
+          - lang-latex
+        command:
+          - typecheck
+          - lint
+          - prettier
+
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: ./package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Compile LaTeX
+        working-directory: lang-latex
+        run: npm run prepare
+
+      - name: Run ${{ matrix.command }} for ${{ matrix.subproject }}
+        working-directory: ${{ matrix.subproject }}
+        run: npm run ${{ matrix.command }}
