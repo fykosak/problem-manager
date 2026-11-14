@@ -33,6 +33,10 @@ jak do jednotlivých složek, tak hlavně do root složky, kde se nachází sdí
 balíčky. Ty se nainstalují, protože jsou nastaveny `workspaces`, aby byla
 zajištěna stejná verze balíčků mezi klientem a serverem.
 
+Některé balíčky dělají problém s verzemi (`codemirror`) nebo s hledáním dalších
+balíčků (`drizzle-kit` v serveru neumí najít `drizzle-kit` v rootu). Proto
+jsou tyto balíčky definovány v root `package.json` a jsou sdíleny mezi projekty.
+
 ### Lokální vývoj
 
 Hlavní složka obsahuje `docker-compose.yml` definující docker kontejnery pro

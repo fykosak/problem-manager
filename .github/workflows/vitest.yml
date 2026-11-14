@@ -28,17 +28,16 @@ jobs:
           node-version: 24
           cache: 'npm'
           cache-dependency-path: ./package-lock.json
+
       - name: Install dependencies
-        working-directory: server
-        run: npm install
-      - name: Install latex
-        working-directory: lang-latex
-        run: npm install
+        run: npm ci
+
       - name: Init test database schema
         working-directory: server
         run: npm run test:init
         env:
           DATABASE_URL: 'postgresql://pm:password@localhost:5432/problem_manager_test'
+
       - name: Run server tests
         working-directory: server
         run: npm run test
