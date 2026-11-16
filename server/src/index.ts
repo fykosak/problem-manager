@@ -23,7 +23,6 @@ app.use(
 	})
 );
 
-// eslint-disable-next-line
 const server = http.createServer(app).listen(8080, () => {
 	console.log('Server running');
 });

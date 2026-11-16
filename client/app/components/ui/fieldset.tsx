@@ -19,7 +19,8 @@ const fieldSetVariants = cva(
 );
 
 export interface FieldSetRootProps
-	extends React.HTMLAttributes<HTMLFieldSetElement>,
+	extends
+		React.HTMLAttributes<HTMLFieldSetElement>,
 		VariantProps<typeof fieldSetVariants> {}
 
 const FieldSetRoot = React.forwardRef<HTMLFieldSetElement, FieldSetRootProps>(
@@ -59,8 +60,7 @@ const FieldSetFooter = React.forwardRef<
 });
 FieldSetFooter.displayName = 'FieldSetFooter';
 
-export interface FieldSetTitleProps
-	extends React.HTMLAttributes<HTMLLegendElement> {
+export interface FieldSetTitleProps extends React.HTMLAttributes<HTMLLegendElement> {
 	level?: number;
 }
 

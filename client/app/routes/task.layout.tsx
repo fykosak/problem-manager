@@ -84,7 +84,7 @@ export async function clientLoader({
 		const newRoute = generatePath('/' + currentRoute.route.path, {
 			...currentRoute.params,
 			contest: contest.symbol,
-			year: contestYear,
+			year: String(contestYear),
 		});
 		return redirect(newRoute);
 	}

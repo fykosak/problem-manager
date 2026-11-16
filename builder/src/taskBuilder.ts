@@ -39,11 +39,9 @@ export class TaskBuilder {
 			process.on('exit', (statusCode: number) => {
 				resolveDone({
 					output: process.stdout.setEncoding('utf8').read() as
-						| string
-						| null,
+						string | null,
 					error: process.stderr.setEncoding('utf8').read() as
-						| string
-						| null,
+						string | null,
 					exitCode: statusCode,
 				});
 			});

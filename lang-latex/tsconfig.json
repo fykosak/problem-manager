@@ -5,8 +5,9 @@
     "target": "es6",
     "module": "es2020",
     "newLine": "lf",
+    "moduleResolution": "bundler",
     "declaration": true,
-    "moduleResolution": "node",
+    "outDir": "./dist",
     "typeRoots": ["./node_modules/@types"]
   }
 }

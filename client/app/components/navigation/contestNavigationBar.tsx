@@ -68,7 +68,7 @@ export default function ContestNavigationBar({
 			const path = generatePath('/' + currentRoute.route.path, {
 				...currentRoute.params,
 				contest: contest.symbol,
-				year: contestYear,
+				year: contestYear ? String(contestYear) : undefined,
 			});
 			return (
 				<DropdownLinkItem key={contest.contestId} to={path}>
@@ -80,7 +80,7 @@ export default function ContestNavigationBar({
 	const yearItems = selectedContest.years.map((year) => {
 		const path = generatePath('/' + currentRoute.route.path, {
 			...currentRoute.params,
-			year: year.year,
+			year: String(year.year),
 		});
 		return (
 			<DropdownLinkItem key={year.year} to={path}>

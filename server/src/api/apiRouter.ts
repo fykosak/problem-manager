@@ -355,6 +355,11 @@ apiRouter.get(
 		const seriesLabel = req.params.seriesLabel;
 		const seriesOrder = Number(req.params.seriesOrder);
 
+		if (typeof seriesLabel !== 'string') {
+			res.status(400).send('Invalid series label');
+			return;
+		}
+
 		try {
 			await testPersonAuthorized(contestId, res);
 		} catch {

@@ -115,7 +115,7 @@ QuoteMacro {
 }
 
 // --- Ifs ---
-@external specialize {CommandIdentifier} specializeCommandIdentifier from "./tokenizer.ts" {
+@external specialize {CommandIdentifier} specializeCommandIdentifier from "./tokenizer" {
 	IfCommandIdentifier,
 	ElseCommandIdentifier,
 	IfEndCommandIdentifier,
@@ -175,7 +175,7 @@ MathEnvironment[group=EnvironmentGroup] {
 	EndEnv<EnvName>
 }
 
-@external specialize {EnvName} specializeEnvName from "./tokenizer.ts" {
+@external specialize {EnvName} specializeEnvName from "./tokenizer" {
 	ListEnvName,
 	TaskEnvName,
 	TabularEnvName,

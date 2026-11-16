@@ -14,6 +14,9 @@ services:
     volumes:
       - ./server/config.json:/app/server/config.json
       - ./task_data:/data
+    environment:
+      PUID: 1000
+      GUID: 1000
     extra_hosts:
       - 'host.docker.internal:host-gateway'
   db:

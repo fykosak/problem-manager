@@ -1,5 +1,7 @@
+ARG NODE_VERSION="24"
+
 # Install dependencies
-FROM node:24-alpine AS deps
+FROM node:${NODE_VERSION} AS deps
 COPY ./package.json ./package-lock.json /app/
 COPY ./builder/package.json /app/builder/package.json
 WORKDIR /app

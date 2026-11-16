@@ -19,7 +19,8 @@ const textareaVariants = cva(
 );
 
 export interface TextareaProps
-	extends React.ComponentProps<'textarea'>,
+	extends
+		React.ComponentProps<'textarea'>,
 		VariantProps<typeof textareaVariants> {}
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
