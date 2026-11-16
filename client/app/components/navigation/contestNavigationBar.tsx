@@ -19,6 +19,7 @@ import NavigationBar from './navigationBar';
 
 const links = [
 	{ name: 'Úlohy', link: '' },
+	{ name: 'Přehled korektur', link: 'work' },
 	{ name: 'Návrhy na úlohy', link: 'tasks/suggestions' },
 ];
 

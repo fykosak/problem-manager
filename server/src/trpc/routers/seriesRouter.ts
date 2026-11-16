@@ -29,8 +29,12 @@ export const seriesRouter = trpc.router({
 						with: {
 							type: true,
 							work: {
-								columns: {
-									state: true,
+								with: {
+									people: {
+										with: {
+											person: true,
+										},
+									},
 								},
 							},
 						},
