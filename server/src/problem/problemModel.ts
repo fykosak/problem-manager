@@ -346,11 +346,11 @@ export class ProblemModel {
 				continue;
 			}
 			for (const textLang of textLangs) {
+				let contents: string | undefined;
 				if (textType === 'task' && textLang === taskLang) {
-					await this.addText('task', textLang, taskText);
-				} else {
-					await this.addText('task', textLang);
+					contents = taskText;
 				}
+				await this.addText(textType, textLang, contents);
 			}
 		}
 	}
