@@ -44,14 +44,21 @@ lokální vývoj. Před spuštěním je však potřeba zkopírovat soubor
 `config.json.sample` do `config.json` ve složce `server`, aby existovala
 konfigurace serveru + v ní doplnit potřebné údaje, hlavně `oidcCertsUrl`.
 
-Nastavení klienta je podobné, v něm je třeba zkopírovat `.end.development.sample`
-do `.end.development` a vyplnit údaje pro OIDC.
+Nastavení klienta je podobné, v něm je třeba zkopírovat `.env.development.sample`
+do `.env.development` a vyplnit údaje pro OIDC.
 
 Následně stačí spustit `docker compose build` a `docker compose up` pro spuštění
 systému. Pro spuštění příkazů v prostředí serveru je možné spustit command line
 v dockeru přes `docker exec -it problem-manager-server-1 bash`. Zde je následně
 možné např. inicializovat schéma databáze přes `npm run db:push` nebo vytvořit
 mock data přes spuštění `npx tsx src/db/seed.ts`.
+
+Kontejnery jak pro vývoj, tak pro produkci, cíleně využívají node image založené
+na Debianu namísto Alpine. Důvodem je použití muslc v Alpine namísto glibc.
+Některé balíčky mají volitelné závislosti v různých variantách pro různé verze
+standardních knihoven a při použití různých verzí v klientské/serverové části
+či v kontejnerech / na lokálním stroji nastávají konflikty a není to navzájem
+kompatibilní.
 
 ### Produkční nasazení
 

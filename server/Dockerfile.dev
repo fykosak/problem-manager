@@ -1,4 +1,6 @@
-FROM node:lts
+ARG NODE_VERSION="24"
+
+FROM node:${NODE_VERSION}
 VOLUME /app
 
 WORKDIR /app/server

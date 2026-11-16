@@ -30,7 +30,8 @@
     "@lezer/highlight": "^1.2.1",
     "@lezer/lr": "^1.4.2",
     "@rollup/plugin-typescript": "^12.3.1",
-    "rollup": "^2.79.2"
+    "rollup": "^2.79.2",
+    "tslib": "^2.9.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",

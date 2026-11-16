@@ -20,7 +20,7 @@ usermod --uid $PUID --gid $GUID node
 echo "User node switched to UID $PUID."
 
 echo "Starting cron"
-crond -f &
+cron -f &
 
 echo "Starting server"
 su -s '/bin/sh' -c "npx tsx src/index.ts" node
