@@ -199,18 +199,41 @@ describe('problemRouter', { concurrent: false }, () => {
 			type: type.typeId,
 			authors: { concept: [person.personId] },
 		});
-		await expect(
-			caller(roleNames.organizer).texts({
-				problemId: created.problemId,
-				textType: 'task',
-			})
-		).resolves.toMatchObject([
-			{
-				problemId: created.problemId,
-				lang: 'en',
-				type: 'task',
-			},
-		]);
+
+		const texts = await caller(roleNames.organizer).texts({
+			problemId: created.problemId,
+		});
+
+		expect(texts.length).toBe(4);
+
+		expect(texts[0]).toMatchObject({
+			problemId: created.problemId,
+			lang: 'cs',
+			type: 'task',
+			contents: null,
+		});
+
+		expect(texts[1]).toMatchObject({
+			problemId: created.problemId,
+			lang: 'en',
+			type: 'task',
+		});
+
+		expect(texts[1]['contents']).not.toBeNull();
+
+		expect(texts[2]).toMatchObject({
+			problemId: created.problemId,
+			lang: 'cs',
+			type: 'solution',
+			contents: null,
+		});
+
+		expect(texts[3]).toMatchObject({
+			problemId: created.problemId,
+			lang: 'en',
+			type: 'solution',
+			contents: null,
+		});
 	});
 
 	it('add work', async () => {
