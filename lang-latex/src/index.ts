@@ -2,6 +2,7 @@ import { LanguageSupport } from '@codemirror/language';
 
 import { basicCompletion, mathCompletion } from './completion';
 import { environmentFolding } from './folding';
+import { escapedDollarHandler } from './input';
 import { latexLanguage } from './language';
 
 export { latexLanguage } from './language';
@@ -10,6 +11,7 @@ export { ParserInput } from './parserInput';
 
 export function latex() {
 	return new LanguageSupport(latexLanguage, [
+		escapedDollarHandler,
 		basicCompletion,
 		mathCompletion,
 		environmentFolding,
