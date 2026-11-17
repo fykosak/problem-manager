@@ -1,4 +1,4 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { NodePgDatabase, drizzle } from 'drizzle-orm/node-postgres';
 
 import config from '@server/config/config';
 
@@ -9,3 +9,5 @@ export const db = drizzle({
 	casing: 'snake_case',
 	schema,
 });
+
+export type DbConnection = NodePgDatabase<typeof schema>;

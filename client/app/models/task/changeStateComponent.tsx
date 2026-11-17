@@ -8,9 +8,9 @@ import { Form } from '@client/components/ui/form';
 import { Loader } from '@client/components/ui/loader';
 import { trpc } from '@client/trpc';
 
-import { Task } from './columns';
+import { Problem } from './columns';
 
-async function onChangeProblemState(problem: Task) {
+async function onChangeProblemState(problem: Problem) {
 	try {
 		const targetState = problem.state === 'active' ? 'deleted' : 'active';
 
@@ -39,7 +39,7 @@ export function ChangeStateComponent({
 	problem,
 	setOpen,
 }: {
-	problem: Task;
+	problem: Problem;
 	setOpen: (open: boolean) => void;
 }) {
 	const changeStateForm = useForm();

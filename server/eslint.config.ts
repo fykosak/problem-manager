@@ -19,5 +19,13 @@ export default tseslint.config(
 				tsconfigRootDir: import.meta.dirname,
 			},
 		},
+		rules: {
+			'@typescript-eslint/switch-exhaustiveness-check': [
+				'error',
+				{
+					considerDefaultExhaustiveForUnions: true,
+				},
+			],
+		},
 	}
 );

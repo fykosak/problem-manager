@@ -6,6 +6,7 @@ import { acl } from '@server/acl/aclFactory';
 import { getPersonFromJWT, getRolesFromJWT } from '@server/auth/jwt';
 import { db } from '@server/db';
 import { contestTable } from '@server/db/schema';
+import { ProblemModel } from '@server/problem/problemModel';
 
 import { trpc } from './trpc';
 
@@ -61,6 +62,34 @@ export const contestProcedure = authedProcedure
 
 		return next({
 			ctx: {
+				contest: contest,
+			},
+		});
+	});
+
+export const problemProcedure = authedProcedure
+	.input(z.object({ problemId: z.number() }))
+	.use(async ({ input, ctx, next }) => {
+		const problemModel = new ProblemModel(db, input.problemId);
+		const contest = await problemModel.getContest();
+
+		if (
+			!acl.isAllowedContest(
+				ctx.aclRoles,
+				contest.symbol,
+				'problem',
+				'access'
+			)
+		) {
+			throw new TRPCError({
+				code: 'FORBIDDEN',
+				message: 'You cannot access this contest',
+			});
+		}
+
+		return next({
+			ctx: {
+				problemModel: problemModel,
 				contest: contest,
 			},
 		});

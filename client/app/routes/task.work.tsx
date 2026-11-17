@@ -16,7 +16,9 @@ import { trpc, trpcOutputTypes } from '@client/trpc';
 import { Route } from './+types/task.work';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-	const work = await trpc.problem.work.query(Number(params.taskId));
+	const work = await trpc.problem.work.query({
+		problemId: Number(params.taskId),
+	});
 	const availableWork = await trpc.contest.availableWork.query({
 		contestSymbol: params.contest,
 	});

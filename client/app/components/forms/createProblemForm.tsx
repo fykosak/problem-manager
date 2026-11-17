@@ -56,7 +56,7 @@ export function CreateProblemForm({
 	currentContestSymbol?: string;
 	currentContestYear?: number;
 	contestCreateProblemData: trpcOutputTypes['contest']['createProblemData'];
-	availableContests: trpcOutputTypes['getContests'];
+	availableContests: trpcOutputTypes['contest']['list'];
 }) {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),

@@ -16,7 +16,7 @@ import { Loader } from '@client/components/ui/loader';
 import { usePersonRoles } from '@client/hooks/usePersonRoles';
 import { trpc, trpcOutputTypes } from '@client/trpc';
 
-import { Task } from './columns';
+import { Problem } from './columns';
 
 async function onChangeContest(problemId: number, contestId: number) {
 	try {
@@ -39,8 +39,8 @@ export function ChangeContestComponent({
 	contests,
 	setOpen,
 }: {
-	problem: Task;
-	contests: trpcOutputTypes['getContests'];
+	problem: Problem;
+	contests: trpcOutputTypes['contest']['list'];
 	setOpen: (open: boolean) => void;
 }) {
 	const changeForm = useForm();

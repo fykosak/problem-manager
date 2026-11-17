@@ -3,6 +3,8 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import { type AuthorTypeEnum, authorTypeEnum } from '@server/db/schema';
+
 import { Button } from '@client/components/ui/button';
 import {
 	FieldSetContent,
@@ -18,6 +20,13 @@ import { FormInput } from './formInput';
 import { TopicSelection } from './topicSelection';
 import { TypeSelection } from './typeSelection';
 import { UnsavedChangesDialog } from './unsavedChangesDialog';
+
+const authorSchema = Object.fromEntries(
+	authorTypeEnum.enumValues.map((authorType) => [
+		authorType,
+		z.number().array(),
+	])
+);
 
 const formSchema = z.object({
 	metadata: z.object({
@@ -44,13 +53,16 @@ const formSchema = z.object({
 				.optional(),
 		}),
 	}),
-	authors: z.object({
-		task: z.number().array(),
-		solution: z.number().array(),
-	}),
+	authors: z.object(authorSchema),
 	topics: z.number().array().min(1),
 	type: z.coerce.number(),
 });
+
+const authorTypeLabels: Record<AuthorTypeEnum, string> = {
+	concept: 'Autoři návrhu zadání',
+	task: 'Autoři zadání',
+	solution: 'Autoři řešení',
+};
 
 export function MetadataForm({
 	problemId,
@@ -67,6 +79,13 @@ export function MetadataForm({
 	organizers: trpcOutputTypes['contest']['organizers'];
 	metadataFields: trpcOutputTypes['contest']['metadataFields'];
 }) {
+	const authors = Object.fromEntries(
+		authorTypeEnum.enumValues.map((authorType) => [
+			authorType,
+			taskData.authors[authorType] ?? [],
+		])
+	);
+
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -88,7 +107,7 @@ export function MetadataForm({
 				},
 				...taskData.metadata, // overrites with already saved values
 			},
-			authors: taskData.authors,
+			authors,
 			topics: taskData.topics,
 			type: taskData.type,
 		},
@@ -216,19 +235,15 @@ export function MetadataForm({
 						</FieldSetRoot>
 					)}
 
-					<AuthorSelection
-						control={form.control}
-						name="authors.task"
-						label="Autoři zadání"
-						organizers={organizers}
-					/>
-
-					<AuthorSelection
-						control={form.control}
-						name="authors.solution"
-						label="Autoři řešení"
-						organizers={organizers}
-					/>
+					{authorTypeEnum.enumValues.map((authorType) => (
+						<AuthorSelection
+							key={authorType}
+							control={form.control}
+							name={`authors.${authorType}`}
+							label={authorTypeLabels[authorType]}
+							organizers={organizers}
+						/>
+					))}
 
 					<TopicSelection
 						control={form.control}

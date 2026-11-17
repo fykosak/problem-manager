@@ -1,6 +1,5 @@
 import { Braces, LetterText, ListTodo, Paperclip, Pen } from 'lucide-react';
-import { NavLink, Outlet } from 'react-router';
-import { Link } from 'react-router';
+import { Link, NavLink, Outlet, generatePath, redirect } from 'react-router';
 
 import { Layout, getLayoutLabel } from '@client/components/editor/layoutEnum';
 import NavigationSuspense from '@client/components/navigation/navigationSuspense';
@@ -37,18 +36,58 @@ import {
 	EditorLayoutProvider,
 	useEditorLayout,
 } from '@client/hooks/editorLayoutProvider';
-import useCurrentRoute from '@client/hooks/useCurrentRoute';
+import useCurrentRoute, {
+	matchCurrentRoute,
+} from '@client/hooks/useCurrentRoute';
 import { trpc, type trpcOutputTypes } from '@client/trpc';
 
 import { Route } from './+types/task.layout';
 
-export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+export async function clientLoader({
+	params,
+	request,
+}: Route.ClientLoaderArgs) {
 	const problemId = Number(params.taskId);
 	if (isNaN(problemId) || !isFinite(problemId)) {
 		throw new Error('Invalid task id');
 	}
 
-	const problem = await trpc.problem.info.query(problemId);
+	const problem = await trpc.problem.info.query({ problemId: problemId });
+
+	// Check that URL params are correct
+	const contest = problem.series?.contestYear.contest ?? problem.contest;
+	if (!contest) {
+		throw new Error('Could not determine problem contest');
+	}
+
+	let contestYear = problem.series?.contestYear.year;
+	if (contestYear === undefined) {
+		const currentContests = await trpc.contest.currentContests.query();
+		contestYear = currentContests.find(
+			(currentContest) =>
+				currentContest.contest.contestId === contest.contestId
+		)?.contest_year.year;
+	}
+	if (contestYear === undefined) {
+		throw new Error('Could not determine current contest year');
+	}
+
+	if (
+		params.contest !== contest.symbol ||
+		params.year !== String(contestYear)
+	) {
+		const currentRoute = matchCurrentRoute(new URL(request.url).pathname);
+		if (!currentRoute) {
+			throw new Error('No route matched');
+		}
+
+		const newRoute = generatePath('/' + currentRoute.route.path, {
+			...currentRoute.params,
+			contest: contest.symbol,
+			year: contestYear,
+		});
+		return redirect(newRoute);
+	}
 
 	const texts = await trpc.problem.texts.query({
 		problemId: problemId,
@@ -65,7 +104,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 		textsByType.set(text.type, textsOfSameType);
 	}
 
-	const problemWork = await trpc.problem.work.query(problemId);
+	const problemWork = await trpc.problem.work.query({ problemId: problemId });
 	const workStats = new Map<string, number>();
 	for (const work of problemWork) {
 		const currentCount = workStats.get(work.state) ?? 0;
@@ -215,6 +254,8 @@ function TaskBreadcrumb({
 			break;
 		case 'web-texts':
 			label = 'Zveřejnění textů';
+			break;
+		default:
 			break;
 	}
 

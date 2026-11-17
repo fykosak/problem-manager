@@ -854,10 +854,9 @@ export class HtmlGenerator {
 						return `\\frac{\\partial ${top}}{\\partial ${bottom}}`;
 					case '\\ppder':
 						return `\\frac{\\partial^2 ${top}}{\\partial ${bottom}^2}`;
+					default: // \der, default for correct break detection
+						return `\\frac{\\mathrm{d}${top}}{\\mathrm{d}${bottom}}`;
 				}
-				// \der set as default for eslint to detect the catch of all
-				// commands
-				return `\\frac{\\mathrm{d}${top}}{\\mathrm{d}${bottom}}`;
 			}
 
 			case '\\ointo':
@@ -876,10 +875,9 @@ export class HtmlGenerator {
 						return `\\left\\langle ${intervalFrom},${intervalTo}\\right)`;
 					case '\\cintc':
 						return `\\left\\langle ${intervalFrom},${intervalTo}\\right\\rangle`;
+					default: // \ointo, default for correct break detection
+						return `\\left(${intervalFrom},${intervalTo}\\right)`;
 				}
-				// \der set as default for eslint to detect the catch of all
-				// commands
-				return `\\left(${intervalFrom},${intervalTo}\\right)`;
 			}
 
 			default: {

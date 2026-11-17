@@ -17,6 +17,16 @@ import { trpc } from '@server/trpc/trpc';
 import { authedProcedure, contestProcedure } from '../middleware';
 
 export const contestRouter = trpc.router({
+	list: authedProcedure.query(async () => {
+		return await db.query.contestTable.findMany({
+			with: {
+				years: {
+					orderBy: desc(contestYearTable.year),
+				},
+			},
+		});
+	}),
+
 	// TODO filter by organizer contests
 	createProblemData: authedProcedure.query(async () => {
 		const contests = await db.query.contestTable.findMany({
